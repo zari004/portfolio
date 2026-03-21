@@ -514,7 +514,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 
 <script>
 const PASS = 'zarnigor2026';
-const USER = 'admin';
 let editingPortIndex = -1;
 let selectedGrad = 0;
 
@@ -583,7 +582,7 @@ function setData(d){localStorage.setItem('zo_data',JSON.stringify(d))}
 function doLogin(){
   const u=document.getElementById('l-user').value;
   const p=document.getElementById('l-pass').value;
-  if(u===USER&&p===PASS){
+  if(p.trim() === PASS){
     document.getElementById('login-screen').style.display='none';
     document.getElementById('app').style.display='block';
     initAll();
