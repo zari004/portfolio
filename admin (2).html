@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Admin Panel — Zarnigor Orifova</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0D0D14;--sidebar:#13131F;--card:#1A1A2A;--border:rgba(255,255,255,0.07);
+  --primary:#C026D3;--primary-light:#E879F9;--accent:#F59E0B;
+  --text:#E2E8F0;--muted:#94A3B8;--green:#22C55E;--red:#EF4444;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-thumb{background:var(--primary);border-radius:3px}
+
+/* LOGIN */
+#login-screen{
+  position:fixed;inset:0;z-index:9999;
+  background:var(--bg);
+  display:flex;align-items:center;justify-content:center;
+}
+.login-box{
+  background:var(--card);border:1px solid rgba(192,38,211,0.2);
+  border-radius:24px;padding:2.5rem 2rem;width:100%;max-width:380px;
+  box-shadow:0 20px 60px rgba(0,0,0,0.5);text-align:center;
+}
+.login-logo{
+  font-size:2.2rem;font-weight:900;
+  background:linear-gradient(135deg,var(--primary-light),var(--accent));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  margin-bottom:0.3rem;
+}
+.login-sub{font-size:0.82rem;color:var(--muted);margin-bottom:2rem}
+.login-box label{font-size:0.78rem;color:var(--muted);display:block;text-align:left;margin-bottom:5px;font-weight:500}
+.login-box input{
+  width:100%;background:var(--sidebar);border:1px solid var(--border);
+  color:var(--text);padding:0.8rem 1rem;border-radius:10px;
+  font-family:inherit;font-size:0.9rem;outline:none;transition:border-color 0.3s;
+  margin-bottom:1.2rem;
+}
+.login-box input:focus{border-color:var(--primary)}
+.login-btn{
+  width:100%;background:linear-gradient(135deg,var(--primary),#9333EA);
+  color:#fff;border:none;padding:0.85rem;border-radius:10px;
+  font-size:0.93rem;font-weight:700;cursor:pointer;font-family:inherit;
+  transition:opacity 0.3s;
+}
+.login-btn:hover{opacity:0.85}
+.login-error{color:var(--red);font-size:0.8rem;margin-top:0.5rem;display:none}
+
+/* LAYOUT */
+#app{display:none;min-height:100vh}
+.sidebar{
+  position:fixed;top:0;left:0;width:240px;height:100vh;
+  background:var(--sidebar);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;z-index:100;overflow-y:auto;
+}
+.sb-logo{
+  padding:1.5rem 1.4rem;border-bottom:1px solid var(--border);
+  font-size:1.3rem;font-weight:900;
+  background:linear-gradient(135deg,var(--primary-light),var(--accent));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.sb-sub{font-size:0.72rem;color:var(--muted);font-weight:400;display:block;-webkit-text-fill-color:var(--muted)}
+.sb-section{padding:0.6rem 1.4rem;font-size:0.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-top:0.5rem}
+.sb-link{
+  display:flex;align-items:center;gap:0.75rem;
+  padding:0.65rem 1.4rem;color:var(--muted);text-decoration:none;
+  font-size:0.86rem;font-weight:500;cursor:pointer;border:none;background:none;
+  width:100%;transition:all 0.2s;font-family:inherit;
+  border-left:3px solid transparent;
+}
+.sb-link:hover,.sb-link.active{
+  color:var(--primary-light);background:rgba(192,38,211,0.08);
+  border-left-color:var(--primary);
+}
+.sb-link i{width:16px;text-align:center;font-size:0.9rem}
+.sb-bottom{margin-top:auto;padding:1rem 1.4rem;border-top:1px solid var(--border)}
+.logout-btn{
+  width:100%;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);
+  color:var(--red);padding:0.6rem;border-radius:8px;font-size:0.82rem;
+  font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.3s;
+}
+.logout-btn:hover{background:rgba(239,68,68,0.2)}
+
+/* MAIN */
+.main{margin-left:240px;min-height:100vh;padding:2rem 2.5rem}
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:2rem;
+}
+.page-title{font-size:1.4rem;font-weight:800}
+.save-all-btn{
+  background:linear-gradient(135deg,var(--primary),#9333EA);
+  color:#fff;border:none;padding:0.6rem 1.5rem;border-radius:20px;
+  font-size:0.85rem;font-weight:700;cursor:pointer;font-family:inherit;
+  transition:all 0.3s;display:flex;align-items:center;gap:0.4rem;
+}
+.save-all-btn:hover{opacity:0.85;transform:translateY(-1px)}
+
+/* PAGES */
+.page{display:none}
+.page.active{display:block}
+
+/* CARDS */
+.admin-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:16px;padding:1.8rem;margin-bottom:1.5rem;
+}
+.card-title{
+  font-size:0.95rem;font-weight:700;margin-bottom:1.4rem;
+  display:flex;align-items:center;gap:0.5rem;
+  padding-bottom:1rem;border-bottom:1px solid var(--border);
+}
+.card-title i{color:var(--primary-light)}
+
+/* FORM ELEMENTS */
+.f-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem}
+.f-row.full{grid-template-columns:1fr}
+.f-group{display:flex;flex-direction:column;gap:5px}
+.f-group label{font-size:0.78rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.04em}
+.f-group input,.f-group textarea,.f-group select{
+  background:var(--sidebar);border:1px solid var(--border);
+  color:var(--text);padding:0.72rem 0.9rem;border-radius:9px;
+  font-family:inherit;font-size:0.88rem;outline:none;transition:border-color 0.3s;
+}
+.f-group input:focus,.f-group textarea:focus,.f-group select:focus{border-color:var(--primary)}
+.f-group textarea{resize:vertical;min-height:90px}
+.f-group select option{background:var(--card)}
+.range-wrap{display:flex;align-items:center;gap:1rem}
+.range-wrap input[type=range]{flex:1;accent-color:var(--primary)}
+.range-val{
+  min-width:42px;background:rgba(192,38,211,0.15);
+  border:1px solid rgba(192,38,211,0.3);
+  color:var(--primary-light);padding:0.25rem 0.5rem;
+  border-radius:6px;font-size:0.78rem;font-weight:700;text-align:center;
+}
+
+/* SAVE BTN */
+.save-btn{
+  background:linear-gradient(135deg,var(--primary),#9333EA);
+  color:#fff;border:none;padding:0.65rem 1.6rem;border-radius:10px;
+  font-size:0.85rem;font-weight:600;cursor:pointer;font-family:inherit;
+  transition:all 0.3s;margin-top:0.5rem;
+}
+.save-btn:hover{opacity:0.85}
+.save-btn.success{background:linear-gradient(135deg,#22C55E,#16A34A)!important}
+
+/* SKILLS LIST */
+.skills-list{display:flex;flex-direction:column;gap:0.8rem;margin-bottom:1.2rem}
+.skill-row{
+  display:grid;grid-template-columns:2fr 3fr 60px 40px;
+  gap:0.8rem;align-items:center;
+  background:var(--sidebar);border:1px solid var(--border);
+  border-radius:10px;padding:0.8rem 1rem;
+}
+.skill-row input{background:transparent;border:none;color:var(--text);font-family:inherit;font-size:0.86rem;outline:none;padding:0}
+.skill-row .del-btn{
+  background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);
+  color:var(--red);width:34px;height:34px;border-radius:8px;
+  cursor:pointer;font-size:0.8rem;display:flex;align-items:center;justify-content:center;
+  transition:all 0.3s;flex-shrink:0;
+}
+.skill-row .del-btn:hover{background:rgba(239,68,68,0.25)}
+.add-btn{
+  display:flex;align-items:center;gap:0.5rem;
+  background:rgba(192,38,211,0.1);border:1px dashed rgba(192,38,211,0.3);
+  color:var(--primary-light);padding:0.6rem 1.2rem;border-radius:10px;
+  font-size:0.84rem;font-weight:600;cursor:pointer;font-family:inherit;
+  transition:all 0.3s;width:fit-content;
+}
+.add-btn:hover{background:rgba(192,38,211,0.18)}
+
+/* PORTFOLIO GRID */
+.port-admin-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1.2rem;margin-bottom:1.5rem}
+.port-admin-card{
+  background:var(--sidebar);border:1px solid var(--border);
+  border-radius:14px;overflow:hidden;transition:border-color 0.3s;
+}
+.port-admin-card:hover{border-color:rgba(192,38,211,0.3)}
+.pac-thumb{
+  height:130px;display:flex;align-items:center;justify-content:center;
+  font-size:3rem;position:relative;
+}
+.pac-body{padding:1rem}
+.pac-title{font-weight:700;font-size:0.9rem;margin-bottom:3px}
+.pac-cat{font-size:0.75rem;color:var(--primary-light);font-weight:500}
+.pac-desc{font-size:0.78rem;color:var(--muted);margin-top:4px;line-height:1.4}
+.pac-actions{display:flex;gap:0.5rem;margin-top:0.8rem}
+.pac-edit,.pac-del{
+  padding:0.35rem 0.9rem;border-radius:7px;font-size:0.75rem;
+  font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.3s;border:1px solid;
+}
+.pac-edit{background:rgba(192,38,211,0.1);border-color:rgba(192,38,211,0.25);color:var(--primary-light)}
+.pac-edit:hover{background:rgba(192,38,211,0.22)}
+.pac-del{background:rgba(239,68,68,0.1);border-color:rgba(239,68,68,0.2);color:var(--red)}
+.pac-del:hover{background:rgba(239,68,68,0.22)}
+
+/* MODAL */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0.7);
+  z-index:9000;display:none;align-items:center;justify-content:center;
+  backdrop-filter:blur(4px);
+}
+.modal-overlay.open{display:flex}
+.modal-box{
+  background:var(--card);border:1px solid rgba(192,38,211,0.2);
+  border-radius:20px;padding:2rem;width:100%;max-width:520px;
+  max-height:90vh;overflow-y:auto;
+}
+.modal-title{font-size:1rem;font-weight:700;margin-bottom:1.5rem;display:flex;justify-content:space-between;align-items:center}
+.modal-close{background:none;border:none;color:var(--muted);font-size:1.2rem;cursor:pointer;padding:0.2rem}
+.modal-close:hover{color:var(--text)}
+
+/* SERVICES LIST */
+.srv-admin-list{display:flex;flex-direction:column;gap:0.8rem;margin-bottom:1.2rem}
+.srv-row{
+  background:var(--sidebar);border:1px solid var(--border);
+  border-radius:10px;padding:1rem;display:grid;
+  grid-template-columns:1fr 1fr;gap:0.7rem;position:relative;
+}
+.srv-row .del-btn{
+  position:absolute;top:10px;right:10px;
+  background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);
+  color:var(--red);width:30px;height:30px;border-radius:7px;
+  cursor:pointer;font-size:0.75rem;display:flex;align-items:center;justify-content:center;
+}
+.srv-row input,.srv-row textarea{background:transparent;border:none;color:var(--text);font-family:inherit;font-size:0.84rem;outline:none;padding:0;width:100%}
+.srv-row textarea{resize:none;height:50px}
+.srv-row .srv-price-in{color:var(--accent)}
+.srv-row-labels{display:flex;flex-direction:column;gap:3px}
+.srv-lbl{font-size:0.7rem;color:var(--muted);font-weight:600;text-transform:uppercase}
+
+/* STATS */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:2rem}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.2rem;text-align:center}
+.stat-card .num{font-size:1.8rem;font-weight:900;color:var(--white)}
+.stat-card .lbl{font-size:0.75rem;color:var(--muted);margin-top:3px}
+
+/* TOAST */
+.toast{
+  position:fixed;bottom:2rem;right:2rem;z-index:9999;
+  background:var(--green);color:#fff;padding:0.8rem 1.4rem;
+  border-radius:12px;font-size:0.85rem;font-weight:600;
+  transform:translateY(100px);opacity:0;transition:all 0.3s;
+  display:flex;align-items:center;gap:0.5rem;
+}
+.toast.show{transform:translateY(0);opacity:1}
+
+/* GRADIENT PICKER */
+.grad-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0.5rem;margin-top:0.5rem}
+.grad-opt{height:40px;border-radius:8px;cursor:pointer;border:2px solid transparent;transition:all 0.2s}
+.grad-opt.selected{border-color:var(--white);transform:scale(1.08)}
+
+@media(max-width:768px){
+  .sidebar{width:200px}
+  .main{margin-left:200px;padding:1.5rem}
+  .f-row{grid-template-columns:1fr}
+  .stats-row{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">ZO. Admin</div>
+    <div class="login-sub">Shaxsiy vebsayt boshqaruv paneli</div>
+    <div class="f-group">
+      <label>Foydalanuvchi nomi</label>
+      <input type="text" id="l-user" placeholder="admin" value="admin"/>
+    </div>
+    <div class="f-group">
+      <label>Parol</label>
+      <input type="password" id="l-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/>
+    </div>
+    <button class="login-btn" onclick="doLogin()">🔐 Kirish</button>
+    <p class="login-error" id="login-err">❌ Noto'g'ri foydalanuvchi yoki parol</p>
+    <p style="font-size:0.72rem;color:var(--muted);margin-top:1rem">Parol: <code style="color:var(--primary-light)">zarnigor2026</code></p>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sb-logo">ZO. Admin<span class="sb-sub">Boshqaruv paneli</span></div>
+    <div class="sb-section">Sahifalar</div>
+    <button class="sb-link active" onclick="showPage('dashboard',this)"><i class="fas fa-th-large"></i> Dashboard</button>
+    <button class="sb-link" onclick="showPage('hero',this)"><i class="fas fa-home"></i> Hero Bo'lim</button>
+    <button class="sb-link" onclick="showPage('about',this)"><i class="fas fa-user"></i> Haqimda</button>
+    <button class="sb-link" onclick="showPage('skills',this)"><i class="fas fa-chart-bar"></i> Ko'nikmalar</button>
+    <button class="sb-link" onclick="showPage('portfolio',this)"><i class="fas fa-images"></i> Portfolio</button>
+    <button class="sb-link" onclick="showPage('services',this)"><i class="fas fa-briefcase"></i> Xizmatlar</button>
+    <button class="sb-link" onclick="showPage('contact',this)"><i class="fas fa-envelope"></i> Aloqa</button>
+    <div class="sb-bottom">
+      <a href="zarnigor_portfolio_v2.html" target="_blank" class="sb-link" style="margin-bottom:0.5rem;padding-left:0">
+        <i class="fas fa-external-link-alt"></i> Saytni ko'rish
+      </a>
+      <button class="logout-btn" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i> Chiqish</button>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div class="page-title" id="page-heading">Dashboard</div>
+      <button class="save-all-btn" onclick="saveAll()"><i class="fas fa-save"></i> Hammasini Saqlash</button>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="stats-row">
+        <div class="stat-card"><div class="num" id="d-skills">8</div><div class="lbl">Ko'nikma</div></div>
+        <div class="stat-card"><div class="num" id="d-portfolio">6</div><div class="lbl">Portfolio</div></div>
+        <div class="stat-card"><div class="num" id="d-services">4</div><div class="lbl">Xizmat</div></div>
+        <div class="stat-card"><div class="num">✅</div><div class="lbl">Saqlangan</div></div>
+      </div>
+      <div class="admin-card">
+        <div class="card-title"><i class="fas fa-info-circle"></i> Tezkor Boshqaruv</div>
+        <p style="color:var(--muted);font-size:0.9rem;line-height:1.7">
+          Chap menyu orqali istalgan bo'limni tahrirlang.<br>
+          O'zgarishlar <strong style="color:var(--primary-light)">localStorage</strong> ga saqlanadi va saytda darhol aks etadi.<br>
+          <span style="color:var(--accent)">⚠️</span> Saqlash tugmasini bosishni unutmang!
+        </p>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-top:1.5rem">
+          <div onclick="showPage('hero',document.querySelectorAll('.sb-link')[1])" 
+               style="background:rgba(192,38,211,0.1);border:1px solid rgba(192,38,211,0.2);border-radius:12px;padding:1rem;cursor:pointer;text-align:center;transition:all 0.3s"
+               onmouseover="this.style.background='rgba(192,38,211,0.2)'" onmouseout="this.style.background='rgba(192,38,211,0.1)'">
+            <div style="font-size:1.8rem">🏠</div>
+            <div style="font-size:0.82rem;font-weight:600;margin-top:0.4rem">Hero</div>
+          </div>
+          <div onclick="showPage('portfolio',document.querySelectorAll('.sb-link')[4])"
+               style="background:rgba(192,38,211,0.1);border:1px solid rgba(192,38,211,0.2);border-radius:12px;padding:1rem;cursor:pointer;text-align:center;transition:all 0.3s"
+               onmouseover="this.style.background='rgba(192,38,211,0.2)'" onmouseout="this.style.background='rgba(192,38,211,0.1)'">
+            <div style="font-size:1.8rem">🖼️</div>
+            <div style="font-size:0.82rem;font-weight:600;margin-top:0.4rem">Portfolio</div>
+          </div>
+          <div onclick="showPage('skills',document.querySelectorAll('.sb-link')[3])"
+               style="background:rgba(192,38,211,0.1);border:1px solid rgba(192,38,211,0.2);border-radius:12px;padding:1rem;cursor:pointer;text-align:center;transition:all 0.3s"
+               onmouseover="this.style.background='rgba(192,38,211,0.2)'" onmouseout="this.style.background='rgba(192,38,211,0.1)'">
+            <div style="font-size:1.8rem">⚡</div>
+            <div style="font-size:0.82rem;font-weight:600;margin-top:0.4rem">Ko'nikmalar</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HERO -->
+    <div class="page" id="page-hero">
+      <div class="admin-card">
+        <div class="card-title"><i class="fas fa-user-circle"></i> Asosiy Ma'lumotlar</div>
+        <div class="f-row">
+          <div class="f-group"><label>To'liq Ism</label><input id="h-name" value="Zarnigor Orifova"/></div>
+          <div class="f-group"><label>Kasb / Role</label><input id="h-role" value="Grafik & Web Dizayner"/></div>
+        </div>
+        <div class="f-row">
+          <div class="f-group"><label>Yosh</label><input id="h-age" type="number" value="21"/></div>
+          <div class="f-group"><label>Shahar</label><input id="h-city" value="Toshkent, O'zbekiston"/></div>
+        </div>
+        <div class="f-row full">
+          <div class="f-group"><label>Qisqa Tavsif (Hero)</label><textarea id="h-desc">5 yillik tajribam davomida brendlar uchun esda qoladigan vizual identitetlar, zamonaviy web sahifalar va kreativ dizayn yechimlari yaratib kelmoqdaman.</textarea></div>
+        </div>
+        <div class="f-row">
+          <div class="f-group"><label>Badge Matni</label><input id="h-badge" value="Yangi loyihalarga ochiqman"/></div>
+          <div class="f-group"><label>Avatar Emoji</label><input id="h-emoji" value="👩‍🎨"/></div>
+        </div>
+      </div>
+      <div class="admin-card">
+        <div class="card-title"><i class="fas fa-chart-pie"></i> Statistika Raqamlari</div>
+        <div class="f-row">
+          <div class="f-group"><label>Stat 1 — Raqam</label><input id="s1n" value="5+"/></div>
+          <div class="f-group"><label>Stat 1 — Izoh</label><input id="s1l" value="Yil tajriba"/></div>
+        </div>
+        <div class="f-row">
+          <div class="f-group"><label>Stat 2 — Raqam</label><input id="s2n" value="100+"/></div>
+          <div class="f-group"><label>Stat 2 — Izoh</label><input id="s2l" value="Loyiha"/></div>
+        </div>
+        <div class="f-row">
+          <div class="f-group"><label>Stat 3 — Raqam</label><input id="s3n" value="8+"/></div>
+          <div class="f-group"><label>Stat 3 — Izoh</label><input id="s3l" value="Dastur biladi"/></div>
+        </div>
+        <button class="save-btn" onclick="saveSection('hero')">💾 Saqlash</button>
+      </div>
+    </div>
+
+    <!-- ABOUT -->
+    <div class="page" id="page-about">
+      <div class="admin-card">
+        <div class="card-title"><i class="fas fa-id-card"></i> Haqimda Bo'limi</div>
+        <div class="f-row full">
+          <div class="f-group"><label>Asosiy Paragraf</label>
+            <textarea id="a-text" style="min-height:120px">Men — Zarnigor Orifova, 21 yoshli grafik va web dizaynerман. 16 yoshimdan boshlab dizayn bilan shug'ullanib kelaman. Brend identiteti, UI/UX, web dizayn va ijtimoiy tarmoqlar uchun vizual kontent — mening asosiy soham.</textarea>
+          </div>
+        </div>
+        <div class="f-row">
+          <div class="f-group"><label>Yillar Tajriba (Badge)</label><input id="a-exp" value="5+ Yil"/></div>
+          <div class="f-group"><label>Rasm Emoji</label><input id="a-emoji" value="👩‍💻"/></div>
+        </div>
+      </div>
+      <div class="admin-card">
+        <div class="card-title"><i class="fas fa-briefcase"></i> Ish Tajribasi</div>
+        <div id="timeline-list"></div>
+        <button class="add-btn" onclick="addTimeline()"><i class="fas fa-plus"></i> Yangi qo'shish</button>
+        <br><button class="save-btn" style="margin-top:1rem" onclick="saveSection('about')">💾 Saqlash</button>
+      </div>
+    </div>
+
+    <!-- SKILLS -->
+    <div class="page" id="page-skills">
+      <div class="admin-card">
+        <div class="card-title"><i class="fas fa-sliders-h"></i> Ko'nikmalar Ro'yxati</div>
+        <p style="color:var(--muted);font-size:0.82rem;margin-bottom:1.2rem">Dastur nomi, emoji va foizni kiriting.</p>
+        <div class="skills-list" id="skills-list"></div>
+        <button class="add-btn" onclick="addSkill()"><i class="fas fa-plus"></i> Ko'nikma qo'shish</button>
+        <br><button class="save-btn" style="margin-top:1rem" onclick="saveSection('skills')">💾 Saqlash</button>
+      </div>
+    </div>
+
+    <!-- PORTFOLIO -->
+    <div class="page" id="page-portfolio">
+      <div class="admin-card">
+        <div class="card-title"><i class="fas fa-images"></i> Portfolio Loyihalari</div>
+        <div class="port-admin-grid" id="port-grid"></div>
+        <button class="add-btn" onclick="openPortModal()"><i class="fas fa-plus"></i> Yangi loyiha qo'shish</button>
+      </div>
+    </div>
+
+    <!-- SERVICES -->
+    <div class="page" id="page-services">
+      <div class="admin-card">
+        <div class="card-title"><i class="fas fa-concierge-bell"></i> Xizmatlar</div>
+        <div class="srv-admin-list" id="srv-list"></div>
+        <button class="add-btn" onclick="addService()"><i class="fas fa-plus"></i> Xizmat qo'shish</button>
+        <br><button class="save-btn" style="margin-top:1rem" onclick="saveSection('services')">💾 Saqlash</button>
+      </div>
+    </div>
+
+    <!-- CONTACT -->
+    <div class="page" id="page-contact">
+      <div class="admin-card">
+        <div class="card-title"><i class="fas fa-address-card"></i> Aloqa Ma'lumotlari</div>
+        <div class="f-row">
+          <div class="f-group"><label>Email</label><input id="c-email" value="zarnigor@design.uz"/></div>
+          <div class="f-group"><label>Telegram</label><input id="c-telegram" value="@zarnigor_design"/></div>
+        </div>
+        <div class="f-row">
+          <div class="f-group"><label>Telefon</label><input id="c-phone" value="+998 90 123 45 67"/></div>
+          <div class="f-group"><label>Shahar</label><input id="c-city" value="Toshkent, O'zbekiston"/></div>
+        </div>
+        <div class="f-row">
+          <div class="f-group"><label>Instagram URL</label><input id="c-ig" placeholder="https://instagram.com/..."/></div>
+          <div class="f-group"><label>Behance URL</label><input id="c-be" placeholder="https://behance.net/..."/></div>
+        </div>
+        <div class="f-row">
+          <div class="f-group"><label>Dribbble URL</label><input id="c-dr" placeholder="https://dribbble.com/..."/></div>
+          <div class="f-group"><label>LinkedIn URL</label><input id="c-li" placeholder="https://linkedin.com/..."/></div>
+        </div>
+        <button class="save-btn" onclick="saveSection('contact')">💾 Saqlash</button>
+      </div>
+    </div>
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- PORTFOLIO MODAL -->
+<div class="modal-overlay" id="port-modal">
+  <div class="modal-box">
+    <div class="modal-title">
+      <span id="modal-heading">Yangi Loyiha</span>
+      <button class="modal-close" onclick="closePortModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="f-group" style="margin-bottom:1rem">
+      <label>Loyiha Nomi</label>
+      <input id="pm-title" placeholder="Loyiha nomi..."/>
+    </div>
+    <div class="f-group" style="margin-bottom:1rem">
+      <label>Kategoriya</label>
+      <select id="pm-cat">
+        <option>Logo & Brend</option>
+        <option>Web Dizayn</option>
+        <option>SMM Visual</option>
+        <option>Poster</option>
+        <option>UI/UX</option>
+        <option>Boshqa</option>
+      </select>
+    </div>
+    <div class="f-group" style="margin-bottom:1rem">
+      <label>Tavsif</label>
+      <textarea id="pm-desc" placeholder="Loyiha haqida qisqacha..."></textarea>
+    </div>
+    <div class="f-group" style="margin-bottom:1rem">
+      <label>Emoji (Avatar sifatida)</label>
+      <input id="pm-emoji" placeholder="🎨" value="🎨"/>
+    </div>
+    <div class="f-group" style="margin-bottom:1rem">
+      <label>Fon Rangi (Gradient)</label>
+      <div class="grad-grid" id="grad-grid"></div>
+    </div>
+    <div class="f-group" style="margin-bottom:1.5rem">
+      <label>Rasm URL (ixtiyoriy)</label>
+      <input id="pm-img" placeholder="https://...jpg"/>
+    </div>
+    <button class="save-btn" style="width:100%;padding:0.85rem" onclick="savePortItem()">💾 Saqlash</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"><i class="fas fa-check-circle"></i> <span id="toast-msg">Saqlandi!</span></div>
+
+<script>
+const PASS = 'zarnigor2026';
+const USER = 'admin';
+let editingPortIndex = -1;
+let selectedGrad = 0;
+
+const gradients = [
+  'linear-gradient(135deg,#1a0030,#C026D3)',
+  'linear-gradient(135deg,#0a1628,#06B6D4)',
+  'linear-gradient(135deg,#1a1200,#F59E0B)',
+  'linear-gradient(135deg,#001a10,#10B981)',
+  'linear-gradient(135deg,#1a0018,#EC4899)',
+  'linear-gradient(135deg,#0a0a1a,#6366F1)',
+  'linear-gradient(135deg,#1a0a00,#EF4444)',
+  'linear-gradient(135deg,#0d1a0d,#84CC16)',
+  'linear-gradient(135deg,#1a1a1a,#F97316)',
+  'linear-gradient(135deg,#0a0a2a,#8B5CF6)',
+  'linear-gradient(135deg,#1a0015,#DB2777)',
+  'linear-gradient(135deg,#001020,#0EA5E9)',
+];
+
+// DEFAULT DATA
+const defaults = {
+  hero:{name:'Zarnigor Orifova',role:'Grafik & Web Dizayner',age:'21',city:"Toshkent, O'zbekiston",
+    desc:"5 yillik tajribam davomida brendlar uchun esda qoladigan vizual identitetlar, zamonaviy web sahifalar va kreativ dizayn yechimlari yaratib kelmoqdaman.",
+    badge:'Yangi loyihalarga ochiqman',emoji:'👩‍🎨',
+    s1n:'5+',s1l:'Yil tajriba',s2n:'100+',s2l:'Loyiha',s3n:'8+',s3l:'Dastur biladi'},
+  about:{text:"Men — Zarnigor Orifova, 21 yoshli grafik va web dizaynerман. 16 yoshimdan boshlab dizayn bilan shug'ullanib kelaman. Brend identiteti, UI/UX, web dizayn va ijtimoiy tarmoqlar uchun vizual kontent — mening asosiy soham.",
+    exp:'5+ Yil',emoji:'👩‍💻',
+    timeline:[
+      {icon:'fas fa-briefcase',title:'Freelance Grafik & Web Dizayner',sub:'2021 — hozir · Mustaqil faoliyat'},
+      {icon:'fas fa-palette',title:'SMM & Dizayn Mutaxassisi',sub:'2022 — 2024 · Mahalliy agentlik'},
+      {icon:'fas fa-graduation-cap',title:'Dizayn yo'nalishida ta'lim',sub:'2020 — hozir · Toshkent'}
+    ]},
+  skills:[
+    {name:'Adobe Illustrator',emoji:'🎭',pct:95},
+    {name:'Photoshop',emoji:'🖼️',pct:92},
+    {name:'Figma',emoji:'⚡',pct:90},
+    {name:'Tilda',emoji:'🌐',pct:88},
+    {name:'InDesign',emoji:'📐',pct:85},
+    {name:'Affinity',emoji:'🔷',pct:80},
+    {name:'Canva Pro',emoji:'🖌️',pct:96},
+    {name:'Brend Dizayn',emoji:'🎯',pct:93},
+  ],
+  portfolio:[
+    {title:'Violet Boutique',cat:'Logo & Brend',desc:'Kiyim brendining to'liq vizual identiteti',emoji:'💜',grad:0,img:''},
+    {title:'AquaFlow Web',cat:'Web Dizayn',desc:'Tilda platformasida web dizayn',emoji:'🌊',grad:1,img:''},
+    {title:'Golden Honey',cat:'SMM Visual',desc:'Instagram vizual paket — 30 ta post',emoji:'☀️',grad:2,img:''},
+    {title:'EcoLife Brend',cat:'Logo & Brend',desc:'Ekologik mahsulot brendining identiteti',emoji:'🌿',grad:3,img:''},
+    {title:'Blossom Beauty',cat:'Web Dizayn',desc:'Go'zallik saloni uchun landing page',emoji:'🌸',grad:4,img:''},
+    {title:'Beat Studio',cat:'Poster',desc:'Musiqa studiyasi event posterlari',emoji:'🎵',grad:5,img:''},
+  ],
+  services:[
+    {icon:'✏️',title:'Logo & Brend Dizayn',desc:'Illustrator va Photoshop orqali unikal logotip va to'liq brend paket.',price:'$150 dan boshlab'},
+    {icon:'🌐',title:'Web Dizayn (Tilda)',desc:'Tilda platformasida chiroyli, responsive landing page va web saytlar.',price:'$200 dan boshlab'},
+    {icon:'📱',title:'SMM Vizual Kontent',desc:'Instagram, Telegram uchun Canva/Photoshop bilan kreativ postlar.',price:'$100 dan boshlab'},
+    {icon:'📐',title:'Print & Poligrafiya',desc:'InDesign va Illustrator bilan katalog, flyer, banner materiallar.',price:'$80 dan boshlab'},
+  ],
+  contact:{email:'zarnigor@design.uz',telegram:'@zarnigor_design',phone:'+998 90 123 45 67',city:"Toshkent, O'zbekiston",ig:'',be:'',dr:'',li:''}
+};
+
+function getData(){
+  try{const d=localStorage.getItem('zo_data');return d?JSON.parse(d):JSON.parse(JSON.stringify(defaults));}
+  catch{return JSON.parse(JSON.stringify(defaults));}
+}
+function setData(d){localStorage.setItem('zo_data',JSON.stringify(d))}
+
+// LOGIN
+function doLogin(){
+  const u=document.getElementById('l-user').value;
+  const p=document.getElementById('l-pass').value;
+  if(u===USER&&p===PASS){
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('app').style.display='block';
+    initAll();
+  } else {
+    document.getElementById('login-err').style.display='block';
+  }
+}
+function doLogout(){
+  document.getElementById('app').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('l-pass').value='';
+}
+
+// NAVIGATION
+function showPage(id,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.sb-link').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  el.classList.add('active');
+  const titles={dashboard:'Dashboard',hero:'Hero Bo'lim',about:'Haqimda',skills:'Ko'nikmalar',portfolio:'Portfolio',services:'Xizmatlar',contact:'Aloqa'};
+  document.getElementById('page-heading').textContent=titles[id]||id;
+}
+
+// INIT ALL
+function initAll(){
+  const d=getData();
+  initHero(d.hero);
+  initAbout(d.about);
+  initSkills(d.skills);
+  renderPortfolio(d.portfolio);
+  initServices(d.services);
+  initContact(d.contact);
+  initGradGrid();
+  updateDashStats(d);
+}
+
+function updateDashStats(d){
+  document.getElementById('d-skills').textContent=d.skills.length;
+  document.getElementById('d-portfolio').textContent=d.portfolio.length;
+  document.getElementById('d-services').textContent=d.services.length;
+}
+
+// HERO
+function initHero(h){
+  document.getElementById('h-name').value=h.name||'';
+  document.getElementById('h-role').value=h.role||'';
+  document.getElementById('h-age').value=h.age||'';
+  document.getElementById('h-city').value=h.city||'';
+  document.getElementById('h-desc').value=h.desc||'';
+  document.getElementById('h-badge').value=h.badge||'';
+  document.getElementById('h-emoji').value=h.emoji||'';
+  document.getElementById('s1n').value=h.s1n||'';
+  document.getElementById('s1l').value=h.s1l||'';
+  document.getElementById('s2n').value=h.s2n||'';
+  document.getElementById('s2l').value=h.s2l||'';
+  document.getElementById('s3n').value=h.s3n||'';
+  document.getElementById('s3l').value=h.s3l||'';
+}
+
+// ABOUT
+function initAbout(a){
+  document.getElementById('a-text').value=a.text||'';
+  document.getElementById('a-exp').value=a.exp||'';
+  document.getElementById('a-emoji').value=a.emoji||'';
+  renderTimeline(a.timeline||[]);
+}
+function renderTimeline(list){
+  const c=document.getElementById('timeline-list');
+  c.innerHTML=list.map((t,i)=>`
+    <div style="display:grid;grid-template-columns:80px 1fr 1fr 40px;gap:0.7rem;align-items:center;
+      background:var(--sidebar);border:1px solid var(--border);border-radius:10px;padding:0.8rem 1rem;margin-bottom:0.6rem">
+      <input value="${t.icon}" style="background:transparent;border:none;color:var(--primary-light);font-family:monospace;font-size:0.75rem;outline:none;padding:0" onchange="updateTL(${i},'icon',this.value)"/>
+      <input value="${t.title}" style="background:transparent;border:none;color:var(--text);font-family:inherit;font-size:0.84rem;outline:none;padding:0;font-weight:600" onchange="updateTL(${i},'title',this.value)"/>
+      <input value="${t.sub}" style="background:transparent;border:none;color:var(--muted);font-family:inherit;font-size:0.8rem;outline:none;padding:0" onchange="updateTL(${i},'sub',this.value)"/>
+      <button class="del-btn" onclick="delTL(${i})" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);color:var(--red);width:34px;height:34px;border-radius:8px;cursor:pointer;font-size:0.8rem;display:flex;align-items:center;justify-content:center"><i class="fas fa-trash"></i></button>
+    </div>`).join('');
+}
+let tlData=[];
+function loadTL(){const d=getData();tlData=[...(d.about.timeline||[])];return tlData;}
+function updateTL(i,k,v){const d=getData();d.about.timeline[i][k]=v;setData(d);}
+function delTL(i){const d=getData();d.about.timeline.splice(i,1);setData(d);renderTimeline(d.about.timeline);}
+function addTimeline(){
+  const d=getData();
+  d.about.timeline.push({icon:'fas fa-star',title:'Yangi tajriba',sub:'Yil · Kompaniya'});
+  setData(d);renderTimeline(d.about.timeline);
+}
+
+// SKILLS
+function initSkills(list){
+  const c=document.getElementById('skills-list');
+  c.innerHTML=list.map((s,i)=>`
+    <div class="skill-row">
+      <div style="display:flex;align-items:center;gap:0.5rem">
+        <input value="${s.emoji}" style="width:36px;font-size:1.2rem;text-align:center" onchange="updateSkill(${i},'emoji',this.value)"/>
+        <input value="${s.name}" onchange="updateSkill(${i},'name',this.value)" placeholder="Dastur nomi"/>
+      </div>
+      <div class="range-wrap">
+        <input type="range" min="10" max="100" value="${s.pct}" oninput="this.nextElementSibling.textContent=this.value+'%';updateSkill(${i},'pct',+this.value)"/>
+        <span class="range-val">${s.pct}%</span>
+      </div>
+      <span style="font-size:0.78rem;color:${s.pct>=90?'#22C55E':s.pct>=75?'var(--accent)':'var(--primary-light)'}">
+        ${s.pct>=90?'Ekspert':s.pct>=75?'Ilg'or':'O'rta'}
+      </span>
+      <button class="del-btn" onclick="delSkill(${i})"><i class="fas fa-trash"></i></button>
+    </div>`).join('');
+}
+function updateSkill(i,k,v){const d=getData();d.skills[i][k]=v;setData(d);}
+function delSkill(i){const d=getData();d.skills.splice(i,1);setData(d);initSkills(d.skills);}
+function addSkill(){
+  const d=getData();
+  d.skills.push({name:'Yangi dastur',emoji:'🛠️',pct:70});
+  setData(d);initSkills(d.skills);
+}
+
+// PORTFOLIO
+function renderPortfolio(list){
+  const g=document.getElementById('port-grid');
+  g.innerHTML=list.map((p,i)=>`
+    <div class="port-admin-card">
+      <div class="pac-thumb" style="${p.img?'':'background:'+gradients[p.grad||0]}">
+        ${p.img?`<img src="${p.img}" style="width:100%;height:100%;object-fit:cover">`:`<span>${p.emoji||'🎨'}</span>`}
+      </div>
+      <div class="pac-body">
+        <div class="pac-title">${p.title}</div>
+        <div class="pac-cat">${p.cat}</div>
+        <div class="pac-desc">${p.desc}</div>
+        <div class="pac-actions">
+          <button class="pac-edit" onclick="editPort(${i})"><i class="fas fa-edit"></i> Tahrirlash</button>
+          <button class="pac-del" onclick="delPort(${i})"><i class="fas fa-trash"></i> O'chirish</button>
+        </div>
+      </div>
+    </div>`).join('');
+  updateDashStats(getData());
+}
+function openPortModal(){ editingPortIndex=-1;document.getElementById('modal-heading').textContent='Yangi Loyiha';document.getElementById('pm-title').value='';document.getElementById('pm-desc').value='';document.getElementById('pm-emoji').value='🎨';document.getElementById('pm-img').value='';document.getElementById('pm-cat').value='Logo & Brend';selectGrad(0);document.getElementById('port-modal').classList.add('open');}
+function closePortModal(){document.getElementById('port-modal').classList.remove('open')}
+function editPort(i){
+  const d=getData();const p=d.portfolio[i];editingPortIndex=i;
+  document.getElementById('modal-heading').textContent='Loyihani Tahrirlash';
+  document.getElementById('pm-title').value=p.title||'';
+  document.getElementById('pm-desc').value=p.desc||'';
+  document.getElementById('pm-emoji').value=p.emoji||'🎨';
+  document.getElementById('pm-img').value=p.img||'';
+  document.getElementById('pm-cat').value=p.cat||'Logo & Brend';
+  selectGrad(p.grad||0);
+  document.getElementById('port-modal').classList.add('open');
+}
+function delPort(i){if(!confirm('O'chirishni tasdiqlaysizmi?'))return;const d=getData();d.portfolio.splice(i,1);setData(d);renderPortfolio(d.portfolio);showToast('Loyiha o'chirildi!');}
+function savePortItem(){
+  const d=getData();
+  const item={
+    title:document.getElementById('pm-title').value||'Untitled',
+    cat:document.getElementById('pm-cat').value,
+    desc:document.getElementById('pm-desc').value,
+    emoji:document.getElementById('pm-emoji').value||'🎨',
+    grad:selectedGrad,
+    img:document.getElementById('pm-img').value
+  };
+  if(editingPortIndex>=0) d.portfolio[editingPortIndex]=item;
+  else d.portfolio.push(item);
+  setData(d);renderPortfolio(d.portfolio);closePortModal();showToast('Portfolio saqlandi!');
+}
+
+// SERVICES
+function initServices(list){
+  const c=document.getElementById('srv-list');
+  c.innerHTML=list.map((s,i)=>`
+    <div class="srv-row">
+      <button class="del-btn" onclick="delService(${i})" title="O'chirish"><i class="fas fa-trash"></i></button>
+      <div>
+        <div class="srv-lbl">Icon Emoji</div>
+        <input value="${s.icon}" onchange="updateSrv(${i},'icon',this.value)" style="font-size:1.4rem;width:50px"/>
+      </div>
+      <div>
+        <div class="srv-lbl">Xizmat Nomi</div>
+        <input value="${s.title}" onchange="updateSrv(${i},'title',this.value)" style="font-weight:700"/>
+      </div>
+      <div style="grid-column:1/-1">
+        <div class="srv-lbl">Tavsif</div>
+        <textarea onchange="updateSrv(${i},'desc',this.value)" style="height:50px">${s.desc}</textarea>
+      </div>
+      <div>
+        <div class="srv-lbl">Narx</div>
+        <input value="${s.price}" onchange="updateSrv(${i},'price',this.value)" class="srv-price-in" style="color:var(--accent)"/>
+      </div>
+    </div>`).join('');
+}
+function updateSrv(i,k,v){const d=getData();d.services[i][k]=v;setData(d);}
+function delService(i){const d=getData();d.services.splice(i,1);setData(d);initServices(d.services);}
+function addService(){const d=getData();d.services.push({icon:'🛠️',title:'Yangi Xizmat',desc:'Tavsif...',price:'$50 dan boshlab'});setData(d);initServices(d.services);}
+
+// CONTACT
+function initContact(c){
+  document.getElementById('c-email').value=c.email||'';
+  document.getElementById('c-telegram').value=c.telegram||'';
+  document.getElementById('c-phone').value=c.phone||'';
+  document.getElementById('c-city').value=c.city||'';
+  document.getElementById('c-ig').value=c.ig||'';
+  document.getElementById('c-be').value=c.be||'';
+  document.getElementById('c-dr').value=c.dr||'';
+  document.getElementById('c-li').value=c.li||'';
+}
+
+// SAVE SECTIONS
+function saveSection(sec){
+  const d=getData();
+  if(sec==='hero'){
+    d.hero={name:v('h-name'),role:v('h-role'),age:v('h-age'),city:v('h-city'),desc:v('h-desc'),badge:v('h-badge'),emoji:v('h-emoji'),s1n:v('s1n'),s1l:v('s1l'),s2n:v('s2n'),s2l:v('s2l'),s3n:v('s3n'),s3l:v('s3l')};
+  } else if(sec==='about'){
+    d.about.text=v('a-text');d.about.exp=v('a-exp');d.about.emoji=v('a-emoji');
+  } else if(sec==='skills'){
+    // already saved live
+  } else if(sec==='services'){
+    // already saved live
+  } else if(sec==='contact'){
+    d.contact={email:v('c-email'),telegram:v('c-telegram'),phone:v('c-phone'),city:v('c-city'),ig:v('c-ig'),be:v('c-be'),dr:v('c-dr'),li:v('c-li')};
+  }
+  setData(d);
+  showToast(sec+' bo'limi saqlandi!');
+  const btns=document.querySelectorAll('.save-btn');
+  btns.forEach(b=>{b.classList.add('success');setTimeout(()=>b.classList.remove('success'),2000)});
+}
+function saveAll(){
+  saveSection('hero');saveSection('about');saveSection('skills');saveSection('services');saveSection('contact');
+  showToast('✅ Barcha ma'lumotlar saqlandi!');
+}
+function v(id){return document.getElementById(id)?.value||'';}
+
+// GRADIENT GRID
+function initGradGrid(){
+  const g=document.getElementById('grad-grid');
+  g.innerHTML=gradients.map((gr,i)=>`<div class="grad-opt ${i===0?'selected':''}" style="background:${gr}" onclick="selectGrad(${i})" title="Rang ${i+1}"></div>`).join('');
+}
+function selectGrad(i){
+  selectedGrad=i;
+  document.querySelectorAll('.grad-opt').forEach((el,idx)=>el.classList.toggle('selected',idx===i));
+}
+
+// TOAST
+function showToast(msg='Saqlandi!'){
+  const t=document.getElementById('toast');
+  document.getElementById('toast-msg').textContent=msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2800);
+}
+</script>
+</body>
+</html>

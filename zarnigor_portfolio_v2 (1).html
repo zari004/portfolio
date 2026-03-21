@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Zarnigor Orifova — Grafik & Web Dizayner</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--primary:#C026D3;--primary-light:#E879F9;--accent:#F59E0B;--accent2:#06B6D4;--dark:#0D0D14;--dark2:#13131F;--card:#1A1A2A;--text:#E2E8F0;--muted:#94A3B8;--white:#FFFFFF}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',sans-serif;background:var(--dark);color:var(--text);overflow-x:hidden}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-thumb{background:var(--primary);border-radius:3px}
+
+nav{position:fixed;top:0;width:100%;z-index:999;background:rgba(13,13,20,0.88);backdrop-filter:blur(14px);border-bottom:1px solid rgba(192,38,211,0.15);padding:0 6%;display:flex;align-items:center;justify-content:space-between;height:68px}
+.logo{font-size:1.5rem;font-weight:900;background:linear-gradient(135deg,var(--primary-light),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.nav-links{display:flex;gap:2.2rem;list-style:none}
+.nav-links a{color:var(--muted);text-decoration:none;font-size:0.88rem;font-weight:500;transition:color 0.3s}
+.nav-links a:hover{color:var(--primary-light)}
+.nav-btn{background:linear-gradient(135deg,var(--primary),#9333EA);color:#fff;border:none;padding:0.5rem 1.5rem;border-radius:25px;font-size:0.85rem;font-weight:600;cursor:pointer;transition:all 0.3s;font-family:inherit}
+.nav-btn:hover{opacity:0.85;transform:translateY(-1px)}
+
+#hero{min-height:100vh;display:flex;align-items:center;padding:110px 6% 80px;position:relative;overflow:hidden}
+.hero-bg{position:absolute;inset:0;z-index:0;background:radial-gradient(ellipse at 65% 40%,rgba(192,38,211,0.16) 0%,transparent 55%),radial-gradient(ellipse at 15% 80%,rgba(6,182,212,0.1) 0%,transparent 50%)}
+.hero-bg::after{content:'';position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,0.04) 1px,transparent 1px);background-size:32px 32px}
+.hero-inner{display:grid;grid-template-columns:1.1fr 0.9fr;gap:4rem;align-items:center;position:relative;z-index:1;max-width:1200px;margin:0 auto;width:100%}
+.hero-badge{display:inline-flex;align-items:center;gap:0.55rem;background:rgba(192,38,211,0.12);border:1px solid rgba(192,38,211,0.3);padding:0.4rem 1.1rem;border-radius:20px;font-size:0.78rem;color:var(--primary-light);margin-bottom:1.6rem;font-weight:500}
+.hero-badge .dot{width:8px;height:8px;border-radius:50%;background:#22C55E;animation:blink 1.8s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.4}}
+h1.hero-name{font-size:clamp(2.8rem,5.5vw,4.2rem);font-weight:900;line-height:1.08;margin-bottom:0.6rem}
+h1.hero-name .hl{background:linear-gradient(135deg,var(--primary-light) 0%,var(--accent) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero-role{font-size:1.15rem;color:var(--accent2);font-weight:600;margin-bottom:0.5rem;display:flex;align-items:center;gap:0.5rem}
+.hero-role::before{content:'';width:28px;height:2px;background:var(--accent2);border-radius:2px}
+.hero-age{font-size:0.85rem;color:var(--muted);margin-bottom:1.5rem}
+.hero-desc{font-size:0.98rem;color:var(--muted);line-height:1.75;margin-bottom:2.5rem;max-width:490px}
+.hero-cta{display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:3rem}
+.btn-primary{background:linear-gradient(135deg,var(--primary),#9333EA);color:#fff;padding:0.9rem 2rem;border-radius:30px;text-decoration:none;font-weight:600;font-size:0.92rem;transition:all 0.3s;border:none;cursor:pointer;box-shadow:0 4px 25px rgba(192,38,211,0.4);font-family:inherit}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 35px rgba(192,38,211,0.5)}
+.btn-outline{background:transparent;color:var(--text);border:1px solid rgba(255,255,255,0.18);padding:0.9rem 2rem;border-radius:30px;text-decoration:none;font-weight:600;font-size:0.92rem;transition:all 0.3s}
+.btn-outline:hover{border-color:var(--primary-light);color:var(--primary-light);transform:translateY(-2px)}
+.hero-stats{display:flex;gap:2.5rem;padding-top:2rem;border-top:1px solid rgba(255,255,255,0.07)}
+.stat-num{font-size:1.9rem;font-weight:900;color:var(--white)}
+.stat-label{font-size:0.78rem;color:var(--muted);margin-top:1px}
+.hero-visual{display:flex;justify-content:center;align-items:center;position:relative}
+.avatar-ring{width:320px;height:320px;border-radius:38% 62% 55% 45%/45% 55% 45% 55%;background:linear-gradient(135deg,var(--primary),#9333EA,var(--accent));display:flex;align-items:center;justify-content:center;font-size:7rem;position:relative;animation:morph 9s ease-in-out infinite;box-shadow:0 0 90px rgba(192,38,211,0.28)}
+@keyframes morph{0%,100%{border-radius:38% 62% 55% 45%/45% 55% 45% 55%}33%{border-radius:60% 40% 38% 62%/55% 48% 52% 45%}66%{border-radius:45% 55% 65% 35%/35% 65% 40% 60%}}
+.tag-float{position:absolute;background:var(--card);border:1px solid rgba(192,38,211,0.3);border-radius:12px;padding:0.55rem 1rem;font-size:0.76rem;color:var(--text);font-weight:500;display:flex;align-items:center;gap:0.4rem;box-shadow:0 4px 20px rgba(0,0,0,0.35)}
+.tag-float.t1{top:16px;right:-5px;animation:floatY 3.5s ease-in-out infinite}
+.tag-float.t2{bottom:28px;left:-15px;animation:floatY 3.5s ease-in-out infinite 1.75s}
+@keyframes floatY{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+
+section{padding:100px 6%}
+.sl{display:inline-block;background:rgba(192,38,211,0.1);border:1px solid rgba(192,38,211,0.22);color:var(--primary-light);padding:0.3rem 1rem;border-radius:20px;font-size:0.75rem;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;margin-bottom:1rem}
+.st{font-size:clamp(1.8rem,3.5vw,2.6rem);font-weight:800;line-height:1.2;margin-bottom:0.9rem}
+.st span{background:linear-gradient(135deg,var(--primary-light),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.ss{color:var(--muted);font-size:0.97rem;line-height:1.72;max-width:520px}
+.center{text-align:center}.center .ss{margin:0 auto 3rem}
+
+#about{background:var(--dark2)}
+.about-grid{display:grid;grid-template-columns:1fr 1.1fr;gap:5rem;align-items:center;max-width:1160px;margin:0 auto}
+.about-photo{width:100%;aspect-ratio:3/4;border-radius:24px;background:linear-gradient(145deg,rgba(192,38,211,0.25),rgba(6,182,212,0.15),rgba(245,158,11,0.1));display:flex;align-items:center;justify-content:center;font-size:8rem;border:1px solid rgba(192,38,211,0.2);position:relative}
+.age-badge{position:absolute;bottom:-16px;right:24px;background:linear-gradient(135deg,var(--primary),#9333EA);border-radius:14px;padding:0.9rem 1.4rem;text-align:center;box-shadow:0 8px 30px rgba(192,38,211,0.35)}
+.age-badge .num{font-size:2rem;font-weight:900;color:#fff;line-height:1}
+.age-badge .lbl{font-size:0.72rem;color:rgba(255,255,255,0.75);margin-top:2px}
+.tl-item{display:flex;gap:1rem;margin-bottom:1.4rem}
+.tl-dot{width:40px;height:40px;border-radius:10px;flex-shrink:0;background:rgba(192,38,211,0.12);border:1px solid rgba(192,38,211,0.25);display:flex;align-items:center;justify-content:center;color:var(--primary-light)}
+.tl-title{font-weight:650;font-size:0.94rem}
+.tl-sub{font-size:0.8rem;color:var(--muted);margin-top:3px}
+
+#tools{background:var(--dark);padding:60px 6%}
+.tools-outer{max-width:1160px;margin:0 auto;text-align:center}
+.tools-title{font-size:0.85rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:2rem}
+.tools-row{display:flex;flex-wrap:wrap;gap:1rem;justify-content:center}
+.tool-pill{display:flex;align-items:center;gap:0.5rem;background:var(--card);border:1px solid rgba(255,255,255,0.07);border-radius:30px;padding:0.5rem 1.2rem;font-size:0.84rem;font-weight:500;transition:all 0.3s}
+.tool-pill:hover{border-color:rgba(192,38,211,0.4);color:var(--primary-light);transform:translateY(-2px)}
+
+#skills{background:var(--dark)}
+.skills-outer{max-width:1160px;margin:0 auto}
+.skills-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:1.2rem}
+.skill-card{background:var(--card);border-radius:18px;padding:1.6rem;text-align:center;border:1px solid rgba(255,255,255,0.06);transition:all 0.35s}
+.skill-card:hover{border-color:rgba(192,38,211,0.4);transform:translateY(-5px);box-shadow:0 12px 35px rgba(192,38,211,0.12)}
+.sk-icon{font-size:2.4rem;margin-bottom:0.8rem}
+.sk-name{font-weight:700;font-size:0.9rem;margin-bottom:0.7rem}
+.sk-bar-bg{background:rgba(255,255,255,0.07);border-radius:10px;height:5px;overflow:hidden}
+.sk-bar{height:100%;border-radius:10px;background:linear-gradient(90deg,var(--primary),var(--primary-light))}
+.sk-pct{font-size:0.72rem;color:var(--muted);margin-top:5px}
+
+#portfolio{background:var(--dark2)}
+.port-outer{max-width:1160px;margin:0 auto}
+.filter-row{display:flex;flex-wrap:wrap;gap:0.6rem;margin-bottom:2.5rem}
+.f-btn{padding:0.42rem 1.15rem;border-radius:20px;font-size:0.82rem;border:1px solid rgba(255,255,255,0.12);background:transparent;color:var(--muted);cursor:pointer;transition:all 0.3s;font-family:inherit;font-weight:500}
+.f-btn.active,.f-btn:hover{background:var(--primary);border-color:var(--primary);color:#fff}
+.port-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.4rem}
+.p-card{border-radius:18px;overflow:hidden;position:relative;aspect-ratio:4/3;cursor:pointer;border:1px solid rgba(255,255,255,0.06);transition:transform 0.3s}
+.p-card:hover{transform:scale(1.025)}.p-card:hover .p-over{opacity:1}
+.p-thumb{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:3.5rem}
+.p-over{position:absolute;inset:0;opacity:0;background:rgba(192,38,211,0.88);display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 0.3s;padding:1.5rem;text-align:center}
+.p-over h4{font-size:1rem;font-weight:700;color:#fff;margin-bottom:0.3rem}
+.p-over p{font-size:0.8rem;color:rgba(255,255,255,0.8)}
+.p-over .p-cat{margin-top:0.8rem;font-size:0.72rem;font-weight:600;background:rgba(255,255,255,0.18);padding:0.3rem 0.8rem;border-radius:12px;color:#fff}
+
+#services{background:var(--dark)}
+.srv-outer{max-width:1160px;margin:0 auto}
+.srv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:1.5rem}
+.srv-card{background:var(--card);border-radius:22px;padding:2rem;border:1px solid rgba(255,255,255,0.06);transition:all 0.3s;position:relative;overflow:hidden}
+.srv-card::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--primary),var(--accent));transform:scaleX(0);transform-origin:left;transition:transform 0.3s}
+.srv-card:hover::after{transform:scaleX(1)}.srv-card:hover{transform:translateY(-6px);border-color:rgba(192,38,211,0.22)}
+.srv-ic{width:54px;height:54px;border-radius:14px;margin-bottom:1.2rem;background:rgba(192,38,211,0.12);border:1px solid rgba(192,38,211,0.2);display:flex;align-items:center;justify-content:center;font-size:1.5rem}
+.srv-card h3{font-size:1rem;font-weight:700;margin-bottom:0.6rem}
+.srv-card p{font-size:0.86rem;color:var(--muted);line-height:1.65}
+.srv-price{margin-top:1.3rem;font-size:0.88rem;color:var(--primary-light);font-weight:600}
+
+#contact{background:var(--dark2)}
+.contact-outer{max-width:960px;margin:0 auto;display:grid;grid-template-columns:1fr 1.2fr;gap:4.5rem;align-items:start}
+.c-info-item{display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem}
+.c-icon{width:44px;height:44px;border-radius:11px;flex-shrink:0;background:rgba(192,38,211,0.12);border:1px solid rgba(192,38,211,0.22);display:flex;align-items:center;justify-content:center;color:var(--primary-light)}
+.c-info-item strong{display:block;font-size:0.78rem;color:var(--muted)}
+.c-info-item span{font-size:0.92rem;font-weight:500}
+.soc-row{display:flex;gap:0.8rem;margin-top:2rem}
+.soc-btn{width:42px;height:42px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);display:flex;align-items:center;justify-content:center;color:var(--muted);text-decoration:none;transition:all 0.3s}
+.soc-btn:hover{background:var(--primary);border-color:var(--primary);color:#fff}
+.cf{display:flex;flex-direction:column;gap:1rem}
+.cf label{font-size:0.8rem;color:var(--muted);display:block;margin-bottom:5px;font-weight:500}
+.cf input,.cf textarea,.cf select{width:100%;background:var(--card);border:1px solid rgba(255,255,255,0.09);color:var(--text);padding:0.82rem 1rem;border-radius:10px;font-family:inherit;font-size:0.88rem;outline:none;transition:border-color 0.3s}
+.cf input:focus,.cf textarea:focus{border-color:var(--primary)}
+.cf select option{background:var(--card)}
+.cf textarea{resize:vertical;min-height:110px}
+.cf-btn{width:100%;background:linear-gradient(135deg,var(--primary),#9333EA);color:#fff;border:none;padding:1rem;border-radius:10px;font-size:0.93rem;font-weight:600;cursor:pointer;transition:all 0.3s;font-family:inherit}
+.cf-btn:hover{opacity:0.9;transform:translateY(-1px)}
+footer{background:var(--dark2);border-top:1px solid rgba(255,255,255,0.05);padding:2.5rem 6%;text-align:center}
+footer p{color:var(--muted);font-size:0.84rem}
+footer span{color:var(--primary-light);font-weight:600}
+.admin-fab{position:fixed;bottom:2rem;right:2rem;z-index:999;background:linear-gradient(135deg,var(--primary),#9333EA);color:#fff;width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;text-decoration:none;font-size:1.1rem;box-shadow:0 4px 20px rgba(192,38,211,0.4);transition:all 0.3s;border:none}
+.admin-fab:hover{transform:scale(1.1);box-shadow:0 8px 30px rgba(192,38,211,0.5)}
+@media(max-width:900px){.hero-inner,.about-grid,.contact-outer{grid-template-columns:1fr;gap:2.5rem}.hero-visual{order:-1}.avatar-ring{width:220px;height:220px}.port-grid{grid-template-columns:repeat(2,1fr)}.tag-float.t2{display:none}}
+@media(max-width:580px){.port-grid{grid-template-columns:1fr}.hero-stats{flex-wrap:wrap;gap:1.5rem}.nav-links{display:none}}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo" id="nav-logo">ZO.</div>
+  <ul class="nav-links">
+    <li><a href="#about">Haqimda</a></li>
+    <li><a href="#skills">Ko'nikmalar</a></li>
+    <li><a href="#portfolio">Portfolio</a></li>
+    <li><a href="#services">Xizmatlar</a></li>
+    <li><a href="#contact">Aloqa</a></li>
+  </ul>
+  <button class="nav-btn" onclick="document.getElementById('contact').scrollIntoView({behavior:'smooth'})">Bog'lanish</button>
+</nav>
+
+<section id="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-inner">
+    <div>
+      <div class="hero-badge"><span class="dot"></span><span id="h-badge">Yangi loyihalarga ochiqman</span></div>
+      <h1 class="hero-name">Salom, men<br><span class="hl" id="h-name">Zarnigor Orifova</span></h1>
+      <p class="hero-role" id="h-role">Grafik & Web Dizayner</p>
+      <p class="hero-age"><span id="h-age">21</span> yoshli kreativ dizayner · <span id="h-city">Toshkent, O'zbekiston</span> 🇺🇿</p>
+      <p class="hero-desc" id="h-desc">5 yillik tajribam davomida brendlar uchun esda qoladigan vizual identitetlar yaratib kelmoqdaman.</p>
+      <div class="hero-cta">
+        <a href="#portfolio" class="btn-primary">🎨 Portfolio ko'rish</a>
+        <a href="#contact" class="btn-outline">💬 Muloqotga chiqish</a>
+      </div>
+      <div class="hero-stats">
+        <div><div class="stat-num" id="s1n">5+</div><div class="stat-label" id="s1l">Yil tajriba</div></div>
+        <div><div class="stat-num" id="s2n">100+</div><div class="stat-label" id="s2l">Loyiha</div></div>
+        <div><div class="stat-num" id="s3n">8+</div><div class="stat-label" id="s3l">Dastur biladi</div></div>
+        <div><div class="stat-num" id="h-age2">21</div><div class="stat-label">Yosh</div></div>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="avatar-ring" id="hero-avatar">👩‍🎨
+        <div class="tag-float t1">✨ Web Design</div>
+        <div class="tag-float t2">🏆 5 yil tajriba</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="about">
+  <div class="about-grid">
+    <div style="position:relative">
+      <div class="about-photo" id="about-photo">👩‍💻
+        <div class="age-badge"><div class="num" id="a-age">21</div><div class="lbl">Yosh</div></div>
+      </div>
+    </div>
+    <div>
+      <div class="sl">Haqimda</div>
+      <h2 class="st">Dizayn orqali <span>g'oyalarni</span> hayotga olib chiqaman</h2>
+      <p class="ss" id="a-text">Men — Zarnigor Orifova, 21 yoshli grafik va web dizaynerман.</p>
+      <div id="timeline-wrap" style="margin-top:2rem"></div>
+      <a href="#contact" class="btn-primary" style="margin-top:2.2rem;display:inline-block;text-decoration:none">📄 CV so'rash</a>
+    </div>
+  </div>
+</section>
+
+<div id="tools">
+  <div class="tools-outer">
+    <p class="tools-title">Ishlatadigan dasturlar</p>
+    <div class="tools-row" id="tools-row">
+      <div class="tool-pill">🎨 Adobe Photoshop</div>
+      <div class="tool-pill">✏️ Adobe Illustrator</div>
+      <div class="tool-pill">⚡ Figma</div>
+      <div class="tool-pill">🌐 Tilda</div>
+      <div class="tool-pill">🖌️ Canva</div>
+      <div class="tool-pill">📐 Adobe InDesign</div>
+      <div class="tool-pill">🔷 Affinity Designer</div>
+      <div class="tool-pill">🎬 After Effects</div>
+    </div>
+  </div>
+</div>
+
+<section id="skills">
+  <div class="skills-outer">
+    <div class="center" style="margin-bottom:3rem">
+      <div class="sl">Ko'nikmalar</div>
+      <h2 class="st">Menning <span>kuchli tomonlarim</span></h2>
+    </div>
+    <div class="skills-grid" id="skills-grid"></div>
+  </div>
+</section>
+
+<section id="portfolio">
+  <div class="port-outer">
+    <div class="center" style="margin-bottom:1rem">
+      <div class="sl">Portfolio</div>
+      <h2 class="st">Tanlangan <span>ishlarim</span></h2>
+      <p class="ss">Eng yaxshi loyihalarimdan namunalar.</p>
+    </div>
+    <div class="filter-row" id="filter-row">
+      <button class="f-btn active" data-cat="all">Hammasi</button>
+    </div>
+    <div class="port-grid" id="port-grid"></div>
+  </div>
+</section>
+
+<section id="services">
+  <div class="srv-outer">
+    <div class="center" style="margin-bottom:1rem">
+      <div class="sl">Xizmatlar</div>
+      <h2 class="st">Men nima <span>qila olaman</span></h2>
+      <p class="ss" style="margin:0 auto 3rem">Har bir biznes uchun professional dizayn yechimlari.</p>
+    </div>
+    <div class="srv-grid" id="srv-grid"></div>
+  </div>
+</section>
+
+<section id="contact">
+  <div class="contact-outer">
+    <div>
+      <div class="sl">Aloqa</div>
+      <h2 class="st">Birgalikda <span>yarataylik!</span></h2>
+      <p style="color:var(--muted);line-height:1.72;margin-bottom:2rem;font-size:0.95rem">Yangi loyiha, hamkorlik yoki savol bormi? Murojaat qoldiring — 24 soat ichida javob beraman.</p>
+      <div class="c-info-item"><div class="c-icon"><i class="fas fa-envelope"></i></div><div><strong>Email</strong><span id="c-email">zarnigor@design.uz</span></div></div>
+      <div class="c-info-item"><div class="c-icon"><i class="fab fa-telegram"></i></div><div><strong>Telegram</strong><span id="c-telegram">@zarnigor_design</span></div></div>
+      <div class="c-info-item"><div class="c-icon"><i class="fas fa-phone"></i></div><div><strong>Telefon</strong><span id="c-phone">+998 90 123 45 67</span></div></div>
+      <div class="soc-row" id="soc-row">
+        <a href="#" class="soc-btn" id="soc-ig"><i class="fab fa-instagram"></i></a>
+        <a href="#" class="soc-btn" id="soc-be"><i class="fab fa-behance"></i></a>
+        <a href="#" class="soc-btn" id="soc-dr"><i class="fab fa-dribbble"></i></a>
+        <a href="#" class="soc-btn" id="soc-li"><i class="fab fa-linkedin"></i></a>
+      </div>
+    </div>
+    <form class="cf" onsubmit="handleSubmit(event)">
+      <div><label>Ismingiz</label><input type="text" placeholder="Ism Familiya" required/></div>
+      <div><label>Telegram yoki Email</label><input type="text" placeholder="@username yoki email" required/></div>
+      <div><label>Xizmat turi</label>
+        <select>
+          <option>Logo & Brend Dizayn</option>
+          <option>Web Dizayn (Tilda)</option>
+          <option>SMM Vizual Kontent</option>
+          <option>Print & Poligrafiya</option>
+          <option>Boshqa</option>
+        </select>
+      </div>
+      <div><label>Xabaringiz</label><textarea placeholder="Loyihangiz haqida..."></textarea></div>
+      <button type="submit" class="cf-btn">✉️ Xabar yuborish</button>
+    </form>
+  </div>
+</section>
+
+<footer>
+  <p>© 2026 <span id="footer-name">Zarnigor Orifova</span> · Grafik & Web Dizayner · Toshkent 🇺🇿</p>
+  <p style="margin-top:6px;font-size:0.78rem">Dizayn bilan qilingan ❤️</p>
+</footer>
+
+<a href="admin.html" class="admin-fab" title="Admin Panel"><i class="fas fa-cog"></i></a>
+
+<script>
+const gradients=[
+  'linear-gradient(135deg,#1a0030,#C026D3)',
+  'linear-gradient(135deg,#0a1628,#06B6D4)',
+  'linear-gradient(135deg,#1a1200,#F59E0B)',
+  'linear-gradient(135deg,#001a10,#10B981)',
+  'linear-gradient(135deg,#1a0018,#EC4899)',
+  'linear-gradient(135deg,#0a0a1a,#6366F1)',
+  'linear-gradient(135deg,#1a0a00,#EF4444)',
+  'linear-gradient(135deg,#0d1a0d,#84CC16)',
+  'linear-gradient(135deg,#1a1a1a,#F97316)',
+  'linear-gradient(135deg,#0a0a2a,#8B5CF6)',
+  'linear-gradient(135deg,#1a0015,#DB2777)',
+  'linear-gradient(135deg,#001020,#0EA5E9)',
+];
+
+function getData(){
+  try{const d=localStorage.getItem('zo_data');return d?JSON.parse(d):null;}
+  catch{return null;}
+}
+
+function setT(id,val){const el=document.getElementById(id);if(el&&val)el.textContent=val;}
+
+function init(){
+  const d=getData();if(!d)return;
+  const h=d.hero||{};
+  setT('h-name',h.name);setT('h-role',h.role);setT('h-badge',h.badge);
+  setT('h-age',h.age);setT('h-age2',h.age);setT('a-age',h.age);
+  setT('h-city',h.city);setT('h-desc',h.desc);
+  setT('s1n',h.s1n);setT('s1l',h.s1l);setT('s2n',h.s2n);setT('s2l',h.s2l);setT('s3n',h.s3n);setT('s3l',h.s3l);
+  const ae=document.getElementById('hero-avatar');if(ae&&h.emoji)ae.childNodes[0].textContent=h.emoji;
+  document.getElementById('nav-logo').textContent=(h.name||'ZO').split(' ').map(w=>w[0]).join('').slice(0,3)+'.';
+
+  const a=d.about||{};
+  setT('a-text',a.text);
+  if(a.exp){document.querySelector('.age-badge .lbl').textContent='Yil tajriba';}
+  const ap=document.getElementById('about-photo');if(ap&&a.emoji){ap.childNodes[0].textContent=a.emoji}
+  if(a.timeline&&a.timeline.length){
+    document.getElementById('timeline-wrap').innerHTML=a.timeline.map(t=>`
+      <div class="tl-item">
+        <div class="tl-dot"><i class="${t.icon}"></i></div>
+        <div><div class="tl-title">${t.title}</div><div class="tl-sub">${t.sub}</div></div>
+      </div>`).join('');
+  }
+
+  if(d.skills&&d.skills.length){
+    document.getElementById('skills-grid').innerHTML=d.skills.map(s=>`
+      <div class="skill-card">
+        <div class="sk-icon">${s.emoji}</div>
+        <div class="sk-name">${s.name}</div>
+        <div class="sk-bar-bg"><div class="sk-bar" style="width:${s.pct}%"></div></div>
+        <div class="sk-pct">${s.pct}% — ${s.pct>=90?'Ekspert':s.pct>=75?"Ilg'or":"O'rta"}</div>
+      </div>`).join('');
+  }
+
+  if(d.portfolio&&d.portfolio.length){
+    const cats=['Hammasi',...new Set(d.portfolio.map(p=>p.cat))];
+    document.getElementById('filter-row').innerHTML=cats.map((c,i)=>`
+      <button class="f-btn ${i===0?'active':''}" data-cat="${c==='Hammasi'?'all':c}" onclick="filterPort(this)">${c}</button>`).join('');
+    renderPort(d.portfolio);
+  }
+
+  if(d.services&&d.services.length){
+    document.getElementById('srv-grid').innerHTML=d.services.map(s=>`
+      <div class="srv-card">
+        <div class="srv-ic">${s.icon}</div>
+        <h3>${s.title}</h3>
+        <p>${s.desc}</p>
+        <div class="srv-price">💰 ${s.price}</div>
+      </div>`).join('');
+  }
+
+  const c=d.contact||{};
+  setT('c-email',c.email);setT('c-telegram',c.telegram);setT('c-phone',c.phone);
+  setT('footer-name',h.name||'Zarnigor Orifova');
+  if(c.ig)document.getElementById('soc-ig').href=c.ig;
+  if(c.be)document.getElementById('soc-be').href=c.be;
+  if(c.dr)document.getElementById('soc-dr').href=c.dr;
+  if(c.li)document.getElementById('soc-li').href=c.li;
+}
+
+function renderPort(list){
+  document.getElementById('port-grid').innerHTML=list.map(p=>`
+    <div class="p-card" data-cat="${p.cat}">
+      <div class="p-thumb" style="${p.img?'':'background:'+gradients[p.grad||0]}">
+        ${p.img?`<img src="${p.img}" style="width:100%;height:100%;object-fit:cover">`:`<span>${p.emoji||'🎨'}</span>`}
+      </div>
+      <div class="p-over"><h4>${p.title}</h4><p>${p.desc}</p><span class="p-cat">${p.cat}</span></div>
+    </div>`).join('');
+}
+
+function filterPort(btn){
+  document.querySelectorAll('.f-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const cat=btn.dataset.cat;
+  const d=getData();
+  const list=cat==='all'?d.portfolio:d.portfolio.filter(p=>p.cat===cat);
+  renderPort(list);
+}
+
+const io=new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{if(e.isIntersecting){e.target.style.opacity='1';e.target.style.transform='translateY(0)'}});
+},{threshold:0.08});
+function animateCards(){
+  document.querySelectorAll('.skill-card,.srv-card,.p-card,.tool-pill').forEach(el=>{
+    el.style.opacity='0';el.style.transform='translateY(28px)';
+    el.style.transition='opacity 0.55s ease,transform 0.55s ease';
+    io.observe(el);
+  });
+}
+
+function handleSubmit(e){
+  e.preventDefault();
+  const btn=e.target.querySelector('.cf-btn');
+  btn.textContent='✅ Xabar yuborildi!';
+  btn.style.background='linear-gradient(135deg,#10B981,#059669)';
+  setTimeout(()=>{btn.textContent='✉️ Xabar yuborish';btn.style.background='';e.target.reset();},3000);
+}
+
+window.addEventListener('load',()=>{init();setTimeout(animateCards,100)});
+</script>
+</body>
+</html>
