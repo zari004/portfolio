@@ -1340,17 +1340,17 @@ function toggleCompVisible() {
 function renderCompaniesList() {
   const el = document.getElementById('companiesList');
   if (!data.companies.items.length) { el.innerHTML = '<div class="empty-state"><i class="fas fa-building"></i><p>Kompaniyalar yo\'q</p></div>'; return; }
-  el.innerHTML = data.companies.items.map(c =>
-    '<div class="list-item">'
-    + (c.logo
-      ? '<img class="item-img" src="' + sanitize(c.logo) + '" alt="' + sanitize(c.name) + '" style="object-fit:contain;padding:4px">'
-      : '<div class="item-img" style="display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:800;color:var(--accent);background:rgba(181,245,66,0.08);border:1px solid rgba(181,245,66,0.15);text-transform:uppercase;text-align:center;padding:2px">' + sanitize(c.name.substring(0,3)) + '</div>')
-    + '<div class="item-info"><div class="item-title">' + sanitize(c.name) + '</div><div class="item-sub">' + (c.logo ? '<i class="fas fa-image" style="color:var(--accent);margin-right:3px"></i>Logo bor' : '<i class="fas fa-font" style="margin-right:3px"></i>Faqat matn') + '</div></div>'
-    + '<div class="item-actions">'
-    + '<button class="btn-icon" onclick="editCompany(' + c.id + ')" title="Tahrirlash"><i class="fas fa-edit"></i></button>'
-    + '<button class="btn-icon" onclick="deleteCompany(' + c.id + ')" title="O\'chirish" style="color:var(--red)"><i class="fas fa-trash"></i></button>'
-    + '</div></div>'
-  ).join('');
+  el.innerHTML = data.companies.items.map(c => {
+    const thumb = c.logo
+      ? '<img src="' + sanitize(c.logo) + '" alt="" style="width:48px;height:48px;border-radius:8px;object-fit:contain;padding:4px;background:#2a2a2a;flex-shrink:0">'
+      : '<div style="width:48px;height:48px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:800;color:#b5f542;background:rgba(181,245,66,0.08);border:1px solid rgba(181,245,66,0.15);text-transform:uppercase;text-align:center;flex-shrink:0">' + sanitize(c.name.substring(0,3)) + '</div>';
+    const info = '<div style="flex:1;min-width:0;overflow:hidden"><div style="font-size:0.88rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + sanitize(c.name) + '</div><div style="font-size:0.75rem;color:#999;margin-top:2px">' + (c.logo ? '<i class="fas fa-image" style="color:#b5f542;margin-right:3px"></i>Logo bor' : '<i class="fas fa-font" style="margin-right:3px"></i>Faqat matn') + '</div></div>';
+    const actions = '<div style="display:flex;gap:6px;flex-shrink:0;margin-left:auto">'
+      + '<button onclick="editCompany(' + c.id + ')" style="width:34px;height:34px;padding:0;display:flex;align-items:center;justify-content:center;border-radius:8px;border:1px solid #2a2a2a;background:#1a1a1a;color:#999;cursor:pointer;font-size:0.8rem" title="Tahrirlash"><i class="fas fa-edit"></i></button>'
+      + '<button onclick="deleteCompany(' + c.id + ')" style="width:34px;height:34px;padding:0;display:flex;align-items:center;justify-content:center;border-radius:8px;border:1px solid rgba(245,66,66,0.3);background:rgba(245,66,66,0.08);color:#f54242;cursor:pointer;font-size:0.8rem" title="O\'chirish"><i class="fas fa-trash"></i></button>'
+      + '</div>';
+    return '<div style="display:flex;align-items:center;gap:14px;padding:14px 16px;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:10px;margin-bottom:8px">' + thumb + info + actions + '</div>';
+  }).join('');
 }
 
 function openAddCompany() {
@@ -1425,16 +1425,20 @@ let dragItem = null;
 function renderPortfolioList() {
   const el = document.getElementById('portfolioList');
   if (!data.portfolio.length) { el.innerHTML = '<div class="empty-state"><i class="fas fa-briefcase"></i><p>Loyihalar yo\'q</p></div>'; return; }
-  el.innerHTML = data.portfolio.map((p, idx) =>
-    '<div class="list-item" draggable="true" data-idx="' + idx + '" ondragstart="dragStart(event,' + idx + ')" ondragover="dragOver(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)" ondrop="dragDrop(event,' + idx + ')" ondragend="dragEnd(event)">'
-    + '<span class="drag-handle"><i class="fas fa-grip-vertical"></i></span>'
-    + (p.img ? '<img class="item-img" src="' + sanitize(p.img) + '" alt="">' : '<div class="item-img" style="background:linear-gradient(135deg,' + sanitize(p.color1) + ',' + sanitize(p.color2) + ')"></div>')
-    + '<div class="item-info"><div class="item-title">' + sanitize(p.title) + '</div><div class="item-sub">' + sanitize(p.tag) + ' — ' + sanitize(p.desc) + '</div></div>'
-    + '<div class="item-actions">'
-    + '<button class="btn-icon" onclick="editPortfolio(' + p.id + ')" title="Tahrirlash"><i class="fas fa-edit" style="font-size:0.75rem"></i></button>'
-    + '<button class="btn-icon" onclick="deletePortfolio(' + p.id + ')" title="O\'chirish"><i class="fas fa-trash" style="color:var(--red);font-size:0.75rem"></i></button>'
-    + '</div></div>'
-  ).join('');
+  el.innerHTML = data.portfolio.map((p, idx) => {
+    const thumb = p.img
+      ? '<img src="' + sanitize(p.img) + '" alt="" style="width:48px;height:48px;border-radius:8px;object-fit:cover;background:#2a2a2a;flex-shrink:0">'
+      : '<div style="width:48px;height:48px;border-radius:8px;background:linear-gradient(135deg,' + sanitize(p.color1) + ',' + sanitize(p.color2) + ');flex-shrink:0"></div>';
+    const actions = '<div style="display:flex;gap:6px;flex-shrink:0;margin-left:auto">'
+      + '<button onclick="editPortfolio(' + p.id + ')" style="width:34px;height:34px;padding:0;display:flex;align-items:center;justify-content:center;border-radius:8px;border:1px solid #2a2a2a;background:#1a1a1a;color:#999;cursor:pointer;font-size:0.75rem" title="Tahrirlash"><i class="fas fa-edit"></i></button>'
+      + '<button onclick="deletePortfolio(' + p.id + ')" style="width:34px;height:34px;padding:0;display:flex;align-items:center;justify-content:center;border-radius:8px;border:1px solid rgba(245,66,66,0.3);background:rgba(245,66,66,0.08);color:#f54242;cursor:pointer;font-size:0.75rem" title="O\'chirish"><i class="fas fa-trash"></i></button>'
+      + '</div>';
+    return '<div class="list-item" draggable="true" data-idx="' + idx + '" ondragstart="dragStart(event,' + idx + ')" ondragover="dragOver(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)" ondrop="dragDrop(event,' + idx + ')" ondragend="dragEnd(event)" style="display:flex;align-items:center;gap:14px;padding:14px 16px;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:10px;margin-bottom:8px">'
+      + '<span class="drag-handle" style="color:#666;cursor:grab;font-size:0.9rem;padding:4px;flex-shrink:0"><i class="fas fa-grip-vertical"></i></span>'
+      + thumb
+      + '<div style="flex:1;min-width:0;overflow:hidden"><div style="font-size:0.88rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + sanitize(p.title) + '</div><div style="font-size:0.75rem;color:#999;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + sanitize(p.tag) + ' — ' + sanitize(p.desc) + '</div></div>'
+      + actions + '</div>';
+  }).join('');
 }
 
 function dragStart(e, idx) {
@@ -1541,15 +1545,17 @@ function deletePortfolio(id) {
 function renderServicesList() {
   const el = document.getElementById('servicesList');
   if (!data.services.length) { el.innerHTML = '<div class="empty-state"><i class="fas fa-concierge-bell"></i><p>Xizmatlar yo\'q</p></div>'; return; }
-  el.innerHTML = data.services.map(s =>
-    '<div class="list-item">'
-    + '<div style="width:40px;height:40px;background:var(--panel);border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center"><i class="' + sanitize(s.icon) + '" style="color:var(--accent)"></i></div>'
-    + '<div class="item-info"><div class="item-title">' + sanitize(s.title) + '</div><div class="item-sub">' + sanitize(s.desc) + '</div></div>'
-    + '<div class="item-actions">'
-    + '<button class="btn-icon" onclick="editService(' + s.id + ')" title="Tahrirlash"><i class="fas fa-edit" style="font-size:0.75rem"></i></button>'
-    + '<button class="btn-icon" onclick="deleteService(' + s.id + ')" title="O\'chirish"><i class="fas fa-trash" style="color:var(--red);font-size:0.75rem"></i></button>'
-    + '</div></div>'
-  ).join('');
+  el.innerHTML = data.services.map(s => {
+    const icon = '<div style="width:40px;height:40px;background:#141414;border:1px solid #2a2a2a;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="' + sanitize(s.icon) + '" style="color:#b5f542"></i></div>';
+    const actions = '<div style="display:flex;gap:6px;flex-shrink:0;margin-left:auto">'
+      + '<button onclick="editService(' + s.id + ')" style="width:34px;height:34px;padding:0;display:flex;align-items:center;justify-content:center;border-radius:8px;border:1px solid #2a2a2a;background:#1a1a1a;color:#999;cursor:pointer;font-size:0.75rem" title="Tahrirlash"><i class="fas fa-edit"></i></button>'
+      + '<button onclick="deleteService(' + s.id + ')" style="width:34px;height:34px;padding:0;display:flex;align-items:center;justify-content:center;border-radius:8px;border:1px solid rgba(245,66,66,0.3);background:rgba(245,66,66,0.08);color:#f54242;cursor:pointer;font-size:0.75rem" title="O\'chirish"><i class="fas fa-trash"></i></button>'
+      + '</div>';
+    return '<div style="display:flex;align-items:center;gap:14px;padding:14px 16px;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:10px;margin-bottom:8px">'
+      + icon
+      + '<div style="flex:1;min-width:0;overflow:hidden"><div style="font-size:0.88rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + sanitize(s.title) + '</div><div style="font-size:0.75rem;color:#999;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + sanitize(s.desc) + '</div></div>'
+      + actions + '</div>';
+  }).join('');
 }
 
 function openAddService() {
