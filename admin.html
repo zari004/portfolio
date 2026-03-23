@@ -432,6 +432,46 @@
       object-fit: contain;
     }
 
+    /* ===== ADMIN MOBILE RESPONSIVE ===== */
+    @media (max-width: 900px) {
+      .sidebar {
+        width: 100%; min-height: auto;
+        position: fixed; top: 0; left: 0; right: 0; bottom: auto;
+        flex-direction: row; align-items: center;
+        padding: 0 16px; height: 60px;
+        z-index: 200; overflow: hidden;
+      }
+      .sidebar-logo { padding: 0; border: none; flex: 1; }
+      .sidebar-logo p { display: none; }
+      .nav-section { display: none; }
+      .nav-item { display: none; }
+      .sidebar-bottom { display: none; }
+      .sidebar-mobile-toggle {
+        display: flex !important;
+      }
+      .sidebar.open {
+        height: 100vh; flex-direction: column;
+        align-items: stretch; padding: 0;
+        overflow-y: auto;
+      }
+      .sidebar.open .nav-section { display: block; }
+      .sidebar.open .nav-item { display: flex; }
+      .sidebar.open .sidebar-bottom { display: block; }
+      .sidebar.open .sidebar-logo { padding: 20px 24px; border-bottom: 1px solid var(--border); }
+      .main { margin-left: 0; padding-top: 60px; }
+      .topbar { padding: 14px 20px; }
+      .topbar h2 { font-size: 16px; }
+      .section-panel { padding: 20px 16px; }
+      .edit-card { padding: 20px 16px; }
+      .form-row, .form-row-3 { grid-template-columns: 1fr; }
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+      .modal { padding: 24px 20px; width: 95vw; }
+    }
+    @media (max-width: 500px) {
+      .stats-grid { grid-template-columns: 1fr; }
+      .color-row { grid-template-columns: 1fr; }
+    }
+
     /* ===== LOGIN SCREEN ===== */
     #login-screen {
       position: fixed; inset: 0; z-index: 9999;
@@ -529,6 +569,9 @@
     <h1>dizay<span>n.</span> <span style="font-size:11px;color:var(--muted);font-weight:400">admin</span></h1>
     <p>// boshqaruv paneli</p>
   </div>
+  <button class="sidebar-mobile-toggle" onclick="toggleSidebar()" style="display:none;background:none;border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:8px;cursor:pointer;font-size:16px;margin-left:auto;">
+    <i class="fas fa-bars" id="sidebar-toggle-icon"></i>
+  </button>
 
   <div class="nav-section">Sahifalar</div>
   <div class="nav-item active" onclick="showPanel('hero')">
@@ -1688,7 +1731,7 @@ function initAdminMarqueeEffect() {
       item.style.opacity = opacity;
       const img = item.querySelector('img');
       const txt = item.querySelector('span');
-      if (img) img.style.filter = `grayscale(${grayscale}) brightness(${brightness})`;
+      if (img) img.style.filter = `brightness(0) invert(1) opacity(${(1 - t * 0.8).toFixed(2)})`;
       if (txt) { const r = Math.round(220 * brightness); txt.style.color = `rgb(${r},${r},${r})`; txt.style.fontSize = '18px'; txt.style.fontWeight = '800'; }
     });
     requestAnimationFrame(tick);
@@ -1805,6 +1848,27 @@ function loadGitHubConfig() {
     document.getElementById('gh-branch').value = cfg.branch || 'main';
   }
 }
+
+// ============ MOBILE SIDEBAR ============
+function toggleSidebar() {
+  const sidebar = document.querySelector('.sidebar');
+  const icon = document.getElementById('sidebar-toggle-icon');
+  sidebar.classList.toggle('open');
+  icon.className = sidebar.classList.contains('open') ? 'fas fa-times' : 'fas fa-bars';
+}
+
+// Nav item bosilganda sidebarni yopish (mobilda)
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', () => {
+      if (window.innerWidth <= 900) {
+        const sidebar = document.querySelector('.sidebar');
+        sidebar.classList.remove('open');
+        document.getElementById('sidebar-toggle-icon').className = 'fas fa-bars';
+      }
+    });
+  });
+});
 
 // ============ BADGE STATUS ============
 function updateBadgeStatus() {
