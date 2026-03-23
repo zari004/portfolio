@@ -444,7 +444,7 @@
   </div>
 
   <div class="sidebar-bottom">
-    <a href="portfolio.html" target="_blank" class="preview-btn">
+    <a href="index.html" target="_blank" class="preview-btn">
       <i class="fas fa-external-link-alt"></i> Saytni ko'rish
     </a>
   </div>
@@ -1224,22 +1224,22 @@ async function pushToGitHub() {
 
   try {
     // portfolio.html SHA olish
-    const getRes = await fetch('https://api.github.com/repos/' + repo + '/contents/portfolio.html', {
+    const getRes = await fetch('https://api.github.com/repos/' + repo + '/contents/index.html', {
       headers: { 'Authorization': 'token ' + token, 'Accept': 'application/vnd.github.v3+json' }
     });
-    if (!getRes.ok) { throw new Error('portfolio.html topilmadi (status: ' + getRes.status + ')'); }
+    if (!getRes.ok) { throw new Error('index.html topilmadi (status: ' + getRes.status + ')'); }
     const getJson = await getRes.json();
     const sha = getJson.sha;
 
-    // Mavjud portfolio.html contentini decode qilish
+    // Mavjud index.html contentini decode qilish
     const existingContent = decodeURIComponent(escape(atob(getJson.content.replace(/\n/g,''))));
 
-    // Ma'lumotni portfolio.html ga inject qilish
+    // Ma'lumotni index.html ga inject qilish
     const injected = injectDataIntoPortfolio(existingContent, data);
     const encoded = btoa(unescape(encodeURIComponent(injected)));
 
     // GitHub ga push
-    const pushRes = await fetch('https://api.github.com/repos/' + repo + '/contents/portfolio.html', {
+    const pushRes = await fetch('https://api.github.com/repos/' + repo + '/contents/index.html', {
       method: 'PUT',
       headers: {
         'Authorization': 'token ' + token,
