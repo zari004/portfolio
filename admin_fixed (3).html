@@ -1,0 +1,2128 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Panel – Portfolio</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg: #0d0d0d;
+      --panel: #141414;
+      --card: #1a1a1a;
+      --border: #2a2a2a;
+      --accent: #b5f542;
+      --accent2: #42c8f5;
+      --red: #f54242;
+      --text: #f0f0f0;
+      --muted: #666;
+      --sub: #999;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Syne', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+    }
+
+    /* SIDEBAR */
+    .sidebar {
+      width: 260px; min-height: 100vh;
+      background: var(--panel);
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column;
+      position: fixed; top: 0; left: 0; bottom: 0;
+      z-index: 100;
+    }
+    .sidebar-logo {
+      padding: 28px 24px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .sidebar-logo h1 {
+      font-size: 20px; font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+    .sidebar-logo h1 span { color: var(--accent); }
+    .sidebar-logo p {
+      font-size: 11px; color: var(--muted);
+      margin-top: 4px; font-family: 'JetBrains Mono', monospace;
+    }
+    .nav-section {
+      padding: 16px 16px 8px;
+      font-size: 10px; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 2px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .nav-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 16px; margin: 2px 8px;
+      border-radius: 10px; cursor: pointer;
+      font-size: 14px; font-weight: 600; color: var(--sub);
+      transition: all 0.2s; user-select: none;
+    }
+    .nav-item i { width: 18px; text-align: center; font-size: 14px; }
+    .nav-item:hover { background: rgba(181,245,66,0.06); color: var(--text); }
+    .nav-item.active { background: rgba(181,245,66,0.1); color: var(--accent); }
+    .nav-item.active i { color: var(--accent); }
+    .sidebar-bottom {
+      margin-top: auto;
+      padding: 16px;
+      border-top: 1px solid var(--border);
+    }
+    .preview-btn {
+      display: flex; align-items: center; gap: 10px;
+      padding: 11px 16px; border-radius: 10px;
+      background: var(--accent); color: #0a0a0a;
+      font-weight: 700; font-size: 13px;
+      cursor: pointer; text-decoration: none;
+      transition: all 0.2s;
+    }
+    .preview-btn:hover { background: #8fc422; }
+
+    /* MAIN */
+    .main {
+      margin-left: 260px;
+      flex: 1; min-height: 100vh;
+      padding: 0;
+    }
+
+    /* TOPBAR */
+    .topbar {
+      padding: 20px 36px;
+      border-bottom: 1px solid var(--border);
+      background: var(--panel);
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 50;
+    }
+    .topbar h2 { font-size: 20px; font-weight: 800; }
+    .topbar-right { display: flex; gap: 10px; align-items: center; }
+    .save-all-btn {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--accent); color: #0a0a0a;
+      border: none; padding: 10px 20px; border-radius: 10px;
+      font-weight: 700; font-size: 13px; cursor: pointer;
+      font-family: 'Syne', sans-serif;
+      transition: all 0.2s;
+    }
+    .save-all-btn:hover { background: #8fc422; transform: translateY(-1px); }
+    .toast {
+      position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+      background: var(--accent); color: #0a0a0a;
+      padding: 12px 20px; border-radius: 10px;
+      font-weight: 700; font-size: 14px;
+      display: flex; align-items: center; gap: 8px;
+      opacity: 0; transform: translateY(10px);
+      transition: all 0.3s; pointer-events: none;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+
+    /* SECTIONS */
+    .section-panel {
+      display: none;
+      padding: 36px;
+      animation: fadeIn 0.3s ease;
+    }
+    .section-panel.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* CARDS */
+    .edit-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px 32px;
+      margin-bottom: 20px;
+    }
+    .edit-card h3 {
+      font-size: 15px; font-weight: 700; margin-bottom: 20px;
+      color: var(--accent); display: flex; align-items: center; gap: 8px;
+    }
+    .edit-card h3 i { font-size: 14px; }
+
+    /* FORM ELEMENTS */
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label {
+      display: block; font-size: 11px;
+      color: var(--muted); margin-bottom: 6px;
+      text-transform: uppercase; letter-spacing: 1px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width: 100%; background: var(--bg);
+      border: 1px solid var(--border); border-radius: 10px;
+      padding: 11px 14px; color: var(--text);
+      font-family: 'Syne', sans-serif; font-size: 14px;
+      transition: border-color 0.2s;
+    }
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus {
+      outline: none; border-color: var(--accent);
+    }
+    .form-group textarea { min-height: 90px; resize: vertical; }
+    .form-group select option { background: var(--card); }
+
+    /* PORTFOLIO ITEMS */
+    .portfolio-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
+    .portfolio-item {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 20px;
+      display: flex; align-items: center; gap: 16px;
+      transition: all 0.2s;
+    }
+    .portfolio-item:hover { border-color: #333; }
+    .portfolio-item-thumb {
+      width: 60px; height: 45px;
+      border-radius: 8px; overflow: hidden;
+      flex-shrink: 0; position: relative;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; color: var(--muted);
+    }
+    .portfolio-item-thumb img {
+      width: 100%; height: 100%; object-fit: cover;
+    }
+    .portfolio-item-info { flex: 1; min-width: 0; }
+    .portfolio-item-info .item-tag {
+      font-size: 10px; color: var(--accent);
+      font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1.5px; margin-bottom: 3px;
+    }
+    .portfolio-item-info .item-title {
+      font-size: 14px; font-weight: 700;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .portfolio-item-info .item-desc {
+      font-size: 12px; color: var(--sub);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .item-actions { display: flex; gap: 6px; }
+    .btn-icon {
+      width: 32px; height: 32px; border-radius: 8px;
+      border: 1px solid var(--border);
+      background: transparent; cursor: pointer; color: var(--sub);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; transition: all 0.2s;
+    }
+    .btn-icon:hover { border-color: var(--accent); color: var(--accent); background: rgba(181,245,66,0.06); }
+    .btn-icon.danger:hover { border-color: var(--red); color: var(--red); background: rgba(245,66,66,0.06); }
+
+    /* ADD BUTTON */
+    .add-btn {
+      display: flex; align-items: center; gap: 8px;
+      padding: 11px 20px; border-radius: 10px;
+      border: 1px dashed var(--border);
+      background: transparent; color: var(--sub);
+      cursor: pointer; font-family: 'Syne', sans-serif;
+      font-size: 13px; font-weight: 600;
+      transition: all 0.2s; width: 100%;
+      justify-content: center;
+    }
+    .add-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(181,245,66,0.04); }
+
+    /* MODAL */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+      z-index: 200; display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none; transition: opacity 0.2s;
+      backdrop-filter: blur(4px);
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+    .modal {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 20px; padding: 32px; width: 560px;
+      max-width: 90vw; max-height: 85vh; overflow-y: auto;
+      transform: scale(0.96); transition: transform 0.2s;
+    }
+    .modal-overlay.open .modal { transform: scale(1); }
+    .modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 24px;
+    }
+    .modal-header h3 { font-size: 18px; font-weight: 800; }
+    .modal-close {
+      width: 32px; height: 32px; border-radius: 8px;
+      border: 1px solid var(--border); background: transparent;
+      cursor: pointer; color: var(--sub); font-size: 14px;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+    }
+    .modal-close:hover { border-color: var(--red); color: var(--red); }
+    .modal-footer { display: flex; gap: 10px; margin-top: 24px; justify-content: flex-end; }
+    .btn-save {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--accent); color: #0a0a0a;
+      border: none; padding: 11px 24px; border-radius: 10px;
+      font-weight: 700; font-size: 14px; cursor: pointer;
+      font-family: 'Syne', sans-serif; transition: all 0.2s;
+    }
+    .btn-save:hover { background: #8fc422; }
+    .btn-cancel {
+      display: flex; align-items: center; gap: 8px;
+      background: transparent; color: var(--sub);
+      border: 1px solid var(--border); padding: 11px 20px; border-radius: 10px;
+      font-weight: 600; font-size: 14px; cursor: pointer;
+      font-family: 'Syne', sans-serif; transition: all 0.2s;
+    }
+    .btn-cancel:hover { border-color: var(--sub); color: var(--text); }
+
+    /* IMAGE UPLOAD */
+    .img-upload-area {
+      border: 2px dashed var(--border); border-radius: 12px;
+      padding: 24px; text-align: center; cursor: pointer;
+      transition: all 0.2s; position: relative; overflow: hidden;
+    }
+    .img-upload-area:hover { border-color: var(--accent); background: rgba(181,245,66,0.03); }
+    .img-upload-area input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+    .img-upload-area i { font-size: 28px; color: var(--muted); margin-bottom: 8px; }
+    .img-upload-area p { font-size: 13px; color: var(--muted); }
+    .img-upload-area p strong { color: var(--accent); }
+    .img-preview {
+      width: 100%; max-height: 180px; object-fit: cover;
+      border-radius: 10px; margin-top: 12px; display: none;
+    }
+
+    /* COLOR PICKER ROW */
+    .color-row {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+    }
+    .color-input-wrap {
+      display: flex; align-items: center; gap: 10px;
+    }
+    .color-input-wrap input[type="color"] {
+      width: 40px; height: 40px; border-radius: 8px;
+      padding: 2px; cursor: pointer; border: 1px solid var(--border);
+      background: var(--bg);
+    }
+    .color-input-wrap input[type="text"] {
+      flex: 1;
+    }
+
+    /* STATS EDITOR */
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+    .stat-edit-card {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 12px; padding: 16px; text-align: center;
+    }
+    .stat-edit-card .stat-preview {
+      font-size: 32px; font-weight: 900; color: var(--text);
+      letter-spacing: -1px;
+    }
+    .stat-edit-card .stat-preview span { color: var(--accent); }
+
+    /* SKILL TAGS EDITOR */
+    .skill-tags-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+    .skill-tag-item {
+      display: flex; align-items: center; gap: 6px;
+      padding: 6px 12px; border-radius: 50px;
+      background: var(--bg); border: 1px solid var(--border);
+      font-size: 13px; color: var(--sub);
+    }
+    .skill-tag-item button {
+      background: none; border: none; cursor: pointer;
+      color: var(--muted); font-size: 11px; padding: 0;
+      transition: color 0.2s; line-height: 1;
+    }
+    .skill-tag-item button:hover { color: var(--red); }
+    .add-skill-row { display: flex; gap: 8px; }
+    .add-skill-row input { flex: 1; }
+    .add-skill-row button {
+      padding: 11px 16px; border-radius: 10px;
+      background: var(--accent); color: #0a0a0a;
+      border: none; cursor: pointer; font-weight: 700;
+      font-size: 13px; font-family: 'Syne', sans-serif;
+      white-space: nowrap; transition: all 0.2s;
+    }
+    .add-skill-row button:hover { background: #8fc422; }
+
+    /* SERVICES LIST */
+    .services-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+    .service-item {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 10px; padding: 14px 16px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .service-item-icon {
+      width: 36px; height: 36px; border-radius: 8px;
+      background: rgba(181,245,66,0.1); border: 1px solid rgba(181,245,66,0.2);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--accent); font-size: 15px; flex-shrink: 0;
+    }
+    .service-item-info { flex: 1; }
+    .service-item-info .s-title { font-size: 14px; font-weight: 700; }
+    .service-item-info .s-desc { font-size: 12px; color: var(--sub); }
+
+    /* CONTACT ITEMS */
+    .contact-list { display: flex; flex-direction: column; gap: 12px; }
+    .contact-edit-item {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 10px; padding: 14px 16px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .contact-edit-item i { color: var(--accent); font-size: 16px; width: 20px; }
+
+    /* SECTION DIVIDER */
+    .section-divider {
+      display: flex; align-items: center; gap: 12px;
+      margin: 24px 0 20px; font-size: 12px;
+      color: var(--muted); text-transform: uppercase;
+      letter-spacing: 2px; font-family: 'JetBrains Mono', monospace;
+    }
+    .section-divider::before, .section-divider::after {
+      content: ''; flex: 1; height: 1px; background: var(--border);
+    }
+
+    /* STATUS BADGE */
+    .badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 3px 10px; border-radius: 50px;
+      font-size: 11px; font-weight: 700;
+    }
+    .badge.green { background: rgba(181,245,66,0.1); color: var(--accent); }
+    .badge.blue { background: rgba(66,200,245,0.1); color: var(--accent2); }
+
+    /* SCROLLBAR */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    /* DANGER CONFIRM */
+    .danger-zone {
+      border: 1px solid rgba(245,66,66,0.2);
+      border-radius: 12px; padding: 16px 20px;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 16px; margin-top: 16px;
+    }
+    .danger-zone p { font-size: 13px; color: var(--sub); }
+    .btn-danger {
+      display: flex; align-items: center; gap: 8px;
+      background: rgba(245,66,66,0.1); color: var(--red);
+      border: 1px solid rgba(245,66,66,0.3); padding: 9px 16px; border-radius: 10px;
+      font-weight: 700; font-size: 13px; cursor: pointer;
+      font-family: 'Syne', sans-serif; transition: all 0.2s; white-space: nowrap;
+    }
+    .btn-danger:hover { background: rgba(245,66,66,0.2); }
+
+    @keyframes marquee {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-50%); }
+    }
+    .admin-company-chip {
+      display: inline-flex; align-items: center; justify-content: center;
+      padding: 0 32px; height: 56px; flex-shrink: 0;
+      transition: transform 0.1s, opacity 0.1s;
+    }
+    .admin-company-chip span {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 1px;
+      white-space: nowrap;
+    }
+    .admin-company-chip img {
+      height: 28px; width: auto; max-width: 90px;
+      object-fit: contain;
+    }
+
+    /* ===== COMPANY LIST ITEMS ===== */
+    .company-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+    }
+    .company-item-thumb {
+      width: 60px;
+      height: 44px;
+      border-radius: 8px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+    .company-item-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .company-item-actions {
+      display: flex;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    /* ===== ADMIN MOBILE RESPONSIVE ===== */
+    .sidebar-mobile-toggle {
+      display: none;
+      background: none; border: 1px solid var(--border);
+      color: var(--text); font-size: 16px; cursor: pointer;
+      padding: 7px 10px; border-radius: 8px;
+    }
+    @media (max-width: 900px) {
+      .sidebar {
+        width: 100%; min-height: auto;
+        position: fixed; top: 0; left: 0; right: 0; bottom: auto;
+        flex-direction: row; align-items: center;
+        padding: 0 16px; height: 60px;
+        z-index: 200; overflow: hidden;
+      }
+      .sidebar-logo { padding: 0; border: none; flex: 1; }
+      .sidebar-logo p { display: none; }
+      .nav-section { display: none; }
+      .nav-item { display: none; }
+      .sidebar-bottom { display: none; }
+      .sidebar-mobile-toggle { display: flex !important; }
+      .sidebar.open {
+        height: 100vh; flex-direction: column;
+        align-items: stretch; padding: 0;
+        overflow-y: auto;
+      }
+      .sidebar.open .nav-section { display: block; }
+      .sidebar.open .nav-item { display: flex; }
+      .sidebar.open .sidebar-bottom { display: block; padding: 16px; }
+      .sidebar.open .sidebar-logo { padding: 20px 24px; border-bottom: 1px solid var(--border); }
+      .sidebar.open .sidebar-mobile-toggle { position: absolute; top: 12px; right: 16px; }
+      .main { margin-left: 0; padding-top: 60px; }
+      .topbar { padding: 14px 20px; }
+      .topbar h2 { font-size: 16px; }
+      .topbar-right .badge { display: none; }
+      .section-panel { padding: 20px 16px; }
+      .edit-card { padding: 20px 16px; }
+      .form-row, .form-row-3 { grid-template-columns: 1fr; }
+      .color-row { grid-template-columns: 1fr; }
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+      .modal { padding: 24px 20px; width: 95vw; max-height: 90vh; }
+      .contact-list { gap: 8px; }
+      .users-table th:nth-child(3), .users-table td:nth-child(3) { display: none; }
+      .company-item { gap: 10px; padding: 12px 12px; }
+      .company-item-thumb { width: 48px; height: 38px; }
+      .company-item-actions { gap: 4px; }
+    }
+    @media (max-width: 500px) {
+      .stats-grid { grid-template-columns: 1fr; }
+      .save-all-btn span { display: none; }
+      .topbar h2 { font-size: 14px; }
+      .section-panel { padding: 16px 12px; }
+      .edit-card { padding: 16px 12px; }
+      .company-item-thumb { width: 40px; height: 34px; }
+      .company-item { padding: 10px 10px; gap: 8px; }
+      .company-item-actions { gap: 4px; }
+    }
+
+    /* ===== LOGIN SCREEN ===== */
+    #login-screen {
+      position: fixed; inset: 0; z-index: 9999;
+      background: var(--bg);
+      display: flex; align-items: center; justify-content: center;
+    }
+    #login-screen.hidden { display: none; }
+    .login-box {
+      width: 400px; max-width: 90vw;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 40px 36px;
+    }
+    .login-logo {
+      font-size: 22px; font-weight: 800;
+      margin-bottom: 6px;
+    }
+    .login-logo span { color: var(--accent); }
+    .login-sub {
+      font-size: 12px; color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+      margin-bottom: 32px;
+    }
+    .login-error {
+      background: rgba(245,66,66,0.1);
+      border: 1px solid rgba(245,66,66,0.25);
+      border-radius: 8px; padding: 10px 14px;
+      font-size: 13px; color: var(--red);
+      margin-bottom: 16px; display: none;
+    }
+    .login-error.show { display: block; }
+    .login-btn {
+      width: 100%; padding: 13px;
+      background: var(--accent); color: #0a0a0a;
+      border: none; border-radius: 10px; cursor: pointer;
+      font-size: 14px; font-weight: 700;
+      font-family: 'Syne', sans-serif;
+      transition: all 0.2s; margin-top: 8px;
+    }
+    .login-btn:hover { background: #8fc422; }
+
+    /* ===== USERS TABLE ===== */
+    .users-table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+    .users-table th {
+      text-align: left; padding: 10px 14px;
+      font-size: 10px; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 1.5px;
+      font-family: 'JetBrains Mono', monospace;
+      border-bottom: 1px solid var(--border);
+    }
+    .users-table td {
+      padding: 12px 14px; font-size: 13px;
+      border-bottom: 1px solid rgba(42,42,42,0.5);
+      vertical-align: middle;
+    }
+    .users-table tr:last-child td { border-bottom: none; }
+    .user-role-badge {
+      display: inline-flex; align-items: center;
+      padding: 3px 10px; border-radius: 50px;
+      font-size: 10px; font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .user-role-badge.admin { background: rgba(181,245,66,0.1); color: var(--accent); }
+    .user-role-badge.editor { background: rgba(66,200,245,0.1); color: var(--accent2); }
+
+  </style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">dizay<span>n.</span> <span style="font-size:11px;color:var(--muted);font-weight:400">admin</span></div>
+    <div class="login-sub">// kirish uchun ma'lumotlaringizni kiriting</div>
+    <div class="login-error" id="login-error"><i class="fas fa-exclamation-circle"></i> <span id="login-error-msg">Login yoki parol noto'g'ri</span></div>
+    <div class="form-group">
+      <label>Login</label>
+      <input type="text" id="login-username" placeholder="username" autocomplete="username" onkeydown="if(event.key==='Enter')doLogin()"/>
+    </div>
+    <div class="form-group">
+      <label>Parol</label>
+      <div style="position:relative;">
+        <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()" style="padding-right:44px;"/>
+        <button onclick="togglePwd('login-password',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;"><i class="fas fa-eye"></i></button>
+      </div>
+    </div>
+    <button class="login-btn" onclick="doLogin()"><i class="fas fa-sign-in-alt"></i> Kirish</button>
+  </div>
+</div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <h1>dizay<span>n.</span> <span style="font-size:11px;color:var(--muted);font-weight:400">admin</span></h1>
+    <p>// boshqaruv paneli</p>
+  </div>
+  <button class="sidebar-mobile-toggle" onclick="this.closest('.sidebar').classList.toggle('open')">
+    <i class="fas fa-bars"></i>
+  </button>
+  <button class="sidebar-mobile-toggle" onclick="toggleSidebar()" style="display:none;background:none;border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:8px;cursor:pointer;font-size:16px;margin-left:auto;">
+    <i class="fas fa-bars" id="sidebar-toggle-icon"></i>
+  </button>
+
+  <div class="nav-section">Sahifalar</div>
+  <div class="nav-item active" onclick="showPanel('hero')">
+    <i class="fas fa-home"></i> Hero bo'limi
+  </div>
+  <div class="nav-item" onclick="showPanel('companies')">
+    <i class="fas fa-building"></i> Kompaniyalar
+  </div>
+  <div class="nav-item" onclick="showPanel('portfolio')">
+    <i class="fas fa-images"></i> Portfolio
+  </div>
+  <div class="nav-item" onclick="showPanel('services')">
+    <i class="fas fa-briefcase"></i> Xizmatlar
+  </div>
+  <div class="nav-item" onclick="showPanel('about')">
+    <i class="fas fa-user"></i> Men haqimda
+  </div>
+  <div class="nav-item" onclick="showPanel('contact')">
+    <i class="fas fa-envelope"></i> Aloqa
+  </div>
+  <div class="nav-item" onclick="showPanel('settings')">
+    <i class="fas fa-cog"></i> Sozlamalar
+  </div>
+
+  <div class="sidebar-bottom">
+    <a href="index.html" target="_blank" class="preview-btn" style="margin-bottom:10px;">
+      <i class="fas fa-external-link-alt"></i> Saytni ko'rish
+    </a>
+    <button onclick="logout()" style="display:flex;align-items:center;gap:10px;width:100%;padding:11px 16px;border-radius:10px;background:transparent;border:1px solid var(--border);color:var(--muted);cursor:pointer;font-family:'Syne',sans-serif;font-size:13px;font-weight:600;transition:all 0.2s;" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
+      <i class="fas fa-sign-out-alt"></i> Chiqish
+    </button>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <h2 id="panel-title">Hero bo'limi</h2>
+    <div class="topbar-right">
+      <span class="badge green"><i class="fas fa-circle" style="font-size:7px"></i> Saqlangan</span>
+      <button class="save-all-btn" onclick="saveAll()">
+        <i class="fas fa-save"></i> Saqlash
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== HERO PANEL ===== -->
+  <div class="section-panel active" id="panel-hero">
+    <div class="edit-card">
+      <h3><i class="fas fa-heading"></i> Asosiy sarlavha</h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Birinchi qator</label>
+          <input type="text" id="hero-line1" placeholder="Grafik"/>
+        </div>
+        <div class="form-group">
+          <label>Ikkinchi qator (aksent rang)</label>
+          <input type="text" id="hero-line2" placeholder="Dizayner"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Uchinchi qator</label>
+        <input type="text" id="hero-line3" placeholder="& Kreativ"/>
+      </div>
+      <div class="form-group">
+        <label>Tavsif matni</label>
+        <textarea id="hero-desc" placeholder="Brendlar, mahsulotlar..."></textarea>
+      </div>
+      <div class="form-group">
+        <label>Holat xabari (badge)</label>
+        <input type="text" id="hero-badge" placeholder="Yangi loyihalar qabul qilinmoqda"/>
+      </div>
+    </div>
+
+    <div class="edit-card">
+      <h3><i class="fas fa-chart-bar"></i> Statistikalar</h3>
+      <div class="stats-grid" id="stats-preview">
+        <!-- rendered by JS -->
+      </div>
+      <div class="section-divider">tahrirlash</div>
+      <div id="stats-edit-area"></div>
+    </div>
+  </div>
+
+  <!-- ===== COMPANIES PANEL ===== -->
+  <div class="section-panel" id="panel-companies">
+    <div class="edit-card">
+      <h3><i class="fas fa-building"></i> Kompaniyalar bo'limi</h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Bo'lim sarlavhasi</label>
+          <input type="text" id="companies-label-input" placeholder="Ishlagan kompaniyalar va hamkorlar" oninput="updateCompaniesPreview()"/>
+        </div>
+        <div class="form-group" style="display:flex;align-items:flex-end;">
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:0;flex-wrap:wrap;">
+            <input type="checkbox" id="companies-visible" style="width:16px;height:16px;accent-color:var(--accent);border-radius:4px;flex-shrink:0;" onchange="updateCompaniesPreview()"/>
+            <span style="font-size:13px;color:var(--sub);">Bo'limni ko'rsatish</span>
+          </label>
+        </div>
+      </div>
+      <!-- MINI PREVIEW -->
+      <div style="margin-top:8px;">
+        <div style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">Ko'rinish preview</div>
+        <div id="companies-preview-box" style="background:var(--bg);border:1px solid var(--border);border-radius:12px;overflow:hidden;padding:20px 0;position:relative;">
+          <div id="companies-preview-label" style="text-align:center;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:2px;margin-bottom:14px;"></div>
+          <div style="position:relative;overflow:hidden;">
+            <div style="position:absolute;left:0;top:0;bottom:0;width:80px;background:linear-gradient(90deg,var(--bg),transparent);z-index:2;pointer-events:none;"></div>
+            <div style="position:absolute;right:0;top:0;bottom:0;width:80px;background:linear-gradient(270deg,var(--bg),transparent);z-index:2;pointer-events:none;"></div>
+            <div id="admin-marquee-track" style="display:flex;animation:marquee 20s linear infinite;width:max-content;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="edit-card">
+      <h3><i class="fas fa-list"></i> Kompaniyalar ro'yxati</h3>
+      <div class="portfolio-list" id="companies-list"></div>
+      <button class="add-btn" onclick="openAddCompany()">
+        <i class="fas fa-plus"></i> Yangi kompaniya qo'shish
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== PORTFOLIO PANEL ===== -->
+  <div class="section-panel" id="panel-portfolio">
+    <div class="edit-card">
+      <h3><i class="fas fa-images"></i> Portfolio ishlari</h3>
+      <div class="portfolio-list" id="portfolio-list"></div>
+      <button class="add-btn" onclick="openAddPortfolio()">
+        <i class="fas fa-plus"></i> Yangi ish qo'shish
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== SERVICES PANEL ===== -->
+  <div class="section-panel" id="panel-services">
+    <div class="edit-card">
+      <h3><i class="fas fa-briefcase"></i> Xizmatlar ro'yxati</h3>
+      <div class="services-list" id="services-list"></div>
+      <button class="add-btn" onclick="openAddService()">
+        <i class="fas fa-plus"></i> Yangi xizmat qo'shish
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== ABOUT PANEL ===== -->
+  <div class="section-panel" id="panel-about">
+    <div class="edit-card">
+      <h3><i class="fas fa-user-circle"></i> Shaxsiy ma'lumotlar</h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Sarlavha birinchi qator</label>
+          <input type="text" id="about-title1" placeholder="Dizayn orqali"/>
+        </div>
+        <div class="form-group">
+          <label>Sarlavha ikkinchi qator</label>
+          <input type="text" id="about-title2" placeholder="qiymat yarataman"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Asosiy tavsif</label>
+        <textarea id="about-desc1" placeholder="Toshkentda faoliyat yurituvchi..."></textarea>
+      </div>
+      <div class="form-group">
+        <label>Qo'shimcha matn</label>
+        <textarea id="about-desc2" placeholder="Har bir loyihani..."></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Tajriba yillari (raqam)</label>
+          <input type="text" id="about-exp" placeholder="5+"/>
+        </div>
+        <div class="form-group">
+          <label>Badge matni</label>
+          <input type="text" id="about-exp-label" placeholder="Yil tajriba"/>
+        </div>
+      </div>
+    </div>
+
+    <div class="edit-card">
+      <h3><i class="fas fa-tags"></i> Ko'nikmalar (skill tags)</h3>
+      <div class="skill-tags-list" id="skill-tags-list"></div>
+      <div class="add-skill-row">
+        <input type="text" id="new-skill-input" placeholder="Yangi ko'nikma qo'shing..." onkeydown="if(event.key==='Enter')addSkill()"/>
+        <button onclick="addSkill()"><i class="fas fa-plus"></i> Qo'shish</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== CONTACT PANEL ===== -->
+  <div class="section-panel" id="panel-contact">
+    <div class="edit-card">
+      <h3><i class="fas fa-address-card"></i> Aloqa ma'lumotlari</h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="contact-email" placeholder="email@example.com"/>
+        </div>
+        <div class="form-group">
+          <label>Telegram username</label>
+          <input type="text" id="contact-telegram" placeholder="@username"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Joylashuv</label>
+        <input type="text" id="contact-location" placeholder="Toshkent, O'zbekiston"/>
+      </div>
+    </div>
+
+    <div class="edit-card">
+      <h3><i class="fas fa-share-alt"></i> Ijtimoiy tarmoqlar</h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Instagram URL</label>
+          <input type="text" id="social-instagram" placeholder="https://instagram.com/username"/>
+        </div>
+        <div class="form-group">
+          <label>Telegram URL</label>
+          <input type="text" id="social-telegram" placeholder="https://t.me/username"/>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Behance URL</label>
+          <input type="text" id="social-behance" placeholder="https://behance.net/username"/>
+        </div>
+        <div class="form-group">
+          <label>Dribbble URL</label>
+          <input type="text" id="social-dribbble" placeholder="https://dribbble.com/username"/>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SETTINGS PANEL ===== -->
+  <div class="section-panel" id="panel-settings">
+    <div class="edit-card">
+      <h3><i class="fas fa-paint-brush"></i> Sayt sozlamalari</h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Logo matni (aksentsiz)</label>
+          <input type="text" id="logo-text" placeholder="dizay"/>
+        </div>
+        <div class="form-group">
+          <label>Logo aksent qismi</label>
+          <input type="text" id="logo-accent" placeholder="n."/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Sahifa nomi (title)</label>
+        <input type="text" id="site-title" placeholder="Portfolio – Grafik Dizayner"/>
+      </div>
+      <div class="form-group">
+        <label>Footer matni</label>
+        <input type="text" id="footer-text" placeholder="© 2025 dizayn. Barcha huquqlar himoyalangan."/>
+      </div>
+      <div class="form-group">
+        <label>CV havolasi (Google Docs URL)</label>
+        <input type="text" id="cv-url" placeholder="https://docs.google.com/document/d/..."/>
+        <div style="font-size:11px;color:var(--muted);margin-top:5px;font-family:'JetBrains Mono',monospace;">
+          <i class="fas fa-info-circle" style="color:var(--accent2)"></i> Google Docs → Fayl → Ulashish → Havola nusxalash. Bo'sh qolsa tugma ko'rinmaydi.
+        </div>
+      </div>
+    </div>
+
+    <div class="edit-card">
+      <h3><i class="fas fa-bell"></i> Loyiha qabul holati</h3>
+      <div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:16px 20px;">
+        <div>
+          <div style="font-size:14px;font-weight:700;margin-bottom:4px;" id="badge-status-text">Loyihalar qabul qilinmoqda</div>
+          <div style="font-size:12px;color:var(--muted);font-family:'JetBrains Mono',monospace;">Saytda hero qismida ko'rinadi</div>
+        </div>
+        <label style="position:relative;display:inline-block;width:52px;height:28px;cursor:pointer;">
+          <input type="checkbox" id="badge-open" onchange="updateBadgeStatus()" style="opacity:0;width:0;height:0;position:absolute;">
+          <span id="badge-toggle-track" style="position:absolute;inset:0;border-radius:28px;background:var(--border);transition:all 0.3s;">
+            <span id="badge-toggle-thumb" style="position:absolute;width:20px;height:20px;border-radius:50%;background:#fff;top:4px;left:4px;transition:all 0.3s;"></span>
+          </span>
+        </label>
+      </div>
+      <div id="badge-preview" style="margin-top:12px;display:inline-flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px 14px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--sub);">
+        <span id="badge-preview-dot" style="width:7px;height:7px;border-radius:50%;background:var(--accent);flex-shrink:0;"></span>
+        <span id="badge-preview-text">Yangi loyihalar qabul qilinmoqda</span>
+      </div>
+    </div>
+
+    <div class="edit-card">
+      <h3><i class="fas fa-text-height"></i> Shrift o'lchamlari</h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Hero sarlavha (px)</label>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <input type="range" id="font-hero" min="40" max="100" value="72" oninput="document.getElementById('font-hero-val').textContent=this.value+'px'" style="flex:1;accent-color:var(--accent);"/>
+            <span id="font-hero-val" style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent);min-width:36px;">72px</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Bo'lim sarlavhasi (px)</label>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <input type="range" id="font-section" min="24" max="60" value="40" oninput="document.getElementById('font-section-val').textContent=this.value+'px'" style="flex:1;accent-color:var(--accent);"/>
+            <span id="font-section-val" style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent);min-width:36px;">40px</span>
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Asosiy matn (px)</label>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <input type="range" id="font-body" min="12" max="22" value="16" oninput="document.getElementById('font-body-val').textContent=this.value+'px'" style="flex:1;accent-color:var(--accent);"/>
+          <span id="font-body-val" style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent);min-width:36px;">16px</span>
+        </div>
+      </div>
+    </div>
+    <div class="edit-card">
+      <h3><i class="fab fa-github"></i> GitHub sozlamalari</h3>
+      <div class="form-group">
+        <label>GitHub Personal Access Token</label>
+        <input type="password" id="gh-token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"/>
+        <div style="font-size:11px;color:var(--muted);margin-top:5px">Token hech qachon serverga yuborilmaydi, faqat brauzeringizda saqlanadi.</div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Repo (username/reponame)</label>
+          <input type="text" id="gh-repo" placeholder="zari004/portfolio"/>
+        </div>
+        <div class="form-group">
+          <label>Branch</label>
+          <input type="text" id="gh-branch" placeholder="main"/>
+        </div>
+      </div>
+      <button class="btn-save" onclick="saveGitHubConfig()" style="margin-top:4px">
+        <i class="fas fa-save"></i> GitHub sozlamalarini saqlash
+      </button>
+    </div>
+
+    <div class="edit-card">
+      <h3><i class="fas fa-users-cog"></i> Foydalanuvchilar boshqaruvi</h3>
+      <table class="users-table" id="users-table"><!-- JS --></table>
+      <button class="add-btn" onclick="openAddUser()" style="margin-top:4px;">
+        <i class="fas fa-user-plus"></i> Yangi foydalanuvchi qo'shish
+      </button>
+    </div>
+
+    <div class="edit-card">
+      <h3><i class="fas fa-exclamation-triangle" style="color:var(--red)"></i> Xavfli zona</h3>
+      <div class="danger-zone">
+        <p>Barcha ma'lumotlarni o'chirib, boshlang'ich holatga qaytarish</p>
+        <button class="btn-danger" onclick="resetAll()">
+          <i class="fas fa-trash"></i> Tozalash
+        </button>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- PORTFOLIO MODAL -->
+<div class="modal-overlay" id="portfolio-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="portfolio-modal-title">Yangi ish qo'shish</h3>
+      <button class="modal-close" onclick="closeModal('portfolio-modal')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="form-group">
+      <label>Loyiha nomi</label>
+      <input type="text" id="pm-title" placeholder="TechStart Brend Identifikatsiyasi"/>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Kategoriya</label>
+        <select id="pm-tag">
+          <option>Brending</option>
+          <option>UI/UX</option>
+          <option>Bosma</option>
+          <option>Social Media</option>
+          <option>Qadoqlash</option>
+          <option>Motion</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Loyiha havolasi (ixtiyoriy)</label>
+        <input type="text" id="pm-link" placeholder="https://..."/>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Tavsif</label>
+      <textarea id="pm-desc" placeholder="Loyiha haqida qisqacha..."></textarea>
+    </div>
+    <div class="form-group">
+      <label>Rasm</label>
+      <div class="img-upload-area" onclick="document.getElementById('pm-img-input').click()">
+        <input type="file" id="pm-img-input" accept="image/*" onchange="previewImg(this, 'pm-img-preview')" style="display:none"/>
+        <i class="fas fa-cloud-upload-alt"></i>
+        <p>Rasm yuklash uchun bosing<br><strong>JPG, PNG, WebP</strong> • Max 5MB</p>
+        <img id="pm-img-preview" class="img-preview"/>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Fon gradienti (rasm yo'q bo'lsa)</label>
+      <div class="color-row">
+        <div class="form-group" style="margin-bottom:0">
+          <label>Rang 1</label>
+          <div class="color-input-wrap">
+            <input type="color" id="pm-color1" value="#1a1a2e" oninput="document.getElementById('pm-color1-text').value=this.value"/>
+            <input type="text" id="pm-color1-text" value="#1a1a2e" oninput="document.getElementById('pm-color1').value=this.value"/>
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label>Rang 2</label>
+          <div class="color-input-wrap">
+            <input type="color" id="pm-color2" value="#16213e" oninput="document.getElementById('pm-color2-text').value=this.value"/>
+            <input type="text" id="pm-color2-text" value="#16213e" oninput="document.getElementById('pm-color2').value=this.value"/>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('portfolio-modal')">Bekor qilish</button>
+      <button class="btn-save" onclick="savePortfolioItem()"><i class="fas fa-check"></i> Saqlash</button>
+    </div>
+  </div>
+</div>
+
+<!-- SERVICE MODAL -->
+<div class="modal-overlay" id="service-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="service-modal-title">Yangi xizmat qo'shish</h3>
+      <button class="modal-close" onclick="closeModal('service-modal')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="form-group">
+      <label>Xizmat nomi</label>
+      <input type="text" id="sm-title" placeholder="Logo & Brending"/>
+    </div>
+    <div class="form-group">
+      <label>Font Awesome ikonka kodi</label>
+      <input type="text" id="sm-icon" placeholder="fas fa-pen-nib"/>
+      <div style="font-size:11px;color:var(--muted);margin-top:5px">
+        Misollar: fas fa-pen-nib, fas fa-palette, fas fa-mobile-alt, fas fa-photo-video
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Tavsif</label>
+      <textarea id="sm-desc" placeholder="Xizmat haqida qisqacha..."></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('service-modal')">Bekor qilish</button>
+      <button class="btn-save" onclick="saveServiceItem()"><i class="fas fa-check"></i> Saqlash</button>
+    </div>
+  </div>
+</div>
+
+<!-- COMPANY MODAL -->
+<div class="modal-overlay" id="company-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="company-modal-title">Yangi kompaniya qo'shish</h3>
+      <button class="modal-close" onclick="closeModal('company-modal')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="form-group">
+      <label>Kompaniya nomi</label>
+      <input type="text" id="cm-name" placeholder="Adobe, Figma, TechStart..."/>
+    </div>
+    <div class="form-group">
+      <label>Logo URL (ixtiyoriy)</label>
+      <input type="text" id="cm-logo-url" placeholder="https://example.com/logo.png" oninput="previewLogoUrl()"/>
+      <div style="font-size:11px;color:var(--muted);margin-top:5px;font-family:'JetBrains Mono',monospace;">
+        PNG, SVG, WebP • Oq yoki shaffof fon tavsiya etiladi
+      </div>
+    </div>
+    <!-- URL preview -->
+    <div id="cm-url-preview-wrap" style="display:none;margin-top:-4px;margin-bottom:16px;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:16px;text-align:center;">
+      <img id="cm-url-preview" style="height:48px;width:auto;max-width:200px;object-fit:contain;filter:brightness(0.8);"/>
+      <div style="font-size:11px;color:var(--muted);margin-top:8px;font-family:'JetBrains Mono',monospace;">preview</div>
+    </div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:16px;">
+      <i class="fas fa-info-circle" style="color:var(--accent2)"></i> URL kiritilmasa, kompaniya nomi matn sifatida ko'rsatiladi.
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('company-modal')">Bekor qilish</button>
+      <button class="btn-save" onclick="saveCompanyItem()"><i class="fas fa-check"></i> Saqlash</button>
+    </div>
+  </div>
+</div>
+
+<!-- USER MODAL -->
+<div class="modal-overlay" id="user-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="user-modal-title">Yangi foydalanuvchi</h3>
+      <button class="modal-close" onclick="closeModal('user-modal')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="form-group">
+      <label>Login (username)</label>
+      <input type="text" id="um-username" placeholder="admin"/>
+    </div>
+    <div class="form-group">
+      <label>Parol</label>
+      <div style="position:relative;">
+        <input type="password" id="um-password" placeholder="••••••••" style="padding-right:44px;"/>
+        <button onclick="togglePwd('um-password',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;"><i class="fas fa-eye"></i></button>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:5px;font-family:'JetBrains Mono',monospace;">Tahrirlashda bo'sh qoldirsangiz parol o'zgarmaydi</div>
+    </div>
+    <div class="form-group">
+      <label>Rol</label>
+      <select id="um-role">
+        <option value="admin">Admin (to'liq huquq)</option>
+        <option value="editor">Editor (faqat kontent)</option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('user-modal')">Bekor qilish</button>
+      <button class="btn-save" onclick="saveUser()"><i class="fas fa-check"></i> Saqlash</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"><i class="fas fa-check-circle"></i> <span id="toast-msg">Saqlandi!</span></div>
+
+<script>
+// ============ DATA ============
+const DEFAULT_DATA = {
+  hero: {
+    line1: 'Grafik',
+    line2: 'Dizayner',
+    line3: '& Kreativ',
+    desc: "Brendlar, mahsulotlar va raqamli tajribalar uchun vizual identifikatsiyalar yarataman. Har bir loyiha – noyob hikoya.",
+    badge: 'Yangi loyihalar qabul qilinmoqda',
+    stats: [
+      { num: '50', suffix: '+', label: 'Yakunlangan loyiha' },
+      { num: '30', suffix: '+', label: 'Mamnun mijoz' },
+      { num: '5', suffix: '+', label: 'Yillik tajriba' }
+    ]
+  },
+  companies: {
+    label: 'Ishlagan kompaniyalar va hamkorlar',
+    visible: true,
+    items: [
+      { id: 1, name: 'Adobe', logo: '' },
+      { id: 2, name: 'Figma', logo: '' },
+      { id: 3, name: 'Behance', logo: '' },
+      { id: 4, name: 'Canva', logo: '' },
+      { id: 5, name: 'Dribbble', logo: '' },
+      { id: 6, name: 'Notion', logo: '' }
+    ]
+  },
+  portfolio: [
+    { id: 1, title: 'TechStart Brend Identifikatsiyasi', tag: 'Brending', desc: "To'liq brend paketi: logo, rang palitasi, tipografiya va brend qo'llanma.", color1: '#1a1a2e', color2: '#16213e', img: '', link: '' },
+    { id: 2, title: 'E-commerce Mobil Ilova', tag: 'UI/UX', desc: "Online do'kon uchun foydalanuvchi yo'nalishli mobil ilova interfeysi.", color1: '#0f3460', color2: '#533483', img: '', link: '' },
+    { id: 3, title: 'Restoran Menyu Dizayni', tag: 'Bosma', desc: "Zamonaviy restoran uchun premium menyu va bosma material paketi.", color1: '#2a1a0a', color2: '#1a0a0a', img: '', link: '' },
+    { id: 4, title: 'Fitnes Markaz SMM Paketi', tag: 'Social Media', desc: "30 kunlik Instagram kontent plani va dizayn shablonlar to'plami.", color1: '#2d1b33', color2: '#1a0a2e', img: '', link: '' },
+    { id: 5, title: 'Organic Foods Brendi', tag: 'Brending', desc: "Ekologik mahsulotlar brendi uchun tabiiy va zamonaviy vizual identifikatsiya.", color1: '#1a2a1a', color2: '#0d1f0d', img: '', link: '' },
+    { id: 6, title: 'Qahva Brendi Qadoqlash', tag: 'Qadoqlash', desc: "Premium qahva brendining mahsulot qadoqlash va vizual komunikatsiyasi.", color1: '#2a1a0a', color2: '#3d2b0f', img: '', link: '' }
+  ],
+  services: [
+    { id: 1, title: 'Logo & Brending', icon: 'fas fa-pen-nib', desc: "Kompaniyangiz mohiyatini aks ettiruvchi noyob logo va to'liq brend identifikatsiyasi yaratiladi." },
+    { id: 2, title: 'Grafik Dizayn', icon: 'fas fa-palette', desc: "Bosma materiallar, banner, poster, buklet va har qanday vizual materiallar professional darajada." },
+    { id: 3, title: 'UI/UX Dizayn', icon: 'fas fa-mobile-alt', desc: "Foydalanuvchilar uchun qulay va vizual jihatdan chiroyli interfeys va tajriba dizayni." },
+    { id: 4, title: 'Ijtimoiy Tarmoq', icon: 'fas fa-photo-video', desc: "Instagram, Telegram va boshqa platformalar uchun e'lon, story va reklama dizaynlari." },
+    { id: 5, title: 'Qadoqlash Dizayni', icon: 'fas fa-box-open', desc: "Mahsulotingizni ajratib ko'rsatuvchi zamonaviy va qulay qadoqlash yechimlar." },
+    { id: 6, title: 'Motion Grafika', icon: 'fas fa-film', desc: "Brendingizni jonlantiruvchi animatsiya va motion grafik kontentlar yaratiladi." }
+  ],
+  about: {
+    title1: "Dizayn orqali",
+    title2: "qiymat yarataman",
+    desc1: "Toshkentda faoliyat yurituvchi grafik dizaynerman. Brendlar uchun vizual identifikatsiya, raqamli kontentlar va UI/UX yechimlar yaratishga ixtisoslashganman.",
+    desc2: "Har bir loyihani noyob muammo sifatida ko'raman va uning uchun maxsus, qiziqarli yechim topamanman. Mijozlarim bilan yaqin ishlashni va ularning g'oyalarini reallikka aylantirishni yaxshi ko'raman.",
+    exp: '5+',
+    expLabel: 'Yil tajriba',
+    skills: ['Adobe Illustrator', 'Photoshop', 'Figma', 'InDesign', 'After Effects', 'Canva Pro', 'Brending', 'Tipografiya', 'Rang nazariyasi']
+  },
+  contact: {
+    email: 'dizayn@gmail.com',
+    telegram: '@username',
+    location: "Toshkent, O'zbekiston",
+    instagram: '#',
+    telegramUrl: '#',
+    behance: '#',
+    dribbble: '#'
+  },
+  settings: {
+    logoText: 'dizay',
+    logoAccent: 'n.',
+    siteTitle: 'Portfolio – Grafik Dizayner',
+    footerText: '© 2025 dizayn. Barcha huquqlar himoyalangan.',
+    cvUrl: '',
+    badgeOpen: true,
+    fontSizeHero: '72',
+    fontSizeSection: '40',
+    fontSizeBody: '16'
+  }
+};
+
+let data = JSON.parse(JSON.stringify(DEFAULT_DATA));
+let editingPortfolioId = null;
+let editingServiceId = null;
+let editingCompanyId = null;
+
+// ============ LOAD / SAVE ============
+function loadFromStorage() {
+  const saved = localStorage.getItem('portfolio_admin_data');
+  if (saved) {
+    try {
+      data = JSON.parse(saved);
+      data.settings = Object.assign({}, DEFAULT_DATA.settings, data.settings || {});
+      data.companies = Object.assign({}, DEFAULT_DATA.companies, data.companies || {});
+      if (!data.companies.items) data.companies.items = DEFAULT_DATA.companies.items;
+    } catch(e) {}
+  }
+  fillAllForms();
+}
+
+function saveToStorage() {
+  localStorage.setItem('portfolio_admin_data', JSON.stringify(data));
+}
+
+function saveAll() {
+  // Hero
+  data.hero.line1 = document.getElementById('hero-line1').value;
+  data.hero.line2 = document.getElementById('hero-line2').value;
+  data.hero.line3 = document.getElementById('hero-line3').value;
+  data.hero.desc = document.getElementById('hero-desc').value;
+  data.hero.badge = document.getElementById('hero-badge').value;
+  // Stats
+  data.hero.stats.forEach((s, i) => {
+    const numEl = document.getElementById('stat-num-'+i);
+    const suffEl = document.getElementById('stat-suf-'+i);
+    const lblEl = document.getElementById('stat-lbl-'+i);
+    if (numEl) s.num = numEl.value;
+    if (suffEl) s.suffix = suffEl.value;
+    if (lblEl) s.label = lblEl.value;
+  });
+  // About
+  data.about.title1 = document.getElementById('about-title1').value;
+  data.about.title2 = document.getElementById('about-title2').value;
+  data.about.desc1 = document.getElementById('about-desc1').value;
+  data.about.desc2 = document.getElementById('about-desc2').value;
+  data.about.exp = document.getElementById('about-exp').value;
+  data.about.expLabel = document.getElementById('about-exp-label').value;
+  // Contact
+  data.contact.email = document.getElementById('contact-email').value;
+  data.contact.telegram = document.getElementById('contact-telegram').value;
+  data.contact.location = document.getElementById('contact-location').value;
+  data.contact.instagram = document.getElementById('social-instagram').value;
+  data.contact.telegramUrl = document.getElementById('social-telegram').value;
+  data.contact.behance = document.getElementById('social-behance').value;
+  data.contact.dribbble = document.getElementById('social-dribbble').value;
+  // Settings
+  data.settings.logoText = document.getElementById('logo-text').value;
+  data.settings.logoAccent = document.getElementById('logo-accent').value;
+  data.settings.siteTitle = document.getElementById('site-title').value;
+  data.settings.footerText = document.getElementById('footer-text').value;
+  data.settings.cvUrl = document.getElementById('cv-url').value.trim();
+  data.settings.badgeOpen = document.getElementById('badge-open').checked;
+  data.settings.fontSizeHero = document.getElementById('font-hero').value;
+  data.settings.fontSizeSection = document.getElementById('font-section').value;
+  data.settings.fontSizeBody = document.getElementById('font-body').value;
+  // Companies
+  if (!data.companies) data.companies = Object.assign({}, DEFAULT_DATA.companies);
+  const clInp = document.getElementById('companies-label-input');
+  const cvInp = document.getElementById('companies-visible');
+  if (clInp) data.companies.label = clInp.value;
+  if (cvInp) data.companies.visible = cvInp.checked;
+
+  saveToStorage();
+  showToast('Saqlandi! GitHub ga yuborilmoqda...');
+  document.querySelector('.badge').innerHTML = '<i class="fas fa-circle" style="font-size:7px"></i> Saqlandi';
+  document.querySelector('.badge').className = 'badge green';
+  renderStatsPreview();
+  pushToGitHub();
+}
+
+function resetAll() {
+  if (!confirm('Haqiqatan ham barcha ma\'lumotlarni o\'chirasizmi?')) return;
+  localStorage.removeItem('portfolio_admin_data');
+  data = JSON.parse(JSON.stringify(DEFAULT_DATA));
+  fillAllForms();
+  showToast('Boshlang\'ich holatga qaytarildi');
+}
+
+// ============ FILL FORMS ============
+function fillAllForms() {
+  const h = data.hero;
+  document.getElementById('hero-line1').value = h.line1 || '';
+  document.getElementById('hero-line2').value = h.line2 || '';
+  document.getElementById('hero-line3').value = h.line3 || '';
+  document.getElementById('hero-desc').value = h.desc || '';
+  document.getElementById('hero-badge').value = h.badge || '';
+  renderStatsPreview();
+  renderStatsEdit();
+  renderPortfolioList();
+  renderServicesList();
+  renderSkillTags();
+  renderCompaniesList();
+
+  const ab = data.about;
+  document.getElementById('about-title1').value = ab.title1 || '';
+  document.getElementById('about-title2').value = ab.title2 || '';
+  document.getElementById('about-desc1').value = ab.desc1 || '';
+  document.getElementById('about-desc2').value = ab.desc2 || '';
+  document.getElementById('about-exp').value = ab.exp || '';
+  document.getElementById('about-exp-label').value = ab.expLabel || '';
+
+  const c = data.contact;
+  document.getElementById('contact-email').value = c.email || '';
+  document.getElementById('contact-telegram').value = c.telegram || '';
+  document.getElementById('contact-location').value = c.location || '';
+  document.getElementById('social-instagram').value = c.instagram || '';
+  document.getElementById('social-telegram').value = c.telegramUrl || '';
+  document.getElementById('social-behance').value = c.behance || '';
+  document.getElementById('social-dribbble').value = c.dribbble || '';
+
+  const s = data.settings || DEFAULT_DATA.settings;
+  document.getElementById('logo-text').value = s.logoText || '';
+  document.getElementById('logo-accent').value = s.logoAccent || '';
+  document.getElementById('site-title').value = s.siteTitle || '';
+  document.getElementById('footer-text').value = s.footerText || '';
+  document.getElementById('cv-url').value = s.cvUrl || '';
+
+  // Badge toggle
+  const badgeOpen = s.badgeOpen !== false;
+  document.getElementById('badge-open').checked = badgeOpen;
+  updateBadgeStatus();
+
+  // Font sizes
+  const fh = parseInt(s.fontSizeHero) || 72;
+  const fs = parseInt(s.fontSizeSection) || 40;
+  const fb = parseInt(s.fontSizeBody) || 16;
+  document.getElementById('font-hero').value = fh;
+  document.getElementById('font-hero-val').textContent = fh + 'px';
+  document.getElementById('font-section').value = fs;
+  document.getElementById('font-section-val').textContent = fs + 'px';
+  document.getElementById('font-body').value = fb;
+  document.getElementById('font-body-val').textContent = fb + 'px';
+
+  // Companies
+  const co = data.companies || DEFAULT_DATA.companies;
+  const clEl = document.getElementById('companies-label-input');
+  const cvEl = document.getElementById('companies-visible');
+  if (clEl) clEl.value = co.label || '';
+  if (cvEl) cvEl.checked = co.visible !== false;
+  setTimeout(updateCompaniesPreview, 150);
+}
+
+// ============ STATS ============
+function renderStatsPreview() {
+  const c = document.getElementById('stats-preview');
+  c.innerHTML = data.hero.stats.map(s => `
+    <div class="stat-edit-card">
+      <div class="stat-preview">${s.num}<span>${s.suffix}</span></div>
+      <div style="font-size:12px;color:var(--sub);margin-top:4px">${s.label}</div>
+    </div>
+  `).join('');
+}
+function renderStatsEdit() {
+  const c = document.getElementById('stats-edit-area');
+  c.innerHTML = data.hero.stats.map((s, i) => `
+    <div style="display:grid;grid-template-columns:1fr 80px 1fr;gap:12px;margin-bottom:12px;align-items:end">
+      <div class="form-group" style="margin-bottom:0">
+        <label>Raqam ${i+1}</label>
+        <input type="text" id="stat-num-${i}" value="${s.num}"/>
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label>Suffiks</label>
+        <input type="text" id="stat-suf-${i}" value="${s.suffix}"/>
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label>Yorliq</label>
+        <input type="text" id="stat-lbl-${i}" value="${s.label}"/>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ============ PORTFOLIO ============
+function renderPortfolioList() {
+  const list = document.getElementById('portfolio-list');
+  list.innerHTML = data.portfolio.map(p => `
+    <div class="portfolio-item">
+      <div class="portfolio-item-thumb" style="background:linear-gradient(135deg,${p.color1},${p.color2})">
+        ${p.img ? `<img src="${p.img}" style="width:100%;height:100%;object-fit:cover;border-radius:8px"/>` : '<i class="fas fa-image"></i>'}
+      </div>
+      <div class="portfolio-item-info">
+        <div class="item-tag">${p.tag}</div>
+        <div class="item-title">${p.title}</div>
+        <div class="item-desc">${p.desc}</div>
+      </div>
+      <div class="item-actions">
+        <button class="btn-icon" onclick="editPortfolio(${p.id})" title="Tahrirlash"><i class="fas fa-pen"></i></button>
+        <button class="btn-icon danger" onclick="deletePortfolio(${p.id})" title="O'chirish"><i class="fas fa-trash"></i></button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openAddPortfolio() {
+  editingPortfolioId = null;
+  document.getElementById('portfolio-modal-title').textContent = 'Yangi ish qo\'shish';
+  document.getElementById('pm-title').value = '';
+  document.getElementById('pm-tag').value = 'Brending';
+  document.getElementById('pm-desc').value = '';
+  document.getElementById('pm-link').value = '';
+  document.getElementById('pm-color1').value = '#1a1a2e';
+  document.getElementById('pm-color1-text').value = '#1a1a2e';
+  document.getElementById('pm-color2').value = '#16213e';
+  document.getElementById('pm-color2-text').value = '#16213e';
+  document.getElementById('pm-img-preview').style.display = 'none';
+  document.getElementById('pm-img-preview').src = '';
+  openModal('portfolio-modal');
+}
+
+function editPortfolio(id) {
+  editingPortfolioId = id;
+  const p = data.portfolio.find(x => x.id === id);
+  if (!p) return;
+  document.getElementById('portfolio-modal-title').textContent = 'Ishni tahrirlash';
+  document.getElementById('pm-title').value = p.title;
+  document.getElementById('pm-tag').value = p.tag;
+  document.getElementById('pm-desc').value = p.desc;
+  document.getElementById('pm-link').value = p.link || '';
+  document.getElementById('pm-color1').value = p.color1 || '#1a1a2e';
+  document.getElementById('pm-color1-text').value = p.color1 || '#1a1a2e';
+  document.getElementById('pm-color2').value = p.color2 || '#16213e';
+  document.getElementById('pm-color2-text').value = p.color2 || '#16213e';
+  if (p.img) {
+    document.getElementById('pm-img-preview').src = p.img;
+    document.getElementById('pm-img-preview').style.display = 'block';
+  } else {
+    document.getElementById('pm-img-preview').style.display = 'none';
+  }
+  openModal('portfolio-modal');
+}
+
+function savePortfolioItem() {
+  const title = document.getElementById('pm-title').value.trim();
+  if (!title) { alert('Iltimos, loyiha nomini kiriting!'); return; }
+  const item = {
+    id: editingPortfolioId || Date.now(),
+    title,
+    tag: document.getElementById('pm-tag').value,
+    desc: document.getElementById('pm-desc').value,
+    link: document.getElementById('pm-link').value,
+    color1: document.getElementById('pm-color1').value,
+    color2: document.getElementById('pm-color2').value,
+    img: document.getElementById('pm-img-preview').src !== window.location.href ? document.getElementById('pm-img-preview').src : ''
+  };
+  if (document.getElementById('pm-img-preview').style.display === 'none') item.img = '';
+  if (editingPortfolioId) {
+    const idx = data.portfolio.findIndex(x => x.id === editingPortfolioId);
+    if (idx > -1) data.portfolio[idx] = item;
+  } else {
+    data.portfolio.push(item);
+  }
+  saveToStorage();
+  renderPortfolioList();
+  closeModal('portfolio-modal');
+  showToast(editingPortfolioId ? 'Ish yangilandi!' : 'Yangi ish qo\'shildi!');
+}
+
+function deletePortfolio(id) {
+  if (!confirm('Bu ishni o\'chirasizmi?')) return;
+  data.portfolio = data.portfolio.filter(p => p.id !== id);
+  saveToStorage();
+  renderPortfolioList();
+  showToast('O\'chirildi');
+}
+
+// ============ SERVICES ============
+function renderServicesList() {
+  const list = document.getElementById('services-list');
+  list.innerHTML = data.services.map(s => `
+    <div class="service-item">
+      <div class="service-item-icon"><i class="${s.icon}"></i></div>
+      <div class="service-item-info">
+        <div class="s-title">${s.title}</div>
+        <div class="s-desc">${s.desc}</div>
+      </div>
+      <div class="item-actions">
+        <button class="btn-icon" onclick="editService(${s.id})"><i class="fas fa-pen"></i></button>
+        <button class="btn-icon danger" onclick="deleteService(${s.id})"><i class="fas fa-trash"></i></button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openAddService() {
+  editingServiceId = null;
+  document.getElementById('service-modal-title').textContent = 'Yangi xizmat qo\'shish';
+  document.getElementById('sm-title').value = '';
+  document.getElementById('sm-icon').value = 'fas fa-star';
+  document.getElementById('sm-desc').value = '';
+  openModal('service-modal');
+}
+
+function editService(id) {
+  editingServiceId = id;
+  const s = data.services.find(x => x.id === id);
+  if (!s) return;
+  document.getElementById('service-modal-title').textContent = 'Xizmatni tahrirlash';
+  document.getElementById('sm-title').value = s.title;
+  document.getElementById('sm-icon').value = s.icon;
+  document.getElementById('sm-desc').value = s.desc;
+  openModal('service-modal');
+}
+
+function saveServiceItem() {
+  const title = document.getElementById('sm-title').value.trim();
+  if (!title) { alert('Iltimos, xizmat nomini kiriting!'); return; }
+  const item = {
+    id: editingServiceId || Date.now(),
+    title,
+    icon: document.getElementById('sm-icon').value || 'fas fa-star',
+    desc: document.getElementById('sm-desc').value
+  };
+  if (editingServiceId) {
+    const idx = data.services.findIndex(x => x.id === editingServiceId);
+    if (idx > -1) data.services[idx] = item;
+  } else {
+    data.services.push(item);
+  }
+  saveToStorage();
+  renderServicesList();
+  closeModal('service-modal');
+  showToast(editingServiceId ? 'Xizmat yangilandi!' : 'Yangi xizmat qo\'shildi!');
+}
+
+function deleteService(id) {
+  if (!confirm('Bu xizmatni o\'chirasizmi?')) return;
+  data.services = data.services.filter(s => s.id !== id);
+  saveToStorage();
+  renderServicesList();
+  showToast('O\'chirildi');
+}
+
+// ============ SKILLS ============
+function renderSkillTags() {
+  const list = document.getElementById('skill-tags-list');
+  list.innerHTML = data.about.skills.map((s, i) => `
+    <div class="skill-tag-item">
+      ${s}
+      <button onclick="removeSkill(${i})" title="O'chirish"><i class="fas fa-times"></i></button>
+    </div>
+  `).join('');
+}
+
+function addSkill() {
+  const input = document.getElementById('new-skill-input');
+  const val = input.value.trim();
+  if (!val) return;
+  data.about.skills.push(val);
+  input.value = '';
+  renderSkillTags();
+  saveToStorage();
+  showToast('Ko\'nikma qo\'shildi!');
+}
+
+function removeSkill(i) {
+  data.about.skills.splice(i, 1);
+  renderSkillTags();
+  saveToStorage();
+}
+
+// ============ IMAGE PREVIEW ============
+function previewImg(input, previewId) {
+  const preview = document.getElementById(previewId);
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    preview.src = e.target.result;
+    preview.style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
+// ============ MODAL ============
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => {
+    if (e.target === m) m.classList.remove('open');
+  });
+});
+
+// ============ NAVIGATION ============
+const panelTitles = {
+  hero: "Hero bo'limi",
+  companies: "Kompaniyalar",
+  portfolio: "Portfolio ishlari",
+  services: "Xizmatlar",
+  about: "Men haqimda",
+  contact: "Aloqa ma'lumotlari",
+  settings: "Sozlamalar"
+};
+
+function showPanel(id) {
+  document.querySelectorAll('.section-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('panel-' + id).classList.add('active');
+  event.currentTarget.classList.add('active');
+  document.getElementById('panel-title').textContent = panelTitles[id];
+}
+
+// ============ COMPANIES ============
+function renderCompaniesList() {
+  if (!data.companies) data.companies = Object.assign({}, DEFAULT_DATA.companies);
+  const list = document.getElementById('companies-list');
+  if (!list) return;
+  const items = data.companies.items || [];
+  if (!items.length) {
+    list.innerHTML = '<div style="text-align:center;color:var(--muted);padding:20px;font-size:13px;">Hozircha kompaniya yo\'q</div>';
+    return;
+  }
+  list.innerHTML = items.map(c => `
+    <div class="company-item">
+      <div class="company-item-thumb">
+        ${c.logo
+          ? `<img src="${c.logo}" style="width:100%;height:100%;object-fit:contain;padding:6px;filter:brightness(0) invert(1) opacity(0.7)"/>`
+          : `<span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted);font-weight:700;text-transform:uppercase;text-align:center;padding:2px;">${c.name.substring(0,6)}</span>`
+        }
+      </div>
+      <div class="company-item-info">
+        <div style="font-size:10px;color:var(--accent);font-weight:700;text-transform:uppercase;letter-spacing:1.5px;font-family:'JetBrains Mono',monospace;margin-bottom:2px;">Kompaniya</div>
+        <div style="font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${c.name}</div>
+        <div style="font-size:12px;color:var(--sub);">${c.logo ? 'Logo yuklangan ✓' : 'Faqat matn'}</div>
+      </div>
+      <div class="company-item-actions">
+        <button class="btn-icon" onclick="editCompany(${c.id})" title="Tahrirlash"><i class="fas fa-pen"></i></button>
+        <button class="btn-icon danger" onclick="deleteCompany(${c.id})" title="O'chirish"><i class="fas fa-trash"></i></button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function previewLogoUrl() {
+  const url = document.getElementById('cm-logo-url').value.trim();
+  const wrap = document.getElementById('cm-url-preview-wrap');
+  const img = document.getElementById('cm-url-preview');
+  if (url) {
+    img.src = url;
+    img.onload = () => { wrap.style.display = ''; };
+    img.onerror = () => { wrap.style.display = 'none'; };
+  } else {
+    wrap.style.display = 'none';
+  }
+}
+
+function openAddCompany() {
+  editingCompanyId = null;
+  document.getElementById('company-modal-title').textContent = 'Yangi kompaniya qo\'shish';
+  document.getElementById('cm-name').value = '';
+  document.getElementById('cm-logo-url').value = '';
+  document.getElementById('cm-url-preview-wrap').style.display = 'none';
+  openModal('company-modal');
+}
+
+function editCompany(id) {
+  editingCompanyId = id;
+  const c = data.companies.items.find(x => x.id === id);
+  if (!c) return;
+  document.getElementById('company-modal-title').textContent = 'Kompaniyani tahrirlash';
+  document.getElementById('cm-name').value = c.name;
+  document.getElementById('cm-logo-url').value = c.logo || '';
+  if (c.logo) {
+    const img = document.getElementById('cm-url-preview');
+    img.src = c.logo;
+    document.getElementById('cm-url-preview-wrap').style.display = '';
+  } else {
+    document.getElementById('cm-url-preview-wrap').style.display = 'none';
+  }
+  openModal('company-modal');
+}
+
+function saveCompanyItem() {
+  const name = document.getElementById('cm-name').value.trim();
+  if (!name) { alert('Kompaniya nomini kiriting!'); return; }
+  const logo = document.getElementById('cm-logo-url').value.trim();
+  const item = { id: editingCompanyId || Date.now(), name, logo };
+  if (!data.companies) data.companies = Object.assign({}, DEFAULT_DATA.companies);
+  if (editingCompanyId) {
+    const idx = data.companies.items.findIndex(x => x.id === editingCompanyId);
+    if (idx > -1) data.companies.items[idx] = item;
+  } else {
+    data.companies.items.push(item);
+  }
+  saveToStorage();
+  renderCompaniesList();
+  updateCompaniesPreview();
+  closeModal('company-modal');
+  showToast(editingCompanyId ? 'Kompaniya yangilandi!' : 'Kompaniya qo\'shildi!');
+}
+
+function deleteCompany(id) {
+  if (!confirm('Bu kompaniyani o\'chirasizmi?')) return;
+  data.companies.items = data.companies.items.filter(c => c.id !== id);
+  saveToStorage();
+  renderCompaniesList();
+  updateCompaniesPreview();
+  showToast('O\'chirildi');
+}
+
+function updateCompaniesPreview() {
+  const labelEl = document.getElementById('companies-preview-label');
+  const track = document.getElementById('admin-marquee-track');
+  const box = document.getElementById('companies-preview-box');
+  if (!track || !box) return;
+
+  const visible = document.getElementById('companies-visible');
+  box.style.display = (visible && !visible.checked) ? 'none' : '';
+
+  const lbl = document.getElementById('companies-label-input');
+  if (labelEl && lbl) labelEl.textContent = lbl.value;
+
+  const items = (data.companies && data.companies.items) || [];
+  if (!items.length) {
+    track.innerHTML = '<div style="padding:0 40px;color:var(--muted);font-size:12px;font-family:\'JetBrains Mono\',monospace;">Kompaniyalar yo\'q</div>';
+    return;
+  }
+
+  const makeChip = (item) => {
+    const inner = item.logo
+      ? `<img src="${item.logo}" alt="${item.name}" style="height:28px;width:auto;max-width:90px;object-fit:contain;"/>`
+      : `<span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;white-space:nowrap;">${item.name}</span>`;
+    return `<div class="admin-company-chip">${inner}</div>`;
+  };
+
+  const html = items.map(makeChip).join('');
+  track.innerHTML = html + html;
+  initAdminMarqueeEffect();
+}
+
+function initAdminMarqueeEffect() {
+  const wrapper = document.querySelector('#companies-preview-box > div:last-child');
+  const track = document.getElementById('admin-marquee-track');
+  if (!wrapper || !track) return;
+
+  let running = true;
+  function tick() {
+    if (!running) return;
+    const items = track.querySelectorAll('.admin-company-chip');
+    const wRect = wrapper.getBoundingClientRect();
+    const center = wRect.left + wRect.width / 2;
+    const maxDist = wRect.width / 2;
+
+    items.forEach(item => {
+      const iRect = item.getBoundingClientRect();
+      const iCenter = iRect.left + iRect.width / 2;
+      const t = Math.min(Math.abs(iCenter - center) / maxDist, 1);
+      const scale = 1.0 - t * 0.3;
+      const opacity = 1.0 - t * 0.8;
+      const brightness = 1.0 - t * 0.75;
+      const grayscale = t;
+      item.style.transform = `scale(${scale})`;
+      item.style.opacity = opacity;
+      const img = item.querySelector('img');
+      const txt = item.querySelector('span');
+      if (img) img.style.filter = `brightness(0) invert(1) opacity(${(1 - t * 0.8).toFixed(2)})`;
+      if (txt) { const r = Math.round(220 * brightness); txt.style.color = `rgb(${r},${r},${r})`; txt.style.fontSize = '18px'; txt.style.fontWeight = '800'; }
+    });
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+// ============ TOAST ============
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2800);
+}
+
+// ============ GITHUB PUSH ============
+async function pushToGitHub() {
+  const cfg = JSON.parse(localStorage.getItem('github_config') || '{}');
+  const token = cfg.token;
+  const repo = cfg.repo || 'zari004/portfolio';
+  const branch = cfg.branch || 'main';
+
+  if (!token) {
+    showToast('GitHub token kiritilmagan! Sozlamalar > GitHub');
+    setBadge('blue', 'Lokal saqlandi');
+    return;
+  }
+
+  setBadge('blue', '<i class="fas fa-spinner fa-spin" style="font-size:10px"></i> Yuborilmoqda...');
+
+  try {
+    // 1. Mavjud index.html SHA sini olish
+    const getRes = await fetch('https://api.github.com/repos/' + repo + '/contents/index.html', {
+      headers: { 'Authorization': 'token ' + token, 'Accept': 'application/vnd.github.v3+json' }
+    });
+    if (!getRes.ok) { throw new Error('index.html topilmadi (status: ' + getRes.status + ')'); }
+    const getJson = await getRes.json();
+    const sha = getJson.sha;
+
+    // 2. Mavjud contentni decode qilish va data inject qilish
+    const existingHTML = decodeURIComponent(escape(atob(getJson.content.replace(/\n/g,''))));
+    const injected = injectDataIntoPortfolio(existingHTML, data);
+    const encoded = btoa(unescape(encodeURIComponent(injected)));
+
+    // 3. GitHub ga push
+    const pushRes = await fetch('https://api.github.com/repos/' + repo + '/contents/index.html', {
+      method: 'PUT',
+      headers: {
+        'Authorization': 'token ' + token,
+        'Accept': 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        message: 'Admin panel: sayt yangilandi ' + new Date().toLocaleString('uz'),
+        content: encoded,
+        sha: sha,
+        branch: branch
+      })
+    });
+
+    if (pushRes.ok) {
+      showToast('GitHub ga muvaffaqiyatli yuborildi!');
+      setBadge('green', '<i class="fas fa-check-circle" style="font-size:9px"></i> GitHub da saqlandi');
+    } else {
+      const err = await pushRes.json();
+      throw new Error(err.message || 'Push amalga oshmadi');
+    }
+  } catch(e) {
+    showToast('Xato: ' + e.message);
+    setBadge('red', 'Xato yuz berdi');
+  }
+}
+
+function injectDataIntoPortfolio(html, d) {
+  const dataScript = '<script id="__admin_data__">window.__PORTFOLIO_DATA__=' + JSON.stringify(d) + ';<\/script>';
+  // Agar avval inject qilingan bo'lsa, yangilaymiz
+  if (html.includes('id="__admin_data__"')) {
+    return html.replace(/<script id="__admin_data__">[\s\S]*?<\/script>/, dataScript);
+  }
+  // Aks holda </head> dan oldin qo'shamiz
+  return html.replace('</head>', dataScript + '\n</head>');
+}
+
+function setBadge(color, text) {
+  const badge = document.querySelector('.badge');
+  badge.className = 'badge ' + (color === 'red' ? '' : color);
+  if (color === 'red') {
+    badge.style.background = 'rgba(245,66,66,0.1)';
+    badge.style.color = 'var(--red)';
+  } else {
+    badge.style.background = '';
+    badge.style.color = '';
+  }
+  badge.innerHTML = text;
+}
+
+function saveGitHubConfig() {
+  const token = document.getElementById('gh-token').value.trim();
+  const repo = document.getElementById('gh-repo').value.trim() || 'zari004/portfolio';
+  const branch = document.getElementById('gh-branch').value.trim() || 'main';
+  if (!token) { alert('Token kiriting!'); return; }
+  localStorage.setItem('github_config', JSON.stringify({ token, repo, branch }));
+  showToast('GitHub sozlamalari saqlandi!');
+}
+
+function loadGitHubConfig() {
+  const cfg = JSON.parse(localStorage.getItem('github_config') || '{}');
+  const t = document.getElementById('gh-token');
+  if (t) {
+    t.value = cfg.token || '';
+    document.getElementById('gh-repo').value = cfg.repo || 'zari004/portfolio';
+    document.getElementById('gh-branch').value = cfg.branch || 'main';
+  }
+}
+
+// ============ MOBILE SIDEBAR ============
+function toggleSidebar() {
+  const sidebar = document.querySelector('.sidebar');
+  const icon = document.getElementById('sidebar-toggle-icon');
+  sidebar.classList.toggle('open');
+  icon.className = sidebar.classList.contains('open') ? 'fas fa-times' : 'fas fa-bars';
+}
+
+// Nav item bosilganda sidebarni yopish (mobilda)
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', () => {
+      if (window.innerWidth <= 900) {
+        const sidebar = document.querySelector('.sidebar');
+        sidebar.classList.remove('open');
+        document.getElementById('sidebar-toggle-icon').className = 'fas fa-bars';
+      }
+    });
+  });
+});
+
+// ============ BADGE STATUS ============
+function updateBadgeStatus() {
+  const isOpen = document.getElementById('badge-open').checked;
+  const track = document.getElementById('badge-toggle-track');
+  const thumb = document.getElementById('badge-toggle-thumb');
+  const dot = document.getElementById('badge-preview-dot');
+  const text = document.getElementById('badge-preview-text');
+  const statusText = document.getElementById('badge-status-text');
+  const preview = document.getElementById('badge-preview');
+
+  if (isOpen) {
+    track.style.background = 'var(--accent)';
+    thumb.style.left = '28px';
+    dot.style.background = 'var(--accent)';
+    text.textContent = 'Yangi loyihalar qabul qilinmoqda';
+    preview.style.borderColor = 'var(--border)';
+    statusText.textContent = 'Loyihalar qabul qilinmoqda';
+    statusText.style.color = 'var(--accent)';
+  } else {
+    track.style.background = '#f54242';
+    thumb.style.left = '4px';
+    dot.style.background = '#f54242';
+    text.textContent = 'Loyihalar qabul qilish tugatildi';
+    preview.style.borderColor = 'rgba(245,66,66,0.3)';
+    statusText.textContent = 'Loyihalar qabul qilish tugatildi';
+    statusText.style.color = '#f54242';
+  }
+}
+
+// ============ AUTH ============
+const DEFAULT_USERS = [
+  { id: 1, username: 'admin', password: 'admin123', role: 'admin' }
+];
+
+function getUsers() {
+  try {
+    const saved = localStorage.getItem('admin_users');
+    if (saved) return JSON.parse(saved);
+  } catch(e) {}
+  // Birinchi marta — default user saqlash
+  localStorage.setItem('admin_users', JSON.stringify(DEFAULT_USERS));
+  return DEFAULT_USERS;
+}
+
+function saveUsers(users) {
+  localStorage.setItem('admin_users', JSON.stringify(users));
+}
+
+function doLogin() {
+  const username = document.getElementById('login-username').value.trim();
+  const password = document.getElementById('login-password').value;
+  const errEl = document.getElementById('login-error');
+  const errMsg = document.getElementById('login-error-msg');
+
+  if (!username || !password) {
+    errMsg.textContent = 'Login va parolni kiriting!';
+    errEl.classList.add('show'); return;
+  }
+
+  const users = getUsers();
+  const user = users.find(u => u.username === username && u.password === password);
+
+  if (user) {
+    sessionStorage.setItem('admin_session', JSON.stringify({ id: user.id, username: user.username, role: user.role }));
+    document.getElementById('login-screen').classList.add('hidden');
+    errEl.classList.remove('show');
+    showToast('Xush kelibsiz, ' + user.username + '!');
+  } else {
+    errMsg.textContent = 'Login yoki parol noto\'g\'ri!';
+    errEl.classList.add('show');
+    document.getElementById('login-password').value = '';
+    document.getElementById('login-password').focus();
+  }
+}
+
+function checkSession() {
+  const session = sessionStorage.getItem('admin_session');
+  if (session) {
+    document.getElementById('login-screen').classList.add('hidden');
+    return true;
+  }
+  return false;
+}
+
+function logout() {
+  sessionStorage.removeItem('admin_session');
+  location.reload();
+}
+
+function togglePwd(inputId, btn) {
+  const inp = document.getElementById(inputId);
+  if (inp.type === 'password') {
+    inp.type = 'text';
+    btn.innerHTML = '<i class="fas fa-eye-slash"></i>';
+  } else {
+    inp.type = 'password';
+    btn.innerHTML = '<i class="fas fa-eye"></i>';
+  }
+}
+
+// ============ USERS MANAGEMENT ============
+let editingUserId = null;
+
+function renderUsersTable() {
+  const table = document.getElementById('users-table');
+  if (!table) return;
+  const session = JSON.parse(sessionStorage.getItem('admin_session') || '{}');
+  const users = getUsers();
+  table.innerHTML = `
+    <thead>
+      <tr>
+        <th>Login</th>
+        <th>Rol</th>
+        <th>Parol</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      ${users.map(u => `
+        <tr>
+          <td style="font-weight:700;">${u.username} ${u.id === session.id ? '<span style="font-size:10px;color:var(--muted);font-family:\'JetBrains Mono\',monospace;">(siz)</span>' : ''}</td>
+          <td><span class="user-role-badge ${u.role}">${u.role === 'admin' ? 'Admin' : 'Editor'}</span></td>
+          <td style="font-family:'JetBrains Mono',monospace;color:var(--muted);">${'•'.repeat(Math.min(u.password.length, 10))}</td>
+          <td>
+            <div style="display:flex;gap:6px;justify-content:flex-end;">
+              <button class="btn-icon" onclick="openEditUser(${u.id})" title="Tahrirlash"><i class="fas fa-pen"></i></button>
+              ${u.id !== session.id ? `<button class="btn-icon danger" onclick="deleteUser(${u.id})" title="O'chirish"><i class="fas fa-trash"></i></button>` : ''}
+            </div>
+          </td>
+        </tr>
+      `).join('')}
+    </tbody>
+  `;
+}
+
+function openAddUser() {
+  editingUserId = null;
+  document.getElementById('user-modal-title').textContent = 'Yangi foydalanuvchi';
+  document.getElementById('um-username').value = '';
+  document.getElementById('um-password').value = '';
+  document.getElementById('um-role').value = 'editor';
+  openModal('user-modal');
+}
+
+function openEditUser(id) {
+  editingUserId = id;
+  const users = getUsers();
+  const u = users.find(x => x.id === id);
+  if (!u) return;
+  document.getElementById('user-modal-title').textContent = 'Foydalanuvchini tahrirlash';
+  document.getElementById('um-username').value = u.username;
+  document.getElementById('um-password').value = '';
+  document.getElementById('um-role').value = u.role;
+  openModal('user-modal');
+}
+
+function saveUser() {
+  const username = document.getElementById('um-username').value.trim();
+  const password = document.getElementById('um-password').value;
+  const role = document.getElementById('um-role').value;
+
+  if (!username) { alert('Login kiriting!'); return; }
+
+  const users = getUsers();
+
+  // Username takrorlanishini tekshirish
+  const duplicate = users.find(u => u.username === username && u.id !== editingUserId);
+  if (duplicate) { alert('Bu username allaqachon mavjud!'); return; }
+
+  if (editingUserId) {
+    const idx = users.findIndex(u => u.id === editingUserId);
+    if (idx > -1) {
+      users[idx].username = username;
+      users[idx].role = role;
+      if (password) users[idx].password = password;
+    }
+  } else {
+    if (!password) { alert('Yangi foydalanuvchi uchun parol kiriting!'); return; }
+    users.push({ id: Date.now(), username, password, role });
+  }
+
+  saveUsers(users);
+  renderUsersTable();
+  closeModal('user-modal');
+  showToast(editingUserId ? 'Foydalanuvchi yangilandi!' : 'Foydalanuvchi qo\'shildi!');
+}
+
+function deleteUser(id) {
+  const users = getUsers();
+  if (users.length <= 1) { alert('Kamida 1 ta foydalanuvchi bo\'lishi shart!'); return; }
+  if (!confirm('Bu foydalanuvchini o\'chirasizmi?')) return;
+  saveUsers(users.filter(u => u.id !== id));
+  renderUsersTable();
+  showToast('O\'chirildi');
+}
+
+// ============ INIT ============
+checkSession();
+loadFromStorage();
+loadGitHubConfig();
+renderUsersTable();
+</script>
+</body>
+</html>
