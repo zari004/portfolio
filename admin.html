@@ -1,1157 +1,862 @@
 <!DOCTYPE html>
 <html lang="uz">
 <head>
-      <link rel="icon" type="image/png" href="logo-admin.png">
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Admin Panel – Portfolio</title>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
-  <style>
-    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-    :root {
-      --bg: #0d0d0d;
-      --panel: #141414;
-      --card: #1a1a1a;
-      --border: #2a2a2a;
-      --accent: #b5f542;
-      --accent2: #42c8f5;
-      --red: #f54242;
-      --text: #f0f0f0;
-      --muted: #666;
-      --sub: #999;
-    }
-    html { scroll-behavior: smooth; }
-    body {
-      font-family: 'Syne', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      display: flex;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Panel – Portfolio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --bg: #0d0d0d;
+  --panel: #141414;
+  --card: #1a1a1a;
+  --border: #2a2a2a;
+  --accent: #b5f542;
+  --accent2: #42c8f5;
+  --red: #f54242;
+  --text: #f0f0f0;
+  --muted: #666;
+  --sub: #999;
+  --sidebar-w: 260px;
+  --topbar-h: 60px;
+  --toast-success: #22c55e;
+  --toast-error: #ef4444;
+  --toast-warning: #f59e0b;
+}
+html { font-size: 16px; }
+body { font-family: 'Syne', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+code, .mono { font-family: 'JetBrains Mono', monospace; }
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+input, textarea, select, button { font-family: inherit; }
 
-    /* SIDEBAR */
-    .sidebar {
-      width: 260px; min-height: 100vh;
-      background: var(--panel);
-      border-right: 1px solid var(--border);
-      display: flex; flex-direction: column;
-      position: fixed; top: 0; left: 0; bottom: 0;
-      z-index: 100;
-    }
-    .sidebar-logo {
-      padding: 28px 24px 20px;
-      border-bottom: 1px solid var(--border);
-    }
-    .sidebar-logo h1 {
-      font-size: 20px; font-weight: 800;
-      letter-spacing: -0.5px;
-    }
-    .sidebar-logo h1 span { color: var(--accent); }
-    .sidebar-logo p {
-      font-size: 11px; color: var(--muted);
-      margin-top: 4px; font-family: 'JetBrains Mono', monospace;
-    }
-    .nav-section {
-      padding: 16px 16px 8px;
-      font-size: 10px; color: var(--muted);
-      text-transform: uppercase; letter-spacing: 2px;
-      font-family: 'JetBrains Mono', monospace;
-    }
-    .nav-item {
-      display: flex; align-items: center; gap: 12px;
-      padding: 10px 16px; margin: 2px 8px;
-      border-radius: 10px; cursor: pointer;
-      font-size: 14px; font-weight: 600; color: var(--sub);
-      transition: all 0.2s; user-select: none;
-    }
-    .nav-item i { width: 18px; text-align: center; font-size: 14px; }
-    .nav-item:hover { background: rgba(181,245,66,0.06); color: var(--text); }
-    .nav-item.active { background: rgba(181,245,66,0.1); color: var(--accent); }
-    .nav-item.active i { color: var(--accent); }
-    .sidebar-bottom {
-      margin-top: auto;
-      padding: 16px;
-      border-top: 1px solid var(--border);
-    }
-    .preview-btn {
-      display: flex; align-items: center; gap: 10px;
-      padding: 11px 16px; border-radius: 10px;
-      background: var(--accent); color: #0a0a0a;
-      font-weight: 700; font-size: 13px;
-      cursor: pointer; text-decoration: none;
-      transition: all 0.2s;
-    }
-    .preview-btn:hover { background: #8fc422; }
+/* ============ LOGIN ============ */
+.login-screen {
+  position: fixed; inset: 0; z-index: 9999;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg);
+  overflow: hidden;
+}
+.login-bg-anim {
+  position: absolute; inset: 0; overflow: hidden; pointer-events: none;
+}
+.login-bg-anim span {
+  position: absolute; display: block; width: 20px; height: 20px;
+  background: var(--accent); opacity: 0; border-radius: 50%;
+  animation: loginFloat 12s linear infinite;
+}
+@keyframes loginFloat {
+  0% { transform: translateY(100vh) scale(0); opacity: 0; }
+  10% { opacity: 0.06; }
+  90% { opacity: 0.03; }
+  100% { transform: translateY(-10vh) scale(1.2); opacity: 0; }
+}
+.login-bg-anim span:nth-child(1) { left: 10%; width: 80px; height: 80px; animation-delay: 0s; animation-duration: 11s; }
+.login-bg-anim span:nth-child(2) { left: 25%; width: 30px; height: 30px; animation-delay: 2s; animation-duration: 14s; }
+.login-bg-anim span:nth-child(3) { left: 40%; width: 60px; height: 60px; animation-delay: 4s; animation-duration: 10s; }
+.login-bg-anim span:nth-child(4) { left: 55%; width: 100px; height: 100px; animation-delay: 0s; animation-duration: 16s; }
+.login-bg-anim span:nth-child(5) { left: 70%; width: 40px; height: 40px; animation-delay: 3s; animation-duration: 13s; }
+.login-bg-anim span:nth-child(6) { left: 85%; width: 70px; height: 70px; animation-delay: 6s; animation-duration: 12s; }
+.login-bg-anim span:nth-child(7) { left: 15%; width: 50px; height: 50px; animation-delay: 8s; animation-duration: 15s; }
+.login-bg-anim span:nth-child(8) { left: 50%; width: 25px; height: 25px; animation-delay: 1s; animation-duration: 9s; }
+.login-bg-anim span:nth-child(9) { left: 75%; width: 90px; height: 90px; animation-delay: 5s; animation-duration: 17s; }
+.login-bg-anim span:nth-child(10) { left: 35%; width: 35px; height: 35px; animation-delay: 7s; animation-duration: 11s; }
 
-    /* MAIN */
-    .main {
-      margin-left: 260px;
-      flex: 1; min-height: 100vh;
-      padding: 0;
-    }
+.login-card {
+  position: relative; z-index: 2;
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: 16px; padding: 48px 40px; width: 400px; max-width: 90vw;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+.login-card h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 6px; }
+.login-card h1 span { color: var(--accent); }
+.login-card p.sub { color: var(--sub); font-size: 0.85rem; margin-bottom: 32px; }
+.login-field { margin-bottom: 20px; }
+.login-field label { display: block; font-size: 0.78rem; color: var(--sub); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+.login-field .input-wrap {
+  position: relative; display: flex; align-items: center;
+  background: var(--card); border: 1px solid var(--border); border-radius: 10px; overflow: hidden;
+  transition: border-color .2s;
+}
+.login-field .input-wrap:focus-within { border-color: var(--accent); }
+.login-field .input-wrap i { position: absolute; left: 14px; color: var(--muted); font-size: 0.9rem; }
+.login-field .input-wrap input {
+  width: 100%; padding: 13px 14px 13px 42px; border: none; background: transparent; color: var(--text); font-size: 0.95rem; outline: none;
+}
+.login-field .input-wrap .pwd-toggle {
+  position: absolute; right: 10px; background: none; border: none; color: var(--muted); cursor: pointer; padding: 6px;
+  font-size: 0.9rem; transition: color .2s;
+}
+.login-field .input-wrap .pwd-toggle:hover { color: var(--text); }
+.login-btn {
+  width: 100%; padding: 14px; background: var(--accent); color: #0d0d0d; border: none; border-radius: 10px;
+  font-size: 1rem; font-weight: 700; cursor: pointer; transition: all .2s; margin-top: 8px;
+}
+.login-btn:hover { background: #c8ff5a; transform: translateY(-1px); }
+.login-btn:active { transform: translateY(0); }
+.login-error { color: var(--red); font-size: 0.82rem; margin-top: 12px; text-align: center; min-height: 1.2em; }
 
-    /* TOPBAR */
-    .topbar {
-      padding: 20px 36px;
-      border-bottom: 1px solid var(--border);
-      background: var(--panel);
-      display: flex; align-items: center; justify-content: space-between;
-      position: sticky; top: 0; z-index: 50;
-    }
-    .topbar h2 { font-size: 20px; font-weight: 800; }
-    .topbar-right { display: flex; gap: 10px; align-items: center; }
-    .save-all-btn {
-      display: flex; align-items: center; gap: 8px;
-      background: var(--accent); color: #0a0a0a;
-      border: none; padding: 10px 20px; border-radius: 10px;
-      font-weight: 700; font-size: 13px; cursor: pointer;
-      font-family: 'Syne', sans-serif;
-      transition: all 0.2s;
-    }
-    .save-all-btn:hover { background: #8fc422; transform: translateY(-1px); }
-    .toast {
-      position: fixed; bottom: 24px; right: 24px; z-index: 9999;
-      background: var(--accent); color: #0a0a0a;
-      padding: 12px 20px; border-radius: 10px;
-      font-weight: 700; font-size: 14px;
-      display: flex; align-items: center; gap: 8px;
-      opacity: 0; transform: translateY(10px);
-      transition: all 0.3s; pointer-events: none;
-    }
-    .toast.show { opacity: 1; transform: translateY(0); }
+/* ============ LAYOUT ============ */
+.admin-app { display: none; min-height: 100vh; }
+.admin-app.active { display: flex; }
 
-    /* SECTIONS */
-    .section-panel {
-      display: none;
-      padding: 36px;
-      animation: fadeIn 0.3s ease;
-    }
-    .section-panel.active { display: block; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+/* Sidebar */
+.sidebar-overlay {
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 998;
+  opacity: 0; transition: opacity .3s;
+}
+.sidebar-overlay.active { display: block; opacity: 1; }
+.sidebar {
+  position: fixed; left: 0; top: 0; bottom: 0; width: var(--sidebar-w);
+  background: var(--panel); border-right: 1px solid var(--border);
+  display: flex; flex-direction: column; z-index: 999;
+  transition: transform .3s cubic-bezier(.4,0,.2,1);
+}
+.sidebar-brand {
+  padding: 20px 24px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 12px;
+}
+.sidebar-brand .brand-icon {
+  width: 38px; height: 38px; background: var(--accent); border-radius: 10px;
+  display: flex; align-items: center; justify-content: center; color: #0d0d0d; font-weight: 800; font-size: 1.1rem;
+}
+.sidebar-brand .brand-text { font-weight: 700; font-size: 1.05rem; }
+.sidebar-brand .brand-text span { color: var(--accent); }
+.sidebar-nav { flex: 1; overflow-y: auto; padding: 16px 12px; }
+.sidebar-nav .nav-section { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); padding: 16px 12px 8px; font-weight: 600; }
+.sidebar-nav .nav-item {
+  display: flex; align-items: center; gap: 12px; padding: 11px 14px;
+  border-radius: 10px; cursor: pointer; font-size: 0.88rem; font-weight: 500;
+  color: var(--sub); transition: all .15s; margin-bottom: 2px;
+}
+.sidebar-nav .nav-item i { width: 18px; text-align: center; font-size: 0.9rem; }
+.sidebar-nav .nav-item:hover { background: var(--card); color: var(--text); }
+.sidebar-nav .nav-item.active { background: rgba(181,245,66,0.1); color: var(--accent); }
+.sidebar-footer {
+  padding: 16px; border-top: 1px solid var(--border);
+}
+.sidebar-user {
+  display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 10px;
+}
+.sidebar-user .user-avatar {
+  width: 34px; height: 34px; background: var(--accent); border-radius: 8px;
+  display: flex; align-items: center; justify-content: center; color: #0d0d0d; font-weight: 700; font-size: 0.85rem;
+}
+.sidebar-user .user-info { flex: 1; }
+.sidebar-user .user-info .name { font-size: 0.82rem; font-weight: 600; }
+.sidebar-user .user-info .role { font-size: 0.7rem; color: var(--muted); }
+.sidebar-logout {
+  margin-top: 8px; width: 100%; padding: 9px; background: transparent; border: 1px solid var(--border);
+  border-radius: 8px; color: var(--sub); font-size: 0.8rem; cursor: pointer; transition: all .15s; font-weight: 500;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.sidebar-logout:hover { border-color: var(--red); color: var(--red); }
 
-    /* CARDS */
-    .edit-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 28px 32px;
-      margin-bottom: 20px;
-    }
-    .edit-card h3 {
-      font-size: 15px; font-weight: 700; margin-bottom: 20px;
-      color: var(--accent); display: flex; align-items: center; gap: 8px;
-    }
-    .edit-card h3 i { font-size: 14px; }
+/* Main */
+.main-content {
+  margin-left: var(--sidebar-w); flex: 1; min-height: 100vh;
+  display: flex; flex-direction: column;
+}
+.topbar {
+  height: var(--topbar-h); border-bottom: 1px solid var(--border); background: var(--panel);
+  display: flex; align-items: center; justify-content: space-between; padding: 0 28px;
+  position: sticky; top: 0; z-index: 100;
+}
+.topbar-left { display: flex; align-items: center; gap: 12px; }
+.topbar-title { font-size: 1.1rem; font-weight: 700; }
+.mobile-toggle {
+  display: none; background: none; border: none; color: var(--text); font-size: 1.3rem; cursor: pointer; padding: 4px;
+}
+.topbar-right { display: flex; align-items: center; gap: 12px; }
+.unsaved-badge {
+  display: none; padding: 4px 12px; background: rgba(245,166,35,0.15); color: var(--toast-warning);
+  border-radius: 20px; font-size: 0.72rem; font-weight: 600; align-items: center; gap: 5px;
+}
+.unsaved-badge.active { display: inline-flex; }
+.save-shortcut {
+  font-size: 0.7rem; color: var(--muted); font-family: 'JetBrains Mono', monospace;
+}
+.topbar-save-btn {
+  padding: 8px 20px; background: var(--accent); color: #0d0d0d; border: none; border-radius: 8px;
+  font-size: 0.82rem; font-weight: 700; cursor: pointer; transition: all .15s;
+}
+.topbar-save-btn:hover { background: #c8ff5a; }
 
-    /* FORM ELEMENTS */
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
-    .form-group { margin-bottom: 16px; }
-    .form-group label {
-      display: block; font-size: 11px;
-      color: var(--muted); margin-bottom: 6px;
-      text-transform: uppercase; letter-spacing: 1px;
-      font-family: 'JetBrains Mono', monospace;
-    }
-    .form-group input,
-    .form-group textarea,
-    .form-group select {
-      width: 100%; background: var(--bg);
-      border: 1px solid var(--border); border-radius: 10px;
-      padding: 11px 14px; color: var(--text);
-      font-family: 'Syne', sans-serif; font-size: 14px;
-      transition: border-color 0.2s;
-    }
-    .form-group input:focus,
-    .form-group textarea:focus,
-    .form-group select:focus {
-      outline: none; border-color: var(--accent);
-    }
-    .form-group textarea { min-height: 90px; resize: vertical; }
-    .form-group select option { background: var(--card); }
+/* Panels */
+.panels-container { flex: 1; padding: 28px; }
+.panel { display: none; animation: fadePanel .3s ease; }
+.panel.active { display: block; }
+@keyframes fadePanel { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
-    /* PORTFOLIO ITEMS */
-    .portfolio-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
-    .portfolio-item {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 16px 20px;
-      display: flex; align-items: center; gap: 16px;
-      transition: all 0.2s;
-    }
-    .portfolio-item:hover { border-color: #333; }
-    .portfolio-item-thumb {
-      width: 60px; height: 45px;
-      border-radius: 8px; overflow: hidden;
-      flex-shrink: 0; position: relative;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 20px; color: var(--muted);
-    }
-    .portfolio-item-thumb img {
-      width: 100%; height: 100%; object-fit: cover;
-    }
-    .portfolio-item-info { flex: 1; min-width: 0; }
-    .portfolio-item-info .item-tag {
-      font-size: 10px; color: var(--accent);
-      font-weight: 700; text-transform: uppercase;
-      letter-spacing: 1.5px; margin-bottom: 3px;
-    }
-    .portfolio-item-info .item-title {
-      font-size: 14px; font-weight: 700;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-    .portfolio-item-info .item-desc {
-      font-size: 12px; color: var(--sub);
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-    .item-actions { display: flex; gap: 6px; }
-    .btn-icon {
-      width: 32px; height: 32px; border-radius: 8px;
-      border: 1px solid var(--border);
-      background: transparent; cursor: pointer; color: var(--sub);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 13px; transition: all 0.2s;
-    }
-    .btn-icon:hover { border-color: var(--accent); color: var(--accent); background: rgba(181,245,66,0.06); }
-    .btn-icon.danger:hover { border-color: var(--red); color: var(--red); background: rgba(245,66,66,0.06); }
+.panel-header { margin-bottom: 28px; }
+.panel-header h2 { font-size: 1.4rem; font-weight: 700; margin-bottom: 4px; }
+.panel-header p { color: var(--sub); font-size: 0.85rem; }
 
-    /* ADD BUTTON */
-    .add-btn {
-      display: flex; align-items: center; gap: 8px;
-      padding: 11px 20px; border-radius: 10px;
-      border: 1px dashed var(--border);
-      background: transparent; color: var(--sub);
-      cursor: pointer; font-family: 'Syne', sans-serif;
-      font-size: 13px; font-weight: 600;
-      transition: all 0.2s; width: 100%;
-      justify-content: center;
-    }
-    .add-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(181,245,66,0.04); }
+/* Cards & Forms */
+.form-card {
+  background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 28px; margin-bottom: 20px;
+}
+.form-card-title { font-size: 1rem; font-weight: 700; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+.form-card-title i { color: var(--accent); font-size: 0.9rem; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+.form-row.three { grid-template-columns: 1fr 1fr 1fr; }
+.form-group { margin-bottom: 16px; }
+.form-group label {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 0.78rem; color: var(--sub); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 600;
+}
+.form-group label .char-count { font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; color: var(--muted); text-transform: none; letter-spacing: 0; }
+.form-group label .char-count.warn { color: var(--toast-warning); }
+.form-group label .char-count.over { color: var(--red); }
+.form-input {
+  width: 100%; padding: 11px 14px; background: var(--card); border: 1px solid var(--border);
+  border-radius: 8px; color: var(--text); font-size: 0.9rem; outline: none; transition: border-color .2s;
+}
+.form-input:focus { border-color: var(--accent); }
+.form-input::placeholder { color: var(--muted); }
+textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', sans-serif; }
+.form-hint { font-size: 0.72rem; color: var(--muted); margin-top: 4px; }
 
-    /* MODAL */
-    .modal-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.7);
-      z-index: 200; display: flex; align-items: center; justify-content: center;
-      opacity: 0; pointer-events: none; transition: opacity 0.2s;
-      backdrop-filter: blur(4px);
-    }
-    .modal-overlay.open { opacity: 1; pointer-events: all; }
-    .modal {
-      background: var(--card); border: 1px solid var(--border);
-      border-radius: 20px; padding: 32px; width: 560px;
-      max-width: 90vw; max-height: 85vh; overflow-y: auto;
-      transform: scale(0.96); transition: transform 0.2s;
-    }
-    .modal-overlay.open .modal { transform: scale(1); }
-    .modal-header {
-      display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 24px;
-    }
-    .modal-header h3 { font-size: 18px; font-weight: 800; }
-    .modal-close {
-      width: 32px; height: 32px; border-radius: 8px;
-      border: 1px solid var(--border); background: transparent;
-      cursor: pointer; color: var(--sub); font-size: 14px;
-      display: flex; align-items: center; justify-content: center;
-      transition: all 0.2s;
-    }
-    .modal-close:hover { border-color: var(--red); color: var(--red); }
-    .modal-footer { display: flex; gap: 10px; margin-top: 24px; justify-content: flex-end; }
-    .btn-save {
-      display: flex; align-items: center; gap: 8px;
-      background: var(--accent); color: #0a0a0a;
-      border: none; padding: 11px 24px; border-radius: 10px;
-      font-weight: 700; font-size: 14px; cursor: pointer;
-      font-family: 'Syne', sans-serif; transition: all 0.2s;
-    }
-    .btn-save:hover { background: #8fc422; }
-    .btn-cancel {
-      display: flex; align-items: center; gap: 8px;
-      background: transparent; color: var(--sub);
-      border: 1px solid var(--border); padding: 11px 20px; border-radius: 10px;
-      font-weight: 600; font-size: 14px; cursor: pointer;
-      font-family: 'Syne', sans-serif; transition: all 0.2s;
-    }
-    .btn-cancel:hover { border-color: var(--sub); color: var(--text); }
+/* Image upload */
+.img-upload-zone {
+  border: 2px dashed var(--border); border-radius: 10px; padding: 28px; text-align: center;
+  cursor: pointer; transition: all .2s; position: relative; overflow: hidden;
+}
+.img-upload-zone:hover { border-color: var(--accent); background: rgba(181,245,66,0.03); }
+.img-upload-zone i { font-size: 1.8rem; color: var(--muted); margin-bottom: 8px; }
+.img-upload-zone p { font-size: 0.82rem; color: var(--sub); }
+.img-upload-zone .size-note { font-size: 0.7rem; color: var(--muted); margin-top: 4px; }
+.img-upload-zone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.img-preview {
+  margin-top: 12px; border-radius: 8px; overflow: hidden; position: relative; display: inline-block;
+}
+.img-preview img { max-width: 200px; max-height: 140px; border-radius: 8px; display: block; }
+.img-preview .remove-img {
+  position: absolute; top: 6px; right: 6px; width: 26px; height: 26px;
+  background: rgba(0,0,0,0.7); border: none; border-radius: 50%; color: var(--red);
+  cursor: pointer; font-size: 0.75rem; display: flex; align-items: center; justify-content: center;
+}
 
-    /* IMAGE UPLOAD */
-    .img-upload-area {
-      border: 2px dashed var(--border); border-radius: 12px;
-      padding: 24px; text-align: center; cursor: pointer;
-      transition: all 0.2s; position: relative; overflow: hidden;
-    }
-    .img-upload-area:hover { border-color: var(--accent); background: rgba(181,245,66,0.03); }
-    .img-upload-area input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
-    .img-upload-area i { font-size: 28px; color: var(--muted); margin-bottom: 8px; }
-    .img-upload-area p { font-size: 13px; color: var(--muted); }
-    .img-upload-area p strong { color: var(--accent); }
-    .img-preview {
-      width: 100%; max-height: 180px; object-fit: cover;
-      border-radius: 10px; margin-top: 12px; display: none;
-    }
+/* Buttons */
+.btn { padding: 10px 20px; border: none; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all .15s; display: inline-flex; align-items: center; gap: 6px; }
+.btn-primary { background: var(--accent); color: #0d0d0d; }
+.btn-primary:hover { background: #c8ff5a; }
+.btn-secondary { background: var(--card); color: var(--text); border: 1px solid var(--border); }
+.btn-secondary:hover { border-color: var(--sub); }
+.btn-danger { background: rgba(245,66,66,0.1); color: var(--red); }
+.btn-danger:hover { background: rgba(245,66,66,0.2); }
+.btn-sm { padding: 7px 14px; font-size: 0.78rem; }
+.btn-icon { width: 34px; height: 34px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--sub); cursor: pointer; transition: all .15s; }
+.btn-icon:hover { border-color: var(--sub); color: var(--text); }
 
-    /* COLOR PICKER ROW */
-    .color-row {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
-    }
-    .color-input-wrap {
-      display: flex; align-items: center; gap: 10px;
-    }
-    .color-input-wrap input[type="color"] {
-      width: 40px; height: 40px; border-radius: 8px;
-      padding: 2px; cursor: pointer; border: 1px solid var(--border);
-      background: var(--bg);
-    }
-    .color-input-wrap input[type="text"] {
-      flex: 1;
-    }
+/* List items */
+.list-item {
+  display: flex; align-items: center; gap: 14px; padding: 14px 16px;
+  background: var(--card); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px;
+  transition: border-color .15s;
+}
+.list-item:hover { border-color: var(--sub); }
+.list-item .drag-handle {
+  color: var(--muted); cursor: grab; font-size: 0.9rem; padding: 4px;
+  touch-action: none;
+}
+.list-item .drag-handle:active { cursor: grabbing; }
+.list-item.dragging { opacity: 0.5; border-color: var(--accent); }
+.list-item.drag-over { border-color: var(--accent); border-style: dashed; }
+.list-item .item-info { flex: 1; }
+.list-item .item-title { font-size: 0.88rem; font-weight: 600; }
+.list-item .item-sub { font-size: 0.75rem; color: var(--sub); margin-top: 2px; }
+.list-item .item-actions { display: flex; gap: 6px; }
+.list-item .item-img {
+  width: 48px; height: 48px; border-radius: 8px; object-fit: cover; background: var(--border);
+}
+.empty-state {
+  text-align: center; padding: 40px; color: var(--muted);
+}
+.empty-state i { font-size: 2rem; margin-bottom: 10px; opacity: 0.4; }
+.empty-state p { font-size: 0.85rem; }
 
-    /* STATS EDITOR */
-    .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
-    .stat-edit-card {
-      background: var(--bg); border: 1px solid var(--border);
-      border-radius: 12px; padding: 16px; text-align: center;
-    }
-    .stat-edit-card .stat-preview {
-      font-size: 32px; font-weight: 900; color: var(--text);
-      letter-spacing: -1px;
-    }
-    .stat-edit-card .stat-preview span { color: var(--accent); }
+/* Stats */
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.stat-card {
+  background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; text-align: center;
+}
+.stat-card .stat-num { font-size: 1.6rem; font-weight: 800; color: var(--accent); }
+.stat-card .stat-label { font-size: 0.75rem; color: var(--sub); margin-top: 4px; }
 
-    /* SKILL TAGS EDITOR */
-    .skill-tags-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
-    .skill-tag-item {
-      display: flex; align-items: center; gap: 6px;
-      padding: 6px 12px; border-radius: 50px;
-      background: var(--bg); border: 1px solid var(--border);
-      font-size: 13px; color: var(--sub);
-    }
-    .skill-tag-item button {
-      background: none; border: none; cursor: pointer;
-      color: var(--muted); font-size: 11px; padding: 0;
-      transition: color 0.2s; line-height: 1;
-    }
-    .skill-tag-item button:hover { color: var(--red); }
-    .add-skill-row { display: flex; gap: 8px; }
-    .add-skill-row input { flex: 1; }
-    .add-skill-row button {
-      padding: 11px 16px; border-radius: 10px;
-      background: var(--accent); color: #0a0a0a;
-      border: none; cursor: pointer; font-weight: 700;
-      font-size: 13px; font-family: 'Syne', sans-serif;
-      white-space: nowrap; transition: all 0.2s;
-    }
-    .add-skill-row button:hover { background: #8fc422; }
+/* Skills tags */
+.tags-wrap { display: flex; flex-wrap: wrap; gap: 8px; }
+.tag {
+  display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px;
+  background: var(--card); border: 1px solid var(--border); border-radius: 20px;
+  font-size: 0.8rem; color: var(--text);
+}
+.tag .remove-tag {
+  background: none; border: none; color: var(--muted); cursor: pointer; font-size: 0.7rem;
+  transition: color .15s; padding: 0; line-height: 1;
+}
+.tag .remove-tag:hover { color: var(--red); }
+.add-tag-row { display: flex; gap: 8px; margin-top: 10px; }
+.add-tag-row input { flex: 1; }
 
-    /* SERVICES LIST */
-    .services-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
-    .service-item {
-      background: var(--bg); border: 1px solid var(--border);
-      border-radius: 10px; padding: 14px 16px;
-      display: flex; align-items: center; gap: 12px;
-    }
-    .service-item-icon {
-      width: 36px; height: 36px; border-radius: 8px;
-      background: rgba(181,245,66,0.1); border: 1px solid rgba(181,245,66,0.2);
-      display: flex; align-items: center; justify-content: center;
-      color: var(--accent); font-size: 15px; flex-shrink: 0;
-    }
-    .service-item-info { flex: 1; }
-    .service-item-info .s-title { font-size: 14px; font-weight: 700; }
-    .service-item-info .s-desc { font-size: 12px; color: var(--sub); }
+/* Companies marquee preview */
+.marquee-preview {
+  background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+  padding: 16px; overflow: hidden; margin-bottom: 20px;
+}
+.marquee-track {
+  display: flex; gap: 32px; animation: marqueeScroll 20s linear infinite;
+  width: max-content;
+}
+@keyframes marqueeScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+.marquee-track .marquee-item {
+  display: flex; align-items: center; gap: 8px; padding: 6px 16px;
+  background: var(--panel); border: 1px solid var(--border); border-radius: 8px; white-space: nowrap;
+  font-size: 0.82rem; font-weight: 500;
+}
+.marquee-track .marquee-item img { width: 20px; height: 20px; object-fit: contain; border-radius: 4px; }
 
-    /* CONTACT ITEMS */
-    .contact-list { display: flex; flex-direction: column; gap: 12px; }
-    .contact-edit-item {
-      background: var(--bg); border: 1px solid var(--border);
-      border-radius: 10px; padding: 14px 16px;
-      display: flex; align-items: center; gap: 12px;
-    }
-    .contact-edit-item i { color: var(--accent); font-size: 16px; width: 20px; }
+/* Toggle switch */
+.toggle-wrap { display: flex; align-items: center; gap: 10px; }
+.toggle {
+  position: relative; width: 44px; height: 24px; background: var(--border); border-radius: 12px;
+  cursor: pointer; transition: background .2s;
+}
+.toggle.on { background: var(--accent); }
+.toggle::after {
+  content: ''; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px;
+  background: #fff; border-radius: 50%; transition: transform .2s;
+}
+.toggle.on::after { transform: translateX(20px); }
+.toggle-label { font-size: 0.82rem; color: var(--sub); }
 
-    /* SECTION DIVIDER */
-    .section-divider {
-      display: flex; align-items: center; gap: 12px;
-      margin: 24px 0 20px; font-size: 12px;
-      color: var(--muted); text-transform: uppercase;
-      letter-spacing: 2px; font-family: 'JetBrains Mono', monospace;
-    }
-    .section-divider::before, .section-divider::after {
-      content: ''; flex: 1; height: 1px; background: var(--border);
-    }
+/* Color inputs */
+.color-pair { display: flex; gap: 10px; align-items: center; }
+.color-input-wrap { display: flex; align-items: center; gap: 6px; }
+.color-input-wrap input[type="color"] {
+  width: 36px; height: 36px; border: 1px solid var(--border); border-radius: 6px;
+  background: none; cursor: pointer; padding: 2px;
+}
+.color-input-wrap span { font-size: 0.75rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
 
-    /* STATUS BADGE */
-    .badge {
-      display: inline-flex; align-items: center; gap: 5px;
-      padding: 3px 10px; border-radius: 50px;
-      font-size: 11px; font-weight: 700;
-    }
-    .badge.green { background: rgba(181,245,66,0.1); color: var(--accent); }
-    .badge.blue { background: rgba(66,200,245,0.1); color: var(--accent2); }
+/* Modal */
+.modal-overlay {
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 2000;
+  align-items: center; justify-content: center; padding: 20px;
+  opacity: 0; transition: opacity .2s;
+}
+.modal-overlay.active { display: flex; opacity: 1; }
+.modal {
+  background: var(--panel); border: 1px solid var(--border); border-radius: 16px;
+  width: 560px; max-width: 100%; max-height: 85vh; overflow-y: auto;
+  transform: scale(0.95); transition: transform .2s;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+.modal-overlay.active .modal { transform: scale(1); }
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between; padding: 20px 24px;
+  border-bottom: 1px solid var(--border);
+}
+.modal-header h3 { font-size: 1.05rem; font-weight: 700; }
+.modal-close {
+  width: 32px; height: 32px; background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+  color: var(--sub); cursor: pointer; display: flex; align-items: center; justify-content: center;
+  font-size: 0.85rem; transition: all .15s;
+}
+.modal-close:hover { color: var(--text); border-color: var(--sub); }
+.modal-body { padding: 24px; }
+.modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; }
 
-    /* SCROLLBAR */
-    ::-webkit-scrollbar { width: 4px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+/* Toast */
+.toast-container { position: fixed; top: 20px; right: 20px; z-index: 5000; display: flex; flex-direction: column; gap: 10px; }
+.toast {
+  display: flex; align-items: center; gap: 10px; padding: 14px 20px;
+  background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+  font-size: 0.85rem; font-weight: 500; min-width: 280px; max-width: 400px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+  animation: toastIn .3s ease; pointer-events: auto;
+}
+.toast.removing { animation: toastOut .3s ease forwards; }
+@keyframes toastIn { from { opacity: 0; transform: translateX(60px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes toastOut { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(60px); } }
+.toast .toast-icon { font-size: 1rem; flex-shrink: 0; }
+.toast.success { border-left: 3px solid var(--toast-success); }
+.toast.success .toast-icon { color: var(--toast-success); }
+.toast.error { border-left: 3px solid var(--toast-error); }
+.toast.error .toast-icon { color: var(--toast-error); }
+.toast.warning { border-left: 3px solid var(--toast-warning); }
+.toast.warning .toast-icon { color: var(--toast-warning); }
+.toast .toast-msg { flex: 1; }
+.toast .toast-close { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 0.8rem; padding: 2px; }
 
-    /* DANGER CONFIRM */
-    .danger-zone {
-      border: 1px solid rgba(245,66,66,0.2);
-      border-radius: 12px; padding: 16px 20px;
-      display: flex; align-items: center; justify-content: space-between;
-      gap: 16px; margin-top: 16px;
-    }
-    .danger-zone p { font-size: 13px; color: var(--sub); }
-    .btn-danger {
-      display: flex; align-items: center; gap: 8px;
-      background: rgba(245,66,66,0.1); color: var(--red);
-      border: 1px solid rgba(245,66,66,0.3); padding: 9px 16px; border-radius: 10px;
-      font-weight: 700; font-size: 13px; cursor: pointer;
-      font-family: 'Syne', sans-serif; transition: all 0.2s; white-space: nowrap;
-    }
-    .btn-danger:hover { background: rgba(245,66,66,0.2); }
+/* Danger zone */
+.danger-zone { border: 1px solid rgba(245,66,66,0.2); border-radius: 14px; padding: 24px; background: rgba(245,66,66,0.03); }
+.danger-zone h4 { color: var(--red); font-size: 0.95rem; margin-bottom: 6px; }
+.danger-zone p { color: var(--sub); font-size: 0.82rem; margin-bottom: 16px; }
 
-    @keyframes marquee {
-      from { transform: translateX(0); }
-      to   { transform: translateX(-50%); }
-    }
-    .admin-company-chip {
-      display: inline-flex; align-items: center; justify-content: center;
-      padding: 0 32px; height: 56px; flex-shrink: 0;
-      transition: transform 0.1s, opacity 0.1s;
-    }
-    .admin-company-chip span {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 12px; font-weight: 700;
-      text-transform: uppercase; letter-spacing: 1px;
-      white-space: nowrap;
-    }
-    .admin-company-chip img {
-      height: 28px; width: auto; max-width: 90px;
-      object-fit: contain;
-    }
+/* GitHub section */
+.github-status { display: flex; align-items: center; gap: 8px; font-size: 0.82rem; margin-top: 10px; }
+.github-status .dot { width: 8px; height: 8px; border-radius: 50%; }
+.github-status .dot.ok { background: var(--toast-success); }
+.github-status .dot.no { background: var(--red); }
 
-    /* ===== COMPANY LIST ITEMS ===== */
-    .company-item {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 14px 16px;
-      margin-bottom: 10px;
-    }
-    .company-item-thumb {
-      width: 60px;
-      height: 44px;
-      border-radius: 8px;
-      background: var(--card);
-      border: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      overflow: hidden;
-    }
-    .company-item-info {
-      flex: 1;
-      min-width: 0;
-    }
-    .company-item-actions {
-      display: flex;
-      gap: 6px;
-      flex-shrink: 0;
-    }
-
-    /* ===== ADMIN MOBILE RESPONSIVE ===== */
-    .sidebar-mobile-toggle {
-      display: none;
-      background: none; border: 1px solid var(--border);
-      color: var(--text); font-size: 16px; cursor: pointer;
-      padding: 7px 10px; border-radius: 8px;
-    }
-    @media (max-width: 900px) {
-      .sidebar {
-        width: 100%; min-height: auto;
-        position: fixed; top: 0; left: 0; right: 0; bottom: auto;
-        flex-direction: row; align-items: center;
-        padding: 0 16px; height: 60px;
-        z-index: 200; overflow: hidden;
-      }
-      .sidebar-logo { padding: 0; border: none; flex: 1; }
-      .sidebar-logo p { display: none; }
-      .nav-section { display: none; }
-      .nav-item { display: none; }
-      .sidebar-bottom { display: none; }
-      .sidebar-mobile-toggle { display: flex !important; }
-      .sidebar.open {
-        height: 100vh; flex-direction: column;
-        align-items: stretch; padding: 0;
-        overflow-y: auto;
-      }
-      .sidebar.open .nav-section { display: block; }
-      .sidebar.open .nav-item { display: flex; }
-      .sidebar.open .sidebar-bottom { display: block; padding: 16px; }
-      .sidebar.open .sidebar-logo { padding: 20px 24px; border-bottom: 1px solid var(--border); }
-      .sidebar.open .sidebar-mobile-toggle { position: absolute; top: 12px; right: 16px; }
-      .main { margin-left: 0; padding-top: 60px; }
-      .topbar { padding: 14px 20px; }
-      .topbar h2 { font-size: 16px; }
-      .topbar-right .badge { display: none; }
-      .section-panel { padding: 20px 16px; }
-      .edit-card { padding: 20px 16px; }
-      .form-row, .form-row-3 { grid-template-columns: 1fr; }
-      .color-row { grid-template-columns: 1fr; }
-      .stats-grid { grid-template-columns: 1fr 1fr; }
-      .modal { padding: 24px 20px; width: 95vw; max-height: 90vh; }
-      .contact-list { gap: 8px; }
-      .users-table th:nth-child(3), .users-table td:nth-child(3) { display: none; }
-      .company-item { gap: 10px; padding: 12px 12px; }
-      .company-item-thumb { width: 48px; height: 38px; }
-      .company-item-actions { gap: 4px; }
-    }
-    @media (max-width: 500px) {
-      .stats-grid { grid-template-columns: 1fr; }
-      .save-all-btn span { display: none; }
-      .topbar h2 { font-size: 14px; }
-      .section-panel { padding: 16px 12px; }
-      .edit-card { padding: 16px 12px; }
-      .company-item-thumb { width: 40px; height: 34px; }
-      .company-item { padding: 10px 10px; gap: 8px; }
-      .company-item-actions { gap: 4px; }
-    }
-
-    /* ===== LOGIN SCREEN ===== */
-    #login-screen {
-      position: fixed; inset: 0; z-index: 9999;
-      background: var(--bg);
-      display: flex; align-items: center; justify-content: center;
-    }
-    #login-screen.hidden { display: none; }
-    .login-box {
-      width: 400px; max-width: 90vw;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 40px 36px;
-    }
-    .login-logo {
-      font-size: 22px; font-weight: 800;
-      margin-bottom: 6px;
-    }
-    .login-logo span { color: var(--accent); }
-    .login-sub {
-      font-size: 12px; color: var(--muted);
-      font-family: 'JetBrains Mono', monospace;
-      margin-bottom: 32px;
-    }
-    .login-error {
-      background: rgba(245,66,66,0.1);
-      border: 1px solid rgba(245,66,66,0.25);
-      border-radius: 8px; padding: 10px 14px;
-      font-size: 13px; color: var(--red);
-      margin-bottom: 16px; display: none;
-    }
-    .login-error.show { display: block; }
-    .login-btn {
-      width: 100%; padding: 13px;
-      background: var(--accent); color: #0a0a0a;
-      border: none; border-radius: 10px; cursor: pointer;
-      font-size: 14px; font-weight: 700;
-      font-family: 'Syne', sans-serif;
-      transition: all 0.2s; margin-top: 8px;
-    }
-    .login-btn:hover { background: #8fc422; }
-
-    /* ===== USERS TABLE ===== */
-    .users-table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
-    .users-table th {
-      text-align: left; padding: 10px 14px;
-      font-size: 10px; color: var(--muted);
-      text-transform: uppercase; letter-spacing: 1.5px;
-      font-family: 'JetBrains Mono', monospace;
-      border-bottom: 1px solid var(--border);
-    }
-    .users-table td {
-      padding: 12px 14px; font-size: 13px;
-      border-bottom: 1px solid rgba(42,42,42,0.5);
-      vertical-align: middle;
-    }
-    .users-table tr:last-child td { border-bottom: none; }
-    .user-role-badge {
-      display: inline-flex; align-items: center;
-      padding: 3px 10px; border-radius: 50px;
-      font-size: 10px; font-weight: 700;
-      font-family: 'JetBrains Mono', monospace;
-    }
-    .user-role-badge.admin { background: rgba(181,245,66,0.1); color: var(--accent); }
-    .user-role-badge.editor { background: rgba(66,200,245,0.1); color: var(--accent2); }
-
-  </style>
+/* ============ RESPONSIVE ============ */
+@media (max-width: 900px) {
+  .sidebar { transform: translateX(-100%); }
+  .sidebar.open { transform: translateX(0); }
+  .main-content { margin-left: 0; }
+  .mobile-toggle { display: flex; }
+  .form-row { grid-template-columns: 1fr; }
+  .form-row.three { grid-template-columns: 1fr; }
+  .topbar { padding: 0 16px; }
+  .panels-container { padding: 16px; }
+}
+@media (max-width: 500px) {
+  .login-card { padding: 32px 24px; }
+  .stats-grid { grid-template-columns: 1fr; }
+  .modal { border-radius: 12px; }
+}
+</style>
 </head>
 <body>
 
-<!-- LOGIN SCREEN -->
-<div id="login-screen">
-  <div class="login-box">
-    <div class="login-logo">dizay<span>n.</span> <span style="font-size:11px;color:var(--muted);font-weight:400">admin</span></div>
-    <div class="login-sub">// kirish uchun ma'lumotlaringizni kiriting</div>
-    <div class="login-error" id="login-error"><i class="fas fa-exclamation-circle"></i> <span id="login-error-msg">Login yoki parol noto'g'ri</span></div>
-    <div class="form-group">
-      <label>Login</label>
-      <input type="text" id="login-username" placeholder="username" autocomplete="username" onkeydown="if(event.key==='Enter')doLogin()"/>
+<!-- ============ LOGIN SCREEN ============ -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-bg-anim">
+    <span></span><span></span><span></span><span></span><span></span>
+    <span></span><span></span><span></span><span></span><span></span>
+  </div>
+  <div class="login-card">
+    <h1>Admin <span>Panel</span></h1>
+    <p class="sub">Portfolio boshqaruv paneli</p>
+    <div class="login-field">
+      <label>Foydalanuvchi</label>
+      <div class="input-wrap">
+        <i class="fas fa-user"></i>
+        <input type="text" id="loginUser" placeholder="Loginni kiriting" autocomplete="username">
+      </div>
     </div>
-    <div class="form-group">
+    <div class="login-field">
       <label>Parol</label>
-      <div style="position:relative;">
-        <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()" style="padding-right:44px;"/>
-        <button onclick="togglePwd('login-password',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;"><i class="fas fa-eye"></i></button>
+      <div class="input-wrap">
+        <i class="fas fa-lock"></i>
+        <input type="password" id="loginPass" placeholder="Parolni kiriting" autocomplete="current-password">
+        <button class="pwd-toggle" type="button" onclick="togglePwd()"><i class="fas fa-eye"></i></button>
       </div>
     </div>
-    <button class="login-btn" onclick="doLogin()"><i class="fas fa-sign-in-alt"></i> Kirish</button>
+    <button class="login-btn" onclick="doLogin()">Kirish</button>
+    <div class="login-error" id="loginError"></div>
   </div>
 </div>
 
-<!-- SIDEBAR -->
-<aside class="sidebar">
-  <div class="sidebar-logo">
-    <h1>dizay<span>n.</span> <span style="font-size:11px;color:var(--muted);font-weight:400">admin</span></h1>
-    <p>// boshqaruv paneli</p>
-  </div>
-  <button class="sidebar-mobile-toggle" onclick="this.closest('.sidebar').classList.toggle('open')">
-    <i class="fas fa-bars"></i>
-  </button>
-  <button class="sidebar-mobile-toggle" onclick="toggleSidebar()" style="display:none;background:none;border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:8px;cursor:pointer;font-size:16px;margin-left:auto;">
-    <i class="fas fa-bars" id="sidebar-toggle-icon"></i>
-  </button>
+<!-- ============ ADMIN APP ============ -->
+<div class="admin-app" id="adminApp">
+  <!-- Sidebar overlay for mobile -->
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 
-  <div class="nav-section">Sahifalar</div>
-  <div class="nav-item active" onclick="showPanel('hero')">
-    <i class="fas fa-home"></i> Hero bo'limi
-  </div>
-  <div class="nav-item" onclick="showPanel('companies')">
-    <i class="fas fa-building"></i> Kompaniyalar
-  </div>
-  <div class="nav-item" onclick="showPanel('portfolio')">
-    <i class="fas fa-images"></i> Portfolio
-  </div>
-  <div class="nav-item" onclick="showPanel('services')">
-    <i class="fas fa-briefcase"></i> Xizmatlar
-  </div>
-  <div class="nav-item" onclick="showPanel('about')">
-    <i class="fas fa-user"></i> Men haqimda
-  </div>
-  <div class="nav-item" onclick="showPanel('contact')">
-    <i class="fas fa-envelope"></i> Aloqa
-  </div>
-  <div class="nav-item" onclick="showPanel('settings')">
-    <i class="fas fa-cog"></i> Sozlamalar
-  </div>
-
-  <div class="sidebar-bottom">
-    <a href="index.html" target="_blank" class="preview-btn" style="margin-bottom:10px;">
-      <i class="fas fa-external-link-alt"></i> Saytni ko'rish
-    </a>
-    <button onclick="logout()" style="display:flex;align-items:center;gap:10px;width:100%;padding:11px 16px;border-radius:10px;background:transparent;border:1px solid var(--border);color:var(--muted);cursor:pointer;font-family:'Syne',sans-serif;font-size:13px;font-weight:600;transition:all 0.2s;" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
-      <i class="fas fa-sign-out-alt"></i> Chiqish
-    </button>
-  </div>
-</aside>
-
-<!-- MAIN -->
-<main class="main">
-  <div class="topbar">
-    <h2 id="panel-title">Hero bo'limi</h2>
-    <div class="topbar-right">
-      <span class="badge green"><i class="fas fa-circle" style="font-size:7px"></i> Saqlangan</span>
-      <button class="save-all-btn" onclick="saveAll()">
-        <i class="fas fa-save"></i> Saqlash
-      </button>
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">D</div>
+      <div class="brand-text">dizay<span>n.</span></div>
     </div>
-  </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">Bo'limlar</div>
+      <div class="nav-item active" data-panel="hero" onclick="showPanel('hero', this)">
+        <i class="fas fa-home"></i> Hero
+      </div>
+      <div class="nav-item" data-panel="companies" onclick="showPanel('companies', this)">
+        <i class="fas fa-building"></i> Kompaniyalar
+      </div>
+      <div class="nav-item" data-panel="portfolio" onclick="showPanel('portfolio', this)">
+        <i class="fas fa-briefcase"></i> Portfolio
+      </div>
+      <div class="nav-item" data-panel="services" onclick="showPanel('services', this)">
+        <i class="fas fa-concierge-bell"></i> Xizmatlar
+      </div>
+      <div class="nav-item" data-panel="about" onclick="showPanel('about', this)">
+        <i class="fas fa-user-circle"></i> Haqida
+      </div>
+      <div class="nav-item" data-panel="contact" onclick="showPanel('contact', this)">
+        <i class="fas fa-envelope"></i> Kontakt
+      </div>
+      <div class="nav-section">Tizim</div>
+      <div class="nav-item" data-panel="settings" onclick="showPanel('settings', this)">
+        <i class="fas fa-cog"></i> Sozlamalar
+      </div>
+      <div class="nav-item" data-panel="github" onclick="showPanel('github', this)">
+        <i class="fab fa-github"></i> GitHub Push
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="user-avatar" id="userAvatar">A</div>
+        <div class="user-info">
+          <div class="name" id="userName">Admin</div>
+          <div class="role" id="userRole">Administrator</div>
+        </div>
+      </div>
+      <button class="sidebar-logout" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Chiqish</button>
+    </div>
+  </aside>
 
-  <!-- ===== HERO PANEL ===== -->
-  <div class="section-panel active" id="panel-hero">
-    <div class="edit-card">
-      <h3><i class="fas fa-heading"></i> Asosiy sarlavha</h3>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Birinchi qator</label>
-          <input type="text" id="hero-line1" placeholder="Grafik"/>
-        </div>
-        <div class="form-group">
-          <label>Ikkinchi qator (aksent rang)</label>
-          <input type="text" id="hero-line2" placeholder="Dizayner"/>
-        </div>
+  <!-- Main content -->
+  <div class="main-content">
+    <div class="topbar">
+      <div class="topbar-left">
+        <button class="mobile-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+        <div class="topbar-title" id="topbarTitle">Hero</div>
       </div>
-      <div class="form-group">
-        <label>Uchinchi qator</label>
-        <input type="text" id="hero-line3" placeholder="& Kreativ"/>
-      </div>
-      <div class="form-group">
-        <label>Tavsif matni</label>
-        <textarea id="hero-desc" placeholder="Brendlar, mahsulotlar..."></textarea>
-      </div>
-      <div class="form-group">
-        <label>Holat xabari (badge)</label>
-        <input type="text" id="hero-badge" placeholder="Yangi loyihalar qabul qilinmoqda"/>
+      <div class="topbar-right">
+        <div class="unsaved-badge" id="unsavedBadge"><i class="fas fa-circle" style="font-size:0.45rem"></i> Saqlanmagan</div>
+        <span class="save-shortcut">Ctrl+S</span>
+        <button class="topbar-save-btn" onclick="saveAll()"><i class="fas fa-save"></i> Saqlash</button>
       </div>
     </div>
+    <div class="panels-container">
 
-    <div class="edit-card">
-      <h3><i class="fas fa-chart-bar"></i> Statistikalar</h3>
-      <div class="stats-grid" id="stats-preview">
-        <!-- rendered by JS -->
+      <!-- HERO PANEL -->
+      <div class="panel active" id="panel-hero">
+        <div class="panel-header">
+          <h2>Hero Bo'limi</h2>
+          <p>Bosh sahifadagi sarlavha va statistika</p>
+        </div>
+        <div class="form-card">
+          <div class="form-card-title"><i class="fas fa-heading"></i> Sarlavha</div>
+          <div class="form-row three">
+            <div class="form-group">
+              <label>1-qator <span class="char-count" id="cc-hero-line1"></span></label>
+              <input class="form-input" id="hero-line1" placeholder="Masalan: Grafik" maxlength="30" oninput="charCount(this,'cc-hero-line1',30); markDirty()">
+            </div>
+            <div class="form-group">
+              <label>2-qator <span class="char-count" id="cc-hero-line2"></span></label>
+              <input class="form-input" id="hero-line2" placeholder="Masalan: Dizayner" maxlength="30" oninput="charCount(this,'cc-hero-line2',30); markDirty()">
+            </div>
+            <div class="form-group">
+              <label>3-qator <span class="char-count" id="cc-hero-line3"></span></label>
+              <input class="form-input" id="hero-line3" placeholder="Masalan: & Kreativ" maxlength="30" oninput="charCount(this,'cc-hero-line3',30); markDirty()">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Tavsif <span class="char-count" id="cc-hero-desc"></span></label>
+            <textarea class="form-input" id="hero-desc" rows="3" placeholder="Hero bo'limi tavsifi" maxlength="200" oninput="charCount(this,'cc-hero-desc',200); markDirty()"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Badge matni <span class="char-count" id="cc-hero-badge"></span></label>
+            <input class="form-input" id="hero-badge" placeholder="Masalan: Yangi loyihalar qabul qilinmoqda" maxlength="60" oninput="charCount(this,'cc-hero-badge',60); markDirty()">
+          </div>
+        </div>
+        <div class="form-card">
+          <div class="form-card-title"><i class="fas fa-chart-bar"></i> Statistika</div>
+          <div class="stats-grid" id="statsPreview"></div>
+          <div id="statsEdit"></div>
+          <button class="btn btn-secondary btn-sm" onclick="addStat()" style="margin-top:10px"><i class="fas fa-plus"></i> Statistika qo'shish</button>
+        </div>
       </div>
-      <div class="section-divider">tahrirlash</div>
-      <div id="stats-edit-area"></div>
-    </div>
-  </div>
 
-  <!-- ===== COMPANIES PANEL ===== -->
-  <div class="section-panel" id="panel-companies">
-    <div class="edit-card">
-      <h3><i class="fas fa-building"></i> Kompaniyalar bo'limi</h3>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Bo'lim sarlavhasi</label>
-          <input type="text" id="companies-label-input" placeholder="Ishlagan kompaniyalar va hamkorlar" oninput="updateCompaniesPreview()"/>
+      <!-- COMPANIES PANEL -->
+      <div class="panel" id="panel-companies">
+        <div class="panel-header">
+          <h2>Kompaniyalar</h2>
+          <p>Hamkorlar va ishlangan kompaniyalar</p>
         </div>
-        <div class="form-group" style="display:flex;align-items:flex-end;">
-          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:0;flex-wrap:wrap;">
-            <input type="checkbox" id="companies-visible" style="width:16px;height:16px;accent-color:var(--accent);border-radius:4px;flex-shrink:0;" onchange="updateCompaniesPreview()"/>
-            <span style="font-size:13px;color:var(--sub);">Bo'limni ko'rsatish</span>
-          </label>
+        <div class="form-card">
+          <div class="form-card-title"><i class="fas fa-tag"></i> Marquee Sozlamalari</div>
+          <div class="form-group">
+            <label>Label matni</label>
+            <input class="form-input" id="comp-label" placeholder="Masalan: Ishlagan kompaniyalar" oninput="markDirty()">
+          </div>
+          <div class="toggle-wrap" style="margin-bottom:16px">
+            <div class="toggle on" id="comp-visible-toggle" onclick="toggleCompVisible()"></div>
+            <span class="toggle-label">Ko'rinish</span>
+          </div>
+          <div class="marquee-preview" id="marqueePreview"></div>
+        </div>
+        <div class="form-card">
+          <div class="form-card-title" style="justify-content:space-between">
+            <span><i class="fas fa-list"></i> Kompaniyalar Ro'yxati</span>
+            <button class="btn btn-primary btn-sm" onclick="openAddCompany()"><i class="fas fa-plus"></i> Qo'shish</button>
+          </div>
+          <div id="companiesList"></div>
         </div>
       </div>
-      <!-- MINI PREVIEW -->
-      <div style="margin-top:8px;">
-        <div style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">Ko'rinish preview</div>
-        <div id="companies-preview-box" style="background:var(--bg);border:1px solid var(--border);border-radius:12px;overflow:hidden;padding:20px 0;position:relative;">
-          <div id="companies-preview-label" style="text-align:center;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:2px;margin-bottom:14px;"></div>
-          <div style="position:relative;overflow:hidden;">
-            <div style="position:absolute;left:0;top:0;bottom:0;width:80px;background:linear-gradient(90deg,var(--bg),transparent);z-index:2;pointer-events:none;"></div>
-            <div style="position:absolute;right:0;top:0;bottom:0;width:80px;background:linear-gradient(270deg,var(--bg),transparent);z-index:2;pointer-events:none;"></div>
-            <div id="admin-marquee-track" style="display:flex;animation:marquee 20s linear infinite;width:max-content;"></div>
+
+      <!-- PORTFOLIO PANEL -->
+      <div class="panel" id="panel-portfolio">
+        <div class="panel-header">
+          <h2>Portfolio</h2>
+          <p>Ishlaringiz va loyihalaringiz</p>
+        </div>
+        <div class="form-card">
+          <div class="form-card-title" style="justify-content:space-between">
+            <span><i class="fas fa-th-large"></i> Loyihalar</span>
+            <button class="btn btn-primary btn-sm" onclick="openAddPortfolio()"><i class="fas fa-plus"></i> Yangi loyiha</button>
+          </div>
+          <p style="font-size:0.75rem;color:var(--muted);margin-bottom:14px"><i class="fas fa-grip-vertical"></i> Tartibni o'zgartirish uchun sudrab olib tashlang</p>
+          <div id="portfolioList"></div>
+        </div>
+      </div>
+
+      <!-- SERVICES PANEL -->
+      <div class="panel" id="panel-services">
+        <div class="panel-header">
+          <h2>Xizmatlar</h2>
+          <p>Taklif qiladigan xizmatlaringiz</p>
+        </div>
+        <div class="form-card">
+          <div class="form-card-title" style="justify-content:space-between">
+            <span><i class="fas fa-concierge-bell"></i> Xizmatlar Ro'yxati</span>
+            <button class="btn btn-primary btn-sm" onclick="openAddService()"><i class="fas fa-plus"></i> Yangi xizmat</button>
+          </div>
+          <div id="servicesList"></div>
+        </div>
+      </div>
+
+      <!-- ABOUT PANEL -->
+      <div class="panel" id="panel-about">
+        <div class="panel-header">
+          <h2>Haqida</h2>
+          <p>O'zingiz haqingizda ma'lumotlar</p>
+        </div>
+        <div class="form-card">
+          <div class="form-card-title"><i class="fas fa-image"></i> Profil Rasm</div>
+          <div class="img-upload-zone" id="aboutImgZone">
+            <i class="fas fa-cloud-upload-alt"></i>
+            <p>Rasm yuklash uchun bosing</p>
+            <div class="size-note">Avtomatik siqiladi (maks. 1200px, JPEG 80%)</div>
+            <input type="file" accept="image/*" onchange="previewImg(event, 'aboutImgPreview', 'about-img-data')">
+          </div>
+          <div class="img-preview" id="aboutImgPreview"></div>
+          <input type="hidden" id="about-img-data">
+        </div>
+        <div class="form-card">
+          <div class="form-card-title"><i class="fas fa-pen"></i> Tavsiflar</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Sarlavha 1 <span class="char-count" id="cc-about-t1"></span></label>
+              <input class="form-input" id="about-title1" placeholder="Masalan: Dizayn orqali" maxlength="40" oninput="charCount(this,'cc-about-t1',40); markDirty()">
+            </div>
+            <div class="form-group">
+              <label>Sarlavha 2 <span class="char-count" id="cc-about-t2"></span></label>
+              <input class="form-input" id="about-title2" placeholder="Masalan: qiymat yarataman" maxlength="40" oninput="charCount(this,'cc-about-t2',40); markDirty()">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Tavsif 1 <span class="char-count" id="cc-about-d1"></span></label>
+            <textarea class="form-input" id="about-desc1" rows="2" placeholder="Birinchi tavsif matni" maxlength="200" oninput="charCount(this,'cc-about-d1',200); markDirty()"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Tavsif 2 <span class="char-count" id="cc-about-d2"></span></label>
+            <textarea class="form-input" id="about-desc2" rows="2" placeholder="Ikkinchi tavsif matni" maxlength="200" oninput="charCount(this,'cc-about-d2',200); markDirty()"></textarea>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Tajriba raqami</label>
+              <input class="form-input" id="about-exp" placeholder="Masalan: 5+" oninput="markDirty()">
+            </div>
+            <div class="form-group">
+              <label>Tajriba label</label>
+              <input class="form-input" id="about-expLabel" placeholder="Masalan: Yil tajriba" oninput="markDirty()">
+            </div>
+          </div>
+        </div>
+        <div class="form-card">
+          <div class="form-card-title"><i class="fas fa-tools"></i> Ko'nikmalar</div>
+          <div class="tags-wrap" id="skillTags"></div>
+          <div class="add-tag-row">
+            <input class="form-input" id="newSkill" placeholder="Yangi ko'nikma kiriting" onkeydown="if(event.key==='Enter'){addSkill(); event.preventDefault();}">
+            <button class="btn btn-primary btn-sm" onclick="addSkill()"><i class="fas fa-plus"></i></button>
           </div>
         </div>
       </div>
-    </div>
-    <div class="edit-card">
-      <h3><i class="fas fa-list"></i> Kompaniyalar ro'yxati</h3>
-      <div class="portfolio-list" id="companies-list"></div>
-      <button class="add-btn" onclick="openAddCompany()">
-        <i class="fas fa-plus"></i> Yangi kompaniya qo'shish
-      </button>
-    </div>
-  </div>
 
-  <!-- ===== PORTFOLIO PANEL ===== -->
-  <div class="section-panel" id="panel-portfolio">
-    <div class="edit-card">
-      <h3><i class="fas fa-images"></i> Portfolio ishlari</h3>
-      <div class="portfolio-list" id="portfolio-list"></div>
-      <button class="add-btn" onclick="openAddPortfolio()">
-        <i class="fas fa-plus"></i> Yangi ish qo'shish
-      </button>
-    </div>
-  </div>
-
-  <!-- ===== SERVICES PANEL ===== -->
-  <div class="section-panel" id="panel-services">
-    <div class="edit-card">
-      <h3><i class="fas fa-briefcase"></i> Xizmatlar ro'yxati</h3>
-      <div class="services-list" id="services-list"></div>
-      <button class="add-btn" onclick="openAddService()">
-        <i class="fas fa-plus"></i> Yangi xizmat qo'shish
-      </button>
-    </div>
-  </div>
-
-  <!-- ===== ABOUT PANEL ===== -->
-  <div class="section-panel" id="panel-about">
-    <div class="edit-card">
-      <h3><i class="fas fa-user-circle"></i> Shaxsiy ma'lumotlar</h3>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Sarlavha birinchi qator</label>
-          <input type="text" id="about-title1" placeholder="Dizayn orqali"/>
+      <!-- CONTACT PANEL -->
+      <div class="panel" id="panel-contact">
+        <div class="panel-header">
+          <h2>Kontakt</h2>
+          <p>Bog'lanish ma'lumotlari</p>
         </div>
-        <div class="form-group">
-          <label>Sarlavha ikkinchi qator</label>
-          <input type="text" id="about-title2" placeholder="qiymat yarataman"/>
-        </div>
-      </div>
-      <div class="form-group">
-        <label>Asosiy tavsif</label>
-        <textarea id="about-desc1" placeholder="Toshkentda faoliyat yurituvchi..."></textarea>
-      </div>
-      <div class="form-group">
-        <label>Qo'shimcha matn</label>
-        <textarea id="about-desc2" placeholder="Har bir loyihani..."></textarea>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Tajriba yillari (raqam)</label>
-          <input type="text" id="about-exp" placeholder="5+"/>
-        </div>
-        <div class="form-group">
-          <label>Badge matni</label>
-          <input type="text" id="about-exp-label" placeholder="Yil tajriba"/>
-        </div>
-      </div>
-    </div>
-
-    <div class="edit-card">
-      <h3><i class="fas fa-tags"></i> Ko'nikmalar (skill tags)</h3>
-      <div class="skill-tags-list" id="skill-tags-list"></div>
-      <div class="add-skill-row">
-        <input type="text" id="new-skill-input" placeholder="Yangi ko'nikma qo'shing..." onkeydown="if(event.key==='Enter')addSkill()"/>
-        <button onclick="addSkill()"><i class="fas fa-plus"></i> Qo'shish</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ===== CONTACT PANEL ===== -->
-  <div class="section-panel" id="panel-contact">
-    <div class="edit-card">
-      <h3><i class="fas fa-address-card"></i> Aloqa ma'lumotlari</h3>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Email</label>
-          <input type="email" id="contact-email" placeholder="email@example.com"/>
-        </div>
-        <div class="form-group">
-          <label>Telegram username</label>
-          <input type="text" id="contact-telegram" placeholder="@username"/>
-        </div>
-      </div>
-      <div class="form-group">
-        <label>Joylashuv</label>
-        <input type="text" id="contact-location" placeholder="Toshkent, O'zbekiston"/>
-      </div>
-    </div>
-
-    <div class="edit-card">
-      <h3><i class="fas fa-share-alt"></i> Ijtimoiy tarmoqlar</h3>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Instagram URL</label>
-          <input type="text" id="social-instagram" placeholder="https://instagram.com/username"/>
-        </div>
-        <div class="form-group">
-          <label>Telegram URL</label>
-          <input type="text" id="social-telegram" placeholder="https://t.me/username"/>
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Behance URL</label>
-          <input type="text" id="social-behance" placeholder="https://behance.net/username"/>
-        </div>
-        <div class="form-group">
-          <label>Dribbble URL</label>
-          <input type="text" id="social-dribbble" placeholder="https://dribbble.com/username"/>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ===== SETTINGS PANEL ===== -->
-  <div class="section-panel" id="panel-settings">
-    <div class="edit-card">
-      <h3><i class="fas fa-paint-brush"></i> Sayt sozlamalari</h3>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Logo matni (aksentsiz)</label>
-          <input type="text" id="logo-text" placeholder="dizay"/>
-        </div>
-        <div class="form-group">
-          <label>Logo aksent qismi</label>
-          <input type="text" id="logo-accent" placeholder="n."/>
-        </div>
-      </div>
-      <div class="form-group">
-        <label>Sahifa nomi (title)</label>
-        <input type="text" id="site-title" placeholder="Portfolio – Grafik Dizayner"/>
-      </div>
-      <div class="form-group">
-        <label>Footer matni</label>
-        <input type="text" id="footer-text" placeholder="© 2025 dizayn. Barcha huquqlar himoyalangan."/>
-      </div>
-      <div class="form-group">
-        <label>CV havolasi (Google Docs URL)</label>
-        <input type="text" id="cv-url" placeholder="https://docs.google.com/document/d/..."/>
-        <div style="font-size:11px;color:var(--muted);margin-top:5px;font-family:'JetBrains Mono',monospace;">
-          <i class="fas fa-info-circle" style="color:var(--accent2)"></i> Google Docs → Fayl → Ulashish → Havola nusxalash. Bo'sh qolsa tugma ko'rinmaydi.
-        </div>
-      </div>
-    </div>
-
-    <div class="edit-card">
-      <h3><i class="fas fa-bell"></i> Loyiha qabul holati</h3>
-      <div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:16px 20px;">
-        <div>
-          <div style="font-size:14px;font-weight:700;margin-bottom:4px;" id="badge-status-text">Loyihalar qabul qilinmoqda</div>
-          <div style="font-size:12px;color:var(--muted);font-family:'JetBrains Mono',monospace;">Saytda hero qismida ko'rinadi</div>
-        </div>
-        <label style="position:relative;display:inline-block;width:52px;height:28px;cursor:pointer;">
-          <input type="checkbox" id="badge-open" onchange="updateBadgeStatus()" style="opacity:0;width:0;height:0;position:absolute;">
-          <span id="badge-toggle-track" style="position:absolute;inset:0;border-radius:28px;background:var(--border);transition:all 0.3s;">
-            <span id="badge-toggle-thumb" style="position:absolute;width:20px;height:20px;border-radius:50%;background:#fff;top:4px;left:4px;transition:all 0.3s;"></span>
-          </span>
-        </label>
-      </div>
-      <div id="badge-preview" style="margin-top:12px;display:inline-flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px 14px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--sub);">
-        <span id="badge-preview-dot" style="width:7px;height:7px;border-radius:50%;background:var(--accent);flex-shrink:0;"></span>
-        <span id="badge-preview-text">Yangi loyihalar qabul qilinmoqda</span>
-      </div>
-    </div>
-
-    <div class="edit-card">
-      <h3><i class="fas fa-text-height"></i> Shrift o'lchamlari</h3>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Hero sarlavha (px)</label>
-          <div style="display:flex;align-items:center;gap:10px;">
-            <input type="range" id="font-hero" min="40" max="100" value="72" oninput="document.getElementById('font-hero-val').textContent=this.value+'px'" style="flex:1;accent-color:var(--accent);"/>
-            <span id="font-hero-val" style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent);min-width:36px;">72px</span>
+        <div class="form-card">
+          <div class="form-card-title"><i class="fas fa-address-card"></i> Asosiy ma'lumotlar</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Email</label>
+              <input class="form-input" id="contact-email" placeholder="email@example.com" oninput="markDirty()">
+            </div>
+            <div class="form-group">
+              <label>Telegram</label>
+              <input class="form-input" id="contact-telegram" placeholder="@username" oninput="markDirty()">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Manzil</label>
+            <input class="form-input" id="contact-location" placeholder="Shahar, Davlat" oninput="markDirty()">
           </div>
         </div>
-        <div class="form-group">
-          <label>Bo'lim sarlavhasi (px)</label>
-          <div style="display:flex;align-items:center;gap:10px;">
-            <input type="range" id="font-section" min="24" max="60" value="40" oninput="document.getElementById('font-section-val').textContent=this.value+'px'" style="flex:1;accent-color:var(--accent);"/>
-            <span id="font-section-val" style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent);min-width:36px;">40px</span>
+        <div class="form-card">
+          <div class="form-card-title"><i class="fas fa-share-alt"></i> Ijtimoiy tarmoqlar</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Instagram URL</label>
+              <input class="form-input" id="contact-instagram" placeholder="https://instagram.com/..." oninput="markDirty()">
+            </div>
+            <div class="form-group">
+              <label>Telegram URL</label>
+              <input class="form-input" id="contact-telegramUrl" placeholder="https://t.me/..." oninput="markDirty()">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Behance URL</label>
+              <input class="form-input" id="contact-behance" placeholder="https://behance.net/..." oninput="markDirty()">
+            </div>
+            <div class="form-group">
+              <label>Dribbble URL</label>
+              <input class="form-input" id="contact-dribbble" placeholder="https://dribbble.com/..." oninput="markDirty()">
+            </div>
           </div>
         </div>
       </div>
-      <div class="form-group">
-        <label>Asosiy matn (px)</label>
-        <div style="display:flex;align-items:center;gap:10px;">
-          <input type="range" id="font-body" min="12" max="22" value="16" oninput="document.getElementById('font-body-val').textContent=this.value+'px'" style="flex:1;accent-color:var(--accent);"/>
-          <span id="font-body-val" style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent);min-width:36px;">16px</span>
-        </div>
-      </div>
-    </div>
-    <div class="edit-card">
-      <h3><i class="fab fa-github"></i> GitHub sozlamalari</h3>
-      <div class="form-group">
-        <label>GitHub Personal Access Token</label>
-        <input type="password" id="gh-token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"/>
-        <div style="font-size:11px;color:var(--muted);margin-top:5px">Token hech qachon serverga yuborilmaydi, faqat brauzeringizda saqlanadi.</div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Repo (username/reponame)</label>
-          <input type="text" id="gh-repo" placeholder="zari004/portfolio"/>
-        </div>
-        <div class="form-group">
-          <label>Branch</label>
-          <input type="text" id="gh-branch" placeholder="main"/>
-        </div>
-      </div>
-      <button class="btn-save" onclick="saveGitHubConfig()" style="margin-top:4px">
-        <i class="fas fa-save"></i> GitHub sozlamalarini saqlash
-      </button>
-    </div>
 
-    <div class="edit-card">
-      <h3><i class="fas fa-users-cog"></i> Foydalanuvchilar boshqaruvi</h3>
-      <table class="users-table" id="users-table"><!-- JS --></table>
-      <button class="add-btn" onclick="openAddUser()" style="margin-top:4px;">
-        <i class="fas fa-user-plus"></i> Yangi foydalanuvchi qo'shish
-      </button>
-    </div>
-
-    <div class="edit-card">
-      <h3><i class="fas fa-exclamation-triangle" style="color:var(--red)"></i> Xavfli zona</h3>
-      <div class="danger-zone">
-        <p>Barcha ma'lumotlarni o'chirib, boshlang'ich holatga qaytarish</p>
-        <button class="btn-danger" onclick="resetAll()">
-          <i class="fas fa-trash"></i> Tozalash
-        </button>
+      <!-- SETTINGS PANEL -->
+      <div class="panel" id="panel-settings">
+        <div class="panel-header">
+          <h2>Sozlamalar</h2>
+          <p>Sayt va tizim sozlamalari</p>
+        </div>
+        <div class="form-card">
+          <div class="form-card-title"><i class="fas fa-globe"></i> Sayt Sozlamalari</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Logo matni</label>
+              <input class="form-input" id="set-logoText" placeholder="dizay" oninput="markDirty()">
+            </div>
+            <div class="form-group">
+              <label>Logo accent</label>
+              <input class="form-input" id="set-logoAccent" placeholder="n." oninput="markDirty()">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Sayt sarlavhasi</label>
+            <input class="form-input" id="set-siteTitle" placeholder="Portfolio – Grafik Dizayner" oninput="markDirty()">
+          </div>
+          <div class="form-group">
+            <label>Footer matni</label>
+            <input class="form-input" id="set-footerText" placeholder="© 2025 dizayn." oninput="markDirty()">
+          </div>
+          <div class="form-group">
+            <label>CV URL (havola)</label>
+            <input class="form-input" id="set-cvUrl" placeholder="https://drive.google.com/..." oninput="markDirty()">
+          </div>
+          <div class="toggle-wrap" style="margin-top:8px">
+            <div class="toggle on" id="badge-toggle" onclick="toggleBadge()"></div>
+            <span class="toggle-label">Badge ko'rinishi (Yangi loyihalar)</span>
+          </div>
+        </div>
+        <div class="form-card">
+          <div class="form-card-title"><i class="fas fa-text-height"></i> Shrift O'lchamlari</div>
+          <div class="form-row three">
+            <div class="form-group">
+              <label>Hero (px)</label>
+              <input class="form-input" id="set-fontHero" type="number" min="40" max="120" placeholder="72" oninput="markDirty()">
+            </div>
+            <div class="form-group">
+              <label>Bo'lim (px)</label>
+              <input class="form-input" id="set-fontSection" type="number" min="24" max="80" placeholder="40" oninput="markDirty()">
+            </div>
+            <div class="form-group">
+              <label>Matn (px)</label>
+              <input class="form-input" id="set-fontBody" type="number" min="12" max="24" placeholder="16" oninput="markDirty()">
+            </div>
+          </div>
+        </div>
+        <div class="form-card">
+          <div class="form-card-title"><i class="fas fa-users-cog"></i> Foydalanuvchilar</div>
+          <div id="usersTable"></div>
+          <button class="btn btn-secondary btn-sm" onclick="openAddUser()" style="margin-top:12px"><i class="fas fa-user-plus"></i> Foydalanuvchi qo'shish</button>
+        </div>
+        <div class="danger-zone">
+          <h4><i class="fas fa-exclamation-triangle"></i> Xavfli zona</h4>
+          <p>Bu amal barcha ma'lumotlarni o'chirib, boshlang'ich holatga qaytaradi. Qaytarib bo'lmaydi.</p>
+          <button class="btn btn-danger" onclick="resetAll()"><i class="fas fa-trash-alt"></i> Barchasini tozalash</button>
+        </div>
       </div>
+
+      <!-- GITHUB PANEL -->
+      <div class="panel" id="panel-github">
+        <div class="panel-header">
+          <h2>GitHub Push</h2>
+          <p>Ma'lumotlarni GitHub'ga yuklash</p>
+        </div>
+        <div class="form-card">
+          <div class="form-card-title"><i class="fab fa-github"></i> GitHub Konfiguratsiya</div>
+          <div class="form-group">
+            <label>Personal Access Token</label>
+            <input class="form-input mono" id="gh-token" type="password" placeholder="ghp_xxxxxxxxxxxx" oninput="markDirty()">
+            <div class="form-hint">GitHub Settings → Developer settings → Personal access tokens</div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Repository egasi</label>
+              <input class="form-input" id="gh-owner" placeholder="username" oninput="markDirty()">
+            </div>
+            <div class="form-group">
+              <label>Repository nomi</label>
+              <input class="form-input" id="gh-repo" placeholder="portfolio" oninput="markDirty()">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Branch</label>
+              <input class="form-input" id="gh-branch" placeholder="main" oninput="markDirty()">
+            </div>
+            <div class="form-group">
+              <label>Fayl yo'li</label>
+              <input class="form-input" id="gh-path" placeholder="index.html" oninput="markDirty()">
+            </div>
+          </div>
+          <div class="github-status" id="ghStatus">
+            <div class="dot no"></div>
+            <span>Sozlanmagan</span>
+          </div>
+          <div style="margin-top:16px; display:flex; gap:10px">
+            <button class="btn btn-secondary" onclick="saveGitHubConfig()"><i class="fas fa-save"></i> Konfigni saqlash</button>
+            <button class="btn btn-primary" onclick="pushToGitHub()"><i class="fas fa-cloud-upload-alt"></i> GitHub'ga Push</button>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
+</div>
 
-</main>
-
-<!-- PORTFOLIO MODAL -->
-<div class="modal-overlay" id="portfolio-modal">
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
   <div class="modal">
     <div class="modal-header">
-      <h3 id="portfolio-modal-title">Yangi ish qo'shish</h3>
-      <button class="modal-close" onclick="closeModal('portfolio-modal')"><i class="fas fa-times"></i></button>
+      <h3 id="modalTitle">Modal</h3>
+      <button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
     </div>
-    <div class="form-group">
-      <label>Loyiha nomi</label>
-      <input type="text" id="pm-title" placeholder="TechStart Brend Identifikatsiyasi"/>
-    </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label>Kategoriya</label>
-        <select id="pm-tag">
-          <option>Brending</option>
-          <option>UI/UX</option>
-          <option>Bosma</option>
-          <option>Social Media</option>
-          <option>Qadoqlash</option>
-          <option>Motion</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>Loyiha havolasi (ixtiyoriy)</label>
-        <input type="text" id="pm-link" placeholder="https://..."/>
-      </div>
-    </div>
-    <div class="form-group">
-      <label>Tavsif</label>
-      <textarea id="pm-desc" placeholder="Loyiha haqida qisqacha..."></textarea>
-    </div>
-    <div class="form-group">
-      <label>Rasm</label>
-      <div class="img-upload-area" onclick="document.getElementById('pm-img-input').click()">
-        <input type="file" id="pm-img-input" accept="image/*" onchange="previewImg(this, 'pm-img-preview')" style="display:none"/>
-        <i class="fas fa-cloud-upload-alt"></i>
-        <p>Rasm yuklash uchun bosing<br><strong>JPG, PNG, WebP</strong> • Max 5MB</p>
-        <img id="pm-img-preview" class="img-preview"/>
-      </div>
-    </div>
-    <div class="form-group">
-      <label>Fon gradienti (rasm yo'q bo'lsa)</label>
-      <div class="color-row">
-        <div class="form-group" style="margin-bottom:0">
-          <label>Rang 1</label>
-          <div class="color-input-wrap">
-            <input type="color" id="pm-color1" value="#1a1a2e" oninput="document.getElementById('pm-color1-text').value=this.value"/>
-            <input type="text" id="pm-color1-text" value="#1a1a2e" oninput="document.getElementById('pm-color1').value=this.value"/>
-          </div>
-        </div>
-        <div class="form-group" style="margin-bottom:0">
-          <label>Rang 2</label>
-          <div class="color-input-wrap">
-            <input type="color" id="pm-color2" value="#16213e" oninput="document.getElementById('pm-color2-text').value=this.value"/>
-            <input type="text" id="pm-color2-text" value="#16213e" oninput="document.getElementById('pm-color2').value=this.value"/>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn-cancel" onclick="closeModal('portfolio-modal')">Bekor qilish</button>
-      <button class="btn-save" onclick="savePortfolioItem()"><i class="fas fa-check"></i> Saqlash</button>
-    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer" id="modalFooter"></div>
   </div>
 </div>
 
-<!-- SERVICE MODAL -->
-<div class="modal-overlay" id="service-modal">
-  <div class="modal">
-    <div class="modal-header">
-      <h3 id="service-modal-title">Yangi xizmat qo'shish</h3>
-      <button class="modal-close" onclick="closeModal('service-modal')"><i class="fas fa-times"></i></button>
-    </div>
-    <div class="form-group">
-      <label>Xizmat nomi</label>
-      <input type="text" id="sm-title" placeholder="Logo & Brending"/>
-    </div>
-    <div class="form-group">
-      <label>Font Awesome ikonka kodi</label>
-      <input type="text" id="sm-icon" placeholder="fas fa-pen-nib"/>
-      <div style="font-size:11px;color:var(--muted);margin-top:5px">
-        Misollar: fas fa-pen-nib, fas fa-palette, fas fa-mobile-alt, fas fa-photo-video
-      </div>
-    </div>
-    <div class="form-group">
-      <label>Tavsif</label>
-      <textarea id="sm-desc" placeholder="Xizmat haqida qisqacha..."></textarea>
-    </div>
-    <div class="modal-footer">
-      <button class="btn-cancel" onclick="closeModal('service-modal')">Bekor qilish</button>
-      <button class="btn-save" onclick="saveServiceItem()"><i class="fas fa-check"></i> Saqlash</button>
-    </div>
-  </div>
-</div>
-
-<!-- COMPANY MODAL -->
-<div class="modal-overlay" id="company-modal">
-  <div class="modal">
-    <div class="modal-header">
-      <h3 id="company-modal-title">Yangi kompaniya qo'shish</h3>
-      <button class="modal-close" onclick="closeModal('company-modal')"><i class="fas fa-times"></i></button>
-    </div>
-    <div class="form-group">
-      <label>Kompaniya nomi</label>
-      <input type="text" id="cm-name" placeholder="Adobe, Figma, TechStart..."/>
-    </div>
-    <div class="form-group">
-      <label>Logo URL (ixtiyoriy)</label>
-      <input type="text" id="cm-logo-url" placeholder="https://example.com/logo.png" oninput="previewLogoUrl()"/>
-      <div style="font-size:11px;color:var(--muted);margin-top:5px;font-family:'JetBrains Mono',monospace;">
-        PNG, SVG, WebP • Oq yoki shaffof fon tavsiya etiladi
-      </div>
-    </div>
-    <!-- URL preview -->
-    <div id="cm-url-preview-wrap" style="display:none;margin-top:-4px;margin-bottom:16px;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:16px;text-align:center;">
-      <img id="cm-url-preview" style="height:48px;width:auto;max-width:200px;object-fit:contain;filter:brightness(0.8);"/>
-      <div style="font-size:11px;color:var(--muted);margin-top:8px;font-family:'JetBrains Mono',monospace;">preview</div>
-    </div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:16px;">
-      <i class="fas fa-info-circle" style="color:var(--accent2)"></i> URL kiritilmasa, kompaniya nomi matn sifatida ko'rsatiladi.
-    </div>
-    <div class="modal-footer">
-      <button class="btn-cancel" onclick="closeModal('company-modal')">Bekor qilish</button>
-      <button class="btn-save" onclick="saveCompanyItem()"><i class="fas fa-check"></i> Saqlash</button>
-    </div>
-  </div>
-</div>
-
-<!-- USER MODAL -->
-<div class="modal-overlay" id="user-modal">
-  <div class="modal">
-    <div class="modal-header">
-      <h3 id="user-modal-title">Yangi foydalanuvchi</h3>
-      <button class="modal-close" onclick="closeModal('user-modal')"><i class="fas fa-times"></i></button>
-    </div>
-    <div class="form-group">
-      <label>Login (username)</label>
-      <input type="text" id="um-username" placeholder="admin"/>
-    </div>
-    <div class="form-group">
-      <label>Parol</label>
-      <div style="position:relative;">
-        <input type="password" id="um-password" placeholder="••••••••" style="padding-right:44px;"/>
-        <button onclick="togglePwd('um-password',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;"><i class="fas fa-eye"></i></button>
-      </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:5px;font-family:'JetBrains Mono',monospace;">Tahrirlashda bo'sh qoldirsangiz parol o'zgarmaydi</div>
-    </div>
-    <div class="form-group">
-      <label>Rol</label>
-      <select id="um-role">
-        <option value="admin">Admin (to'liq huquq)</option>
-        <option value="editor">Editor (faqat kontent)</option>
-      </select>
-    </div>
-    <div class="modal-footer">
-      <button class="btn-cancel" onclick="closeModal('user-modal')">Bekor qilish</button>
-      <button class="btn-save" onclick="saveUser()"><i class="fas fa-check"></i> Saqlash</button>
-    </div>
-  </div>
-</div>
-
-<!-- TOAST -->
-<div class="toast" id="toast"><i class="fas fa-check-circle"></i> <span id="toast-msg">Saqlandi!</span></div>
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toastContainer"></div>
 
 <script>
-// ============ DATA ============
+/* ============================================================
+   DATA
+   ============================================================ */
 const DEFAULT_DATA = {
   hero: {
-    line1: 'Grafik',
-    line2: 'Dizayner',
-    line3: '& Kreativ',
+    line1: 'Grafik', line2: 'Dizayner', line3: '& Kreativ',
     desc: "Brendlar, mahsulotlar va raqamli tajribalar uchun vizual identifikatsiyalar yarataman. Har bir loyiha – noyob hikoya.",
     badge: 'Yangi loyihalar qabul qilinmoqda',
     stats: [
@@ -1173,957 +878,1021 @@ const DEFAULT_DATA = {
     ]
   },
   portfolio: [
-    { id: 1, title: 'TechStart Brend Identifikatsiyasi', tag: 'Brending', desc: "To'liq brend paketi: logo, rang palitasi, tipografiya va brend qo'llanma.", color1: '#1a1a2e', color2: '#16213e', img: '', link: '' },
-    { id: 2, title: 'E-commerce Mobil Ilova', tag: 'UI/UX', desc: "Online do'kon uchun foydalanuvchi yo'nalishli mobil ilova interfeysi.", color1: '#0f3460', color2: '#533483', img: '', link: '' },
-    { id: 3, title: 'Restoran Menyu Dizayni', tag: 'Bosma', desc: "Zamonaviy restoran uchun premium menyu va bosma material paketi.", color1: '#2a1a0a', color2: '#1a0a0a', img: '', link: '' },
-    { id: 4, title: 'Fitnes Markaz SMM Paketi', tag: 'Social Media', desc: "30 kunlik Instagram kontent plani va dizayn shablonlar to'plami.", color1: '#2d1b33', color2: '#1a0a2e', img: '', link: '' },
-    { id: 5, title: 'Organic Foods Brendi', tag: 'Brending', desc: "Ekologik mahsulotlar brendi uchun tabiiy va zamonaviy vizual identifikatsiya.", color1: '#1a2a1a', color2: '#0d1f0d', img: '', link: '' },
-    { id: 6, title: 'Qahva Brendi Qadoqlash', tag: 'Qadoqlash', desc: "Premium qahva brendining mahsulot qadoqlash va vizual komunikatsiyasi.", color1: '#2a1a0a', color2: '#3d2b0f', img: '', link: '' }
+    { id: 1, title: 'TechStart Brend Identifikatsiyasi', tag: 'Brending', desc: "To'liq brend paketi", color1: '#1a1a2e', color2: '#16213e', img: '', link: '' },
+    { id: 2, title: 'E-commerce Mobil Ilova', tag: 'UI/UX', desc: "Online do'kon uchun mobil ilova", color1: '#0f3460', color2: '#533483', img: '', link: '' },
+    { id: 3, title: 'Restoran Menyu Dizayni', tag: 'Bosma', desc: "Premium menyu dizayni", color1: '#2a1a0a', color2: '#1a0a0a', img: '', link: '' },
+    { id: 4, title: 'Fitnes Markaz SMM Paketi', tag: 'Social Media', desc: "30 kunlik Instagram kontent", color1: '#2d1b33', color2: '#1a0a2e', img: '', link: '' },
+    { id: 5, title: 'Organic Foods Brendi', tag: 'Brending', desc: "Ekologik mahsulotlar brendi", color1: '#1a2a1a', color2: '#0d1f0d', img: '', link: '' },
+    { id: 6, title: 'Qahva Brendi Qadoqlash', tag: 'Qadoqlash', desc: "Premium qahva qadoqlash", color1: '#2a1a0a', color2: '#3d2b0f', img: '', link: '' }
   ],
   services: [
-    { id: 1, title: 'Logo & Brending', icon: 'fas fa-pen-nib', desc: "Kompaniyangiz mohiyatini aks ettiruvchi noyob logo va to'liq brend identifikatsiyasi yaratiladi." },
-    { id: 2, title: 'Grafik Dizayn', icon: 'fas fa-palette', desc: "Bosma materiallar, banner, poster, buklet va har qanday vizual materiallar professional darajada." },
-    { id: 3, title: 'UI/UX Dizayn', icon: 'fas fa-mobile-alt', desc: "Foydalanuvchilar uchun qulay va vizual jihatdan chiroyli interfeys va tajriba dizayni." },
-    { id: 4, title: 'Ijtimoiy Tarmoq', icon: 'fas fa-photo-video', desc: "Instagram, Telegram va boshqa platformalar uchun e'lon, story va reklama dizaynlari." },
-    { id: 5, title: 'Qadoqlash Dizayni', icon: 'fas fa-box-open', desc: "Mahsulotingizni ajratib ko'rsatuvchi zamonaviy va qulay qadoqlash yechimlar." },
-    { id: 6, title: 'Motion Grafika', icon: 'fas fa-film', desc: "Brendingizni jonlantiruvchi animatsiya va motion grafik kontentlar yaratiladi." }
+    { id: 1, title: 'Logo & Brending', icon: 'fas fa-pen-nib', desc: "Noyob logo va brend identifikatsiyasi" },
+    { id: 2, title: 'Grafik Dizayn', icon: 'fas fa-palette', desc: "Professional vizual materiallar" },
+    { id: 3, title: 'UI/UX Dizayn', icon: 'fas fa-mobile-alt', desc: "Qulay interfeys dizayni" },
+    { id: 4, title: 'Ijtimoiy Tarmoq', icon: 'fas fa-photo-video', desc: "SMM dizayn xizmatlari" },
+    { id: 5, title: 'Qadoqlash Dizayni', icon: 'fas fa-box-open', desc: "Zamonaviy qadoqlash" },
+    { id: 6, title: 'Motion Grafika', icon: 'fas fa-film', desc: "Animatsiya kontentlar" }
   ],
   about: {
-    title1: "Dizayn orqali",
-    title2: "qiymat yarataman",
-    desc1: "Toshkentda faoliyat yurituvchi grafik dizaynerman. Brendlar uchun vizual identifikatsiya, raqamli kontentlar va UI/UX yechimlar yaratishga ixtisoslashganman.",
-    desc2: "Har bir loyihani noyob muammo sifatida ko'raman va uning uchun maxsus, qiziqarli yechim topamanman. Mijozlarim bilan yaqin ishlashni va ularning g'oyalarini reallikka aylantirishni yaxshi ko'raman.",
-    exp: '5+',
-    expLabel: 'Yil tajriba',
-    skills: ['Adobe Illustrator', 'Photoshop', 'Figma', 'InDesign', 'After Effects', 'Canva Pro', 'Brending', 'Tipografiya', 'Rang nazariyasi']
+    title1: "Dizayn orqali", title2: "qiymat yarataman",
+    desc1: "Toshkentda faoliyat yurituvchi grafik dizaynerman.",
+    desc2: "Har bir loyihani noyob muammo sifatida ko'raman.",
+    exp: '5+', expLabel: 'Yil tajriba',
+    skills: ['Adobe Illustrator', 'Photoshop', 'Figma', 'InDesign', 'After Effects', 'Canva Pro', 'Brending', 'Tipografiya', 'Rang nazariyasi'],
+    img: ''
   },
   contact: {
-    email: 'dizayn@gmail.com',
-    telegram: '@username',
-    location: "Toshkent, O'zbekiston",
-    instagram: '#',
-    telegramUrl: '#',
-    behance: '#',
-    dribbble: '#'
+    email: 'dizayn@gmail.com', telegram: '@username', location: "Toshkent, O'zbekiston",
+    instagram: '#', telegramUrl: '#', behance: '#', dribbble: '#'
   },
   settings: {
-    logoText: 'dizay',
-    logoAccent: 'n.',
+    logoText: 'dizay', logoAccent: 'n.',
     siteTitle: 'Portfolio – Grafik Dizayner',
     footerText: '© 2025 dizayn. Barcha huquqlar himoyalangan.',
-    cvUrl: '',
-    badgeOpen: true,
-    fontSizeHero: '72',
-    fontSizeSection: '40',
-    fontSizeBody: '16'
+    cvUrl: '', badgeOpen: true,
+    fontSizeHero: '72', fontSizeSection: '40', fontSizeBody: '16'
   }
 };
 
-let data = JSON.parse(JSON.stringify(DEFAULT_DATA));
-let editingPortfolioId = null;
-let editingServiceId = null;
-let editingCompanyId = null;
+const DEFAULT_USERS = [{ id: 1, username: 'admin', password: 'admin123', role: 'admin' }];
 
-// ============ LOAD / SAVE ============
-function loadFromStorage() {
-  const saved = localStorage.getItem('portfolio_admin_data');
-  if (saved) {
-    try {
-      data = JSON.parse(saved);
-      data.settings = Object.assign({}, DEFAULT_DATA.settings, data.settings || {});
-      data.companies = Object.assign({}, DEFAULT_DATA.companies, data.companies || {});
-      if (!data.companies.items) data.companies.items = DEFAULT_DATA.companies.items;
-    } catch(e) {}
+let data = {};
+let users = [];
+let isDirty = false;
+let currentPanel = 'hero';
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+function sanitize(str) {
+  if (typeof str !== 'string') return '';
+  const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#x27;', '/': '&#x2F;' };
+  return str.replace(/[&<>"'/]/g, c => map[c]);
+}
+
+function deepClone(obj) { return JSON.parse(JSON.stringify(obj)); }
+
+function nextId(arr) {
+  if (!arr || !arr.length) return 1;
+  return Math.max(...arr.map(i => i.id || 0)) + 1;
+}
+
+function charCount(input, countId, max) {
+  const el = document.getElementById(countId);
+  if (!el) return;
+  const len = input.value.length;
+  el.textContent = len + '/' + max;
+  el.className = 'char-count' + (len > max ? ' over' : len > max * 0.85 ? ' warn' : '');
+}
+
+function initCharCount(inputId, countId, max) {
+  const input = document.getElementById(inputId);
+  if (input) charCount(input, countId, max);
+}
+
+/* ============================================================
+   IMAGE COMPRESSION
+   ============================================================ */
+function compressImage(file, maxWidth = 1200, quality = 0.8) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const img = new Image();
+      img.onload = function() {
+        let w = img.width, h = img.height;
+        if (w > maxWidth) {
+          h = Math.round(h * maxWidth / w);
+          w = maxWidth;
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        const compressed = canvas.toDataURL('image/jpeg', quality);
+        resolve(compressed);
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+/* ============================================================
+   TOAST NOTIFICATIONS
+   ============================================================ */
+function showToast(msg, type = 'success') {
+  const container = document.getElementById('toastContainer');
+  const icons = { success: 'fas fa-check-circle', error: 'fas fa-times-circle', warning: 'fas fa-exclamation-triangle' };
+  const toast = document.createElement('div');
+  toast.className = 'toast ' + type;
+  toast.innerHTML = '<i class="toast-icon ' + sanitize(icons[type] || icons.success) + '"></i>'
+    + '<span class="toast-msg">' + sanitize(msg) + '</span>'
+    + '<button class="toast-close" onclick="this.parentElement.classList.add(\'removing\');setTimeout(()=>this.parentElement.remove(),300)"><i class="fas fa-times"></i></button>';
+  container.appendChild(toast);
+  setTimeout(() => {
+    if (toast.parentElement) {
+      toast.classList.add('removing');
+      setTimeout(() => toast.remove(), 300);
+    }
+  }, 3500);
+}
+
+/* ============================================================
+   DIRTY STATE
+   ============================================================ */
+function markDirty() {
+  isDirty = true;
+  const badge = document.getElementById('unsavedBadge');
+  if (badge) badge.classList.add('active');
+}
+
+function clearDirty() {
+  isDirty = false;
+  const badge = document.getElementById('unsavedBadge');
+  if (badge) badge.classList.remove('active');
+}
+
+window.addEventListener('beforeunload', function(e) {
+  if (isDirty) {
+    e.preventDefault();
+    e.returnValue = '';
   }
-  fillAllForms();
+});
+
+/* ============================================================
+   STORAGE
+   ============================================================ */
+function loadFromStorage() {
+  try {
+    const raw = localStorage.getItem('portfolio_admin_data');
+    data = raw ? JSON.parse(raw) : deepClone(DEFAULT_DATA);
+  } catch { data = deepClone(DEFAULT_DATA); }
+  // ensure all sections exist
+  for (const key in DEFAULT_DATA) {
+    if (!(key in data)) data[key] = deepClone(DEFAULT_DATA[key]);
+  }
+  if (!data.about.img) data.about.img = '';
+  try {
+    const rawU = localStorage.getItem('admin_users');
+    users = rawU ? JSON.parse(rawU) : deepClone(DEFAULT_USERS);
+  } catch { users = deepClone(DEFAULT_USERS); }
 }
 
 function saveToStorage() {
   localStorage.setItem('portfolio_admin_data', JSON.stringify(data));
+  localStorage.setItem('admin_users', JSON.stringify(users));
 }
 
-function saveAll() {
+function collectFormData() {
   // Hero
   data.hero.line1 = document.getElementById('hero-line1').value;
   data.hero.line2 = document.getElementById('hero-line2').value;
   data.hero.line3 = document.getElementById('hero-line3').value;
   data.hero.desc = document.getElementById('hero-desc').value;
   data.hero.badge = document.getElementById('hero-badge').value;
-  // Stats
-  data.hero.stats.forEach((s, i) => {
-    const numEl = document.getElementById('stat-num-'+i);
-    const suffEl = document.getElementById('stat-suf-'+i);
-    const lblEl = document.getElementById('stat-lbl-'+i);
-    if (numEl) s.num = numEl.value;
-    if (suffEl) s.suffix = suffEl.value;
-    if (lblEl) s.label = lblEl.value;
+  // collect stats
+  const statEls = document.querySelectorAll('.stat-edit-row');
+  data.hero.stats = [];
+  statEls.forEach(row => {
+    data.hero.stats.push({
+      num: row.querySelector('.stat-num').value,
+      suffix: row.querySelector('.stat-suffix').value,
+      label: row.querySelector('.stat-label').value
+    });
   });
+  // Companies
+  data.companies.label = document.getElementById('comp-label').value;
   // About
   data.about.title1 = document.getElementById('about-title1').value;
   data.about.title2 = document.getElementById('about-title2').value;
   data.about.desc1 = document.getElementById('about-desc1').value;
   data.about.desc2 = document.getElementById('about-desc2').value;
   data.about.exp = document.getElementById('about-exp').value;
-  data.about.expLabel = document.getElementById('about-exp-label').value;
+  data.about.expLabel = document.getElementById('about-expLabel').value;
+  const aboutImgData = document.getElementById('about-img-data').value;
+  if (aboutImgData) data.about.img = aboutImgData;
   // Contact
   data.contact.email = document.getElementById('contact-email').value;
   data.contact.telegram = document.getElementById('contact-telegram').value;
   data.contact.location = document.getElementById('contact-location').value;
-  data.contact.instagram = document.getElementById('social-instagram').value;
-  data.contact.telegramUrl = document.getElementById('social-telegram').value;
-  data.contact.behance = document.getElementById('social-behance').value;
-  data.contact.dribbble = document.getElementById('social-dribbble').value;
+  data.contact.instagram = document.getElementById('contact-instagram').value;
+  data.contact.telegramUrl = document.getElementById('contact-telegramUrl').value;
+  data.contact.behance = document.getElementById('contact-behance').value;
+  data.contact.dribbble = document.getElementById('contact-dribbble').value;
   // Settings
-  data.settings.logoText = document.getElementById('logo-text').value;
-  data.settings.logoAccent = document.getElementById('logo-accent').value;
-  data.settings.siteTitle = document.getElementById('site-title').value;
-  data.settings.footerText = document.getElementById('footer-text').value;
-  data.settings.cvUrl = document.getElementById('cv-url').value.trim();
-  data.settings.badgeOpen = document.getElementById('badge-open').checked;
-  data.settings.fontSizeHero = document.getElementById('font-hero').value;
-  data.settings.fontSizeSection = document.getElementById('font-section').value;
-  data.settings.fontSizeBody = document.getElementById('font-body').value;
-  // Companies
-  if (!data.companies) data.companies = Object.assign({}, DEFAULT_DATA.companies);
-  const clInp = document.getElementById('companies-label-input');
-  const cvInp = document.getElementById('companies-visible');
-  if (clInp) data.companies.label = clInp.value;
-  if (cvInp) data.companies.visible = cvInp.checked;
+  data.settings.logoText = document.getElementById('set-logoText').value;
+  data.settings.logoAccent = document.getElementById('set-logoAccent').value;
+  data.settings.siteTitle = document.getElementById('set-siteTitle').value;
+  data.settings.footerText = document.getElementById('set-footerText').value;
+  data.settings.cvUrl = document.getElementById('set-cvUrl').value;
+  data.settings.fontSizeHero = document.getElementById('set-fontHero').value;
+  data.settings.fontSizeSection = document.getElementById('set-fontSection').value;
+  data.settings.fontSizeBody = document.getElementById('set-fontBody').value;
+}
 
+function saveAll() {
+  collectFormData();
   saveToStorage();
-  showToast('Saqlandi! GitHub ga yuborilmoqda...');
-  document.querySelector('.badge').innerHTML = '<i class="fas fa-circle" style="font-size:7px"></i> Saqlandi';
-  document.querySelector('.badge').className = 'badge green';
-  renderStatsPreview();
-  pushToGitHub();
+  clearDirty();
+  showToast('Barcha ma\'lumotlar saqlandi', 'success');
 }
 
-function resetAll() {
-  if (!confirm('Haqiqatan ham barcha ma\'lumotlarni o\'chirasizmi?')) return;
-  localStorage.removeItem('portfolio_admin_data');
-  data = JSON.parse(JSON.stringify(DEFAULT_DATA));
-  fillAllForms();
-  showToast('Boshlang\'ich holatga qaytarildi');
-}
-
-// ============ FILL FORMS ============
-function fillAllForms() {
-  const h = data.hero;
-  document.getElementById('hero-line1').value = h.line1 || '';
-  document.getElementById('hero-line2').value = h.line2 || '';
-  document.getElementById('hero-line3').value = h.line3 || '';
-  document.getElementById('hero-desc').value = h.desc || '';
-  document.getElementById('hero-badge').value = h.badge || '';
-  renderStatsPreview();
-  renderStatsEdit();
-  renderPortfolioList();
-  renderServicesList();
-  renderSkillTags();
-  renderCompaniesList();
-
-  const ab = data.about;
-  document.getElementById('about-title1').value = ab.title1 || '';
-  document.getElementById('about-title2').value = ab.title2 || '';
-  document.getElementById('about-desc1').value = ab.desc1 || '';
-  document.getElementById('about-desc2').value = ab.desc2 || '';
-  document.getElementById('about-exp').value = ab.exp || '';
-  document.getElementById('about-exp-label').value = ab.expLabel || '';
-
-  const c = data.contact;
-  document.getElementById('contact-email').value = c.email || '';
-  document.getElementById('contact-telegram').value = c.telegram || '';
-  document.getElementById('contact-location').value = c.location || '';
-  document.getElementById('social-instagram').value = c.instagram || '';
-  document.getElementById('social-telegram').value = c.telegramUrl || '';
-  document.getElementById('social-behance').value = c.behance || '';
-  document.getElementById('social-dribbble').value = c.dribbble || '';
-
-  const s = data.settings || DEFAULT_DATA.settings;
-  document.getElementById('logo-text').value = s.logoText || '';
-  document.getElementById('logo-accent').value = s.logoAccent || '';
-  document.getElementById('site-title').value = s.siteTitle || '';
-  document.getElementById('footer-text').value = s.footerText || '';
-  document.getElementById('cv-url').value = s.cvUrl || '';
-
-  // Badge toggle
-  const badgeOpen = s.badgeOpen !== false;
-  document.getElementById('badge-open').checked = badgeOpen;
-  updateBadgeStatus();
-
-  // Font sizes
-  const fh = parseInt(s.fontSizeHero) || 72;
-  const fs = parseInt(s.fontSizeSection) || 40;
-  const fb = parseInt(s.fontSizeBody) || 16;
-  document.getElementById('font-hero').value = fh;
-  document.getElementById('font-hero-val').textContent = fh + 'px';
-  document.getElementById('font-section').value = fs;
-  document.getElementById('font-section-val').textContent = fs + 'px';
-  document.getElementById('font-body').value = fb;
-  document.getElementById('font-body-val').textContent = fb + 'px';
-
-  // Companies
-  const co = data.companies || DEFAULT_DATA.companies;
-  const clEl = document.getElementById('companies-label-input');
-  const cvEl = document.getElementById('companies-visible');
-  if (clEl) clEl.value = co.label || '';
-  if (cvEl) cvEl.checked = co.visible !== false;
-  setTimeout(updateCompaniesPreview, 150);
-}
-
-// ============ STATS ============
-function renderStatsPreview() {
-  const c = document.getElementById('stats-preview');
-  c.innerHTML = data.hero.stats.map(s => `
-    <div class="stat-edit-card">
-      <div class="stat-preview">${s.num}<span>${s.suffix}</span></div>
-      <div style="font-size:12px;color:var(--sub);margin-top:4px">${s.label}</div>
-    </div>
-  `).join('');
-}
-function renderStatsEdit() {
-  const c = document.getElementById('stats-edit-area');
-  c.innerHTML = data.hero.stats.map((s, i) => `
-    <div style="display:grid;grid-template-columns:1fr 80px 1fr;gap:12px;margin-bottom:12px;align-items:end">
-      <div class="form-group" style="margin-bottom:0">
-        <label>Raqam ${i+1}</label>
-        <input type="text" id="stat-num-${i}" value="${s.num}"/>
-      </div>
-      <div class="form-group" style="margin-bottom:0">
-        <label>Suffiks</label>
-        <input type="text" id="stat-suf-${i}" value="${s.suffix}"/>
-      </div>
-      <div class="form-group" style="margin-bottom:0">
-        <label>Yorliq</label>
-        <input type="text" id="stat-lbl-${i}" value="${s.label}"/>
-      </div>
-    </div>
-  `).join('');
-}
-
-// ============ PORTFOLIO ============
-function renderPortfolioList() {
-  const list = document.getElementById('portfolio-list');
-  list.innerHTML = data.portfolio.map(p => `
-    <div class="portfolio-item">
-      <div class="portfolio-item-thumb" style="background:linear-gradient(135deg,${p.color1},${p.color2})">
-        ${p.img ? `<img src="${p.img}" style="width:100%;height:100%;object-fit:cover;border-radius:8px"/>` : '<i class="fas fa-image"></i>'}
-      </div>
-      <div class="portfolio-item-info">
-        <div class="item-tag">${p.tag}</div>
-        <div class="item-title">${p.title}</div>
-        <div class="item-desc">${p.desc}</div>
-      </div>
-      <div class="item-actions">
-        <button class="btn-icon" onclick="editPortfolio(${p.id})" title="Tahrirlash"><i class="fas fa-pen"></i></button>
-        <button class="btn-icon danger" onclick="deletePortfolio(${p.id})" title="O'chirish"><i class="fas fa-trash"></i></button>
-      </div>
-    </div>
-  `).join('');
-}
-
-function openAddPortfolio() {
-  editingPortfolioId = null;
-  document.getElementById('portfolio-modal-title').textContent = 'Yangi ish qo\'shish';
-  document.getElementById('pm-title').value = '';
-  document.getElementById('pm-tag').value = 'Brending';
-  document.getElementById('pm-desc').value = '';
-  document.getElementById('pm-link').value = '';
-  document.getElementById('pm-color1').value = '#1a1a2e';
-  document.getElementById('pm-color1-text').value = '#1a1a2e';
-  document.getElementById('pm-color2').value = '#16213e';
-  document.getElementById('pm-color2-text').value = '#16213e';
-  document.getElementById('pm-img-preview').style.display = 'none';
-  document.getElementById('pm-img-preview').src = '';
-  openModal('portfolio-modal');
-}
-
-function editPortfolio(id) {
-  editingPortfolioId = id;
-  const p = data.portfolio.find(x => x.id === id);
-  if (!p) return;
-  document.getElementById('portfolio-modal-title').textContent = 'Ishni tahrirlash';
-  document.getElementById('pm-title').value = p.title;
-  document.getElementById('pm-tag').value = p.tag;
-  document.getElementById('pm-desc').value = p.desc;
-  document.getElementById('pm-link').value = p.link || '';
-  document.getElementById('pm-color1').value = p.color1 || '#1a1a2e';
-  document.getElementById('pm-color1-text').value = p.color1 || '#1a1a2e';
-  document.getElementById('pm-color2').value = p.color2 || '#16213e';
-  document.getElementById('pm-color2-text').value = p.color2 || '#16213e';
-  if (p.img) {
-    document.getElementById('pm-img-preview').src = p.img;
-    document.getElementById('pm-img-preview').style.display = 'block';
-  } else {
-    document.getElementById('pm-img-preview').style.display = 'none';
-  }
-  openModal('portfolio-modal');
-}
-
-function savePortfolioItem() {
-  const title = document.getElementById('pm-title').value.trim();
-  if (!title) { alert('Iltimos, loyiha nomini kiriting!'); return; }
-  const item = {
-    id: editingPortfolioId || Date.now(),
-    title,
-    tag: document.getElementById('pm-tag').value,
-    desc: document.getElementById('pm-desc').value,
-    link: document.getElementById('pm-link').value,
-    color1: document.getElementById('pm-color1').value,
-    color2: document.getElementById('pm-color2').value,
-    img: document.getElementById('pm-img-preview').src !== window.location.href ? document.getElementById('pm-img-preview').src : ''
-  };
-  if (document.getElementById('pm-img-preview').style.display === 'none') item.img = '';
-  if (editingPortfolioId) {
-    const idx = data.portfolio.findIndex(x => x.id === editingPortfolioId);
-    if (idx > -1) data.portfolio[idx] = item;
-  } else {
-    data.portfolio.push(item);
-  }
-  saveToStorage();
-  renderPortfolioList();
-  closeModal('portfolio-modal');
-  showToast(editingPortfolioId ? 'Ish yangilandi!' : 'Yangi ish qo\'shildi!');
-}
-
-function deletePortfolio(id) {
-  if (!confirm('Bu ishni o\'chirasizmi?')) return;
-  data.portfolio = data.portfolio.filter(p => p.id !== id);
-  saveToStorage();
-  renderPortfolioList();
-  showToast('O\'chirildi');
-}
-
-// ============ SERVICES ============
-function renderServicesList() {
-  const list = document.getElementById('services-list');
-  list.innerHTML = data.services.map(s => `
-    <div class="service-item">
-      <div class="service-item-icon"><i class="${s.icon}"></i></div>
-      <div class="service-item-info">
-        <div class="s-title">${s.title}</div>
-        <div class="s-desc">${s.desc}</div>
-      </div>
-      <div class="item-actions">
-        <button class="btn-icon" onclick="editService(${s.id})"><i class="fas fa-pen"></i></button>
-        <button class="btn-icon danger" onclick="deleteService(${s.id})"><i class="fas fa-trash"></i></button>
-      </div>
-    </div>
-  `).join('');
-}
-
-function openAddService() {
-  editingServiceId = null;
-  document.getElementById('service-modal-title').textContent = 'Yangi xizmat qo\'shish';
-  document.getElementById('sm-title').value = '';
-  document.getElementById('sm-icon').value = 'fas fa-star';
-  document.getElementById('sm-desc').value = '';
-  openModal('service-modal');
-}
-
-function editService(id) {
-  editingServiceId = id;
-  const s = data.services.find(x => x.id === id);
-  if (!s) return;
-  document.getElementById('service-modal-title').textContent = 'Xizmatni tahrirlash';
-  document.getElementById('sm-title').value = s.title;
-  document.getElementById('sm-icon').value = s.icon;
-  document.getElementById('sm-desc').value = s.desc;
-  openModal('service-modal');
-}
-
-function saveServiceItem() {
-  const title = document.getElementById('sm-title').value.trim();
-  if (!title) { alert('Iltimos, xizmat nomini kiriting!'); return; }
-  const item = {
-    id: editingServiceId || Date.now(),
-    title,
-    icon: document.getElementById('sm-icon').value || 'fas fa-star',
-    desc: document.getElementById('sm-desc').value
-  };
-  if (editingServiceId) {
-    const idx = data.services.findIndex(x => x.id === editingServiceId);
-    if (idx > -1) data.services[idx] = item;
-  } else {
-    data.services.push(item);
-  }
-  saveToStorage();
-  renderServicesList();
-  closeModal('service-modal');
-  showToast(editingServiceId ? 'Xizmat yangilandi!' : 'Yangi xizmat qo\'shildi!');
-}
-
-function deleteService(id) {
-  if (!confirm('Bu xizmatni o\'chirasizmi?')) return;
-  data.services = data.services.filter(s => s.id !== id);
-  saveToStorage();
-  renderServicesList();
-  showToast('O\'chirildi');
-}
-
-// ============ SKILLS ============
-function renderSkillTags() {
-  const list = document.getElementById('skill-tags-list');
-  list.innerHTML = data.about.skills.map((s, i) => `
-    <div class="skill-tag-item">
-      ${s}
-      <button onclick="removeSkill(${i})" title="O'chirish"><i class="fas fa-times"></i></button>
-    </div>
-  `).join('');
-}
-
-function addSkill() {
-  const input = document.getElementById('new-skill-input');
-  const val = input.value.trim();
-  if (!val) return;
-  data.about.skills.push(val);
-  input.value = '';
-  renderSkillTags();
-  saveToStorage();
-  showToast('Ko\'nikma qo\'shildi!');
-}
-
-function removeSkill(i) {
-  data.about.skills.splice(i, 1);
-  renderSkillTags();
-  saveToStorage();
-}
-
-// ============ IMAGE PREVIEW ============
-function previewImg(input, previewId) {
-  const preview = document.getElementById(previewId);
-  const file = input.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    preview.src = e.target.result;
-    preview.style.display = 'block';
-  };
-  reader.readAsDataURL(file);
-}
-
-// ============ MODAL ============
-function openModal(id) {
-  document.getElementById(id).classList.add('open');
-}
-function closeModal(id) {
-  document.getElementById(id).classList.remove('open');
-}
-document.querySelectorAll('.modal-overlay').forEach(m => {
-  m.addEventListener('click', e => {
-    if (e.target === m) m.classList.remove('open');
-  });
-});
-
-// ============ NAVIGATION ============
-const panelTitles = {
-  hero: "Hero bo'limi",
-  companies: "Kompaniyalar",
-  portfolio: "Portfolio ishlari",
-  services: "Xizmatlar",
-  about: "Men haqimda",
-  contact: "Aloqa ma'lumotlari",
-  settings: "Sozlamalar"
-};
-
-function showPanel(id) {
-  document.querySelectorAll('.section-panel').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.getElementById('panel-' + id).classList.add('active');
-  event.currentTarget.classList.add('active');
-  document.getElementById('panel-title').textContent = panelTitles[id];
-}
-
-// ============ COMPANIES ============
-function renderCompaniesList() {
-  if (!data.companies) data.companies = Object.assign({}, DEFAULT_DATA.companies);
-  const list = document.getElementById('companies-list');
-  if (!list) return;
-  const items = data.companies.items || [];
-  if (!items.length) {
-    list.innerHTML = '<div style="text-align:center;color:var(--muted);padding:20px;font-size:13px;">Hozircha kompaniya yo\'q</div>';
-    return;
-  }
-  list.innerHTML = items.map(c => `
-    <div class="company-item">
-      <div class="company-item-thumb">
-        ${c.logo
-          ? `<img src="${c.logo}" style="width:100%;height:100%;object-fit:contain;padding:6px;filter:brightness(0) invert(1) opacity(0.7)"/>`
-          : `<span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted);font-weight:700;text-transform:uppercase;text-align:center;padding:2px;">${c.name.substring(0,6)}</span>`
-        }
-      </div>
-      <div class="company-item-info">
-        <div style="font-size:10px;color:var(--accent);font-weight:700;text-transform:uppercase;letter-spacing:1.5px;font-family:'JetBrains Mono',monospace;margin-bottom:2px;">Kompaniya</div>
-        <div style="font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${c.name}</div>
-        <div style="font-size:12px;color:var(--sub);">${c.logo ? 'Logo yuklangan ✓' : 'Faqat matn'}</div>
-      </div>
-      <div class="company-item-actions">
-        <button class="btn-icon" onclick="editCompany(${c.id})" title="Tahrirlash"><i class="fas fa-pen"></i></button>
-        <button class="btn-icon danger" onclick="deleteCompany(${c.id})" title="O'chirish"><i class="fas fa-trash"></i></button>
-      </div>
-    </div>
-  `).join('');
-}
-
-function previewLogoUrl() {
-  const url = document.getElementById('cm-logo-url').value.trim();
-  const wrap = document.getElementById('cm-url-preview-wrap');
-  const img = document.getElementById('cm-url-preview');
-  if (url) {
-    img.src = url;
-    img.onload = () => { wrap.style.display = ''; };
-    img.onerror = () => { wrap.style.display = 'none'; };
-  } else {
-    wrap.style.display = 'none';
-  }
-}
-
-function openAddCompany() {
-  editingCompanyId = null;
-  document.getElementById('company-modal-title').textContent = 'Yangi kompaniya qo\'shish';
-  document.getElementById('cm-name').value = '';
-  document.getElementById('cm-logo-url').value = '';
-  document.getElementById('cm-url-preview-wrap').style.display = 'none';
-  openModal('company-modal');
-}
-
-function editCompany(id) {
-  editingCompanyId = id;
-  const c = data.companies.items.find(x => x.id === id);
-  if (!c) return;
-  document.getElementById('company-modal-title').textContent = 'Kompaniyani tahrirlash';
-  document.getElementById('cm-name').value = c.name;
-  document.getElementById('cm-logo-url').value = c.logo || '';
-  if (c.logo) {
-    const img = document.getElementById('cm-url-preview');
-    img.src = c.logo;
-    document.getElementById('cm-url-preview-wrap').style.display = '';
-  } else {
-    document.getElementById('cm-url-preview-wrap').style.display = 'none';
-  }
-  openModal('company-modal');
-}
-
-function saveCompanyItem() {
-  const name = document.getElementById('cm-name').value.trim();
-  if (!name) { alert('Kompaniya nomini kiriting!'); return; }
-  const logo = document.getElementById('cm-logo-url').value.trim();
-  const item = { id: editingCompanyId || Date.now(), name, logo };
-  if (!data.companies) data.companies = Object.assign({}, DEFAULT_DATA.companies);
-  if (editingCompanyId) {
-    const idx = data.companies.items.findIndex(x => x.id === editingCompanyId);
-    if (idx > -1) data.companies.items[idx] = item;
-  } else {
-    data.companies.items.push(item);
-  }
-  saveToStorage();
-  renderCompaniesList();
-  updateCompaniesPreview();
-  closeModal('company-modal');
-  showToast(editingCompanyId ? 'Kompaniya yangilandi!' : 'Kompaniya qo\'shildi!');
-}
-
-function deleteCompany(id) {
-  if (!confirm('Bu kompaniyani o\'chirasizmi?')) return;
-  data.companies.items = data.companies.items.filter(c => c.id !== id);
-  saveToStorage();
-  renderCompaniesList();
-  updateCompaniesPreview();
-  showToast('O\'chirildi');
-}
-
-function updateCompaniesPreview() {
-  const labelEl = document.getElementById('companies-preview-label');
-  const track = document.getElementById('admin-marquee-track');
-  const box = document.getElementById('companies-preview-box');
-  if (!track || !box) return;
-
-  const visible = document.getElementById('companies-visible');
-  box.style.display = (visible && !visible.checked) ? 'none' : '';
-
-  const lbl = document.getElementById('companies-label-input');
-  if (labelEl && lbl) labelEl.textContent = lbl.value;
-
-  const items = (data.companies && data.companies.items) || [];
-  if (!items.length) {
-    track.innerHTML = '<div style="padding:0 40px;color:var(--muted);font-size:12px;font-family:\'JetBrains Mono\',monospace;">Kompaniyalar yo\'q</div>';
-    return;
-  }
-
-  const makeChip = (item) => {
-    const inner = item.logo
-      ? `<img src="${item.logo}" alt="${item.name}" style="height:28px;width:auto;max-width:90px;object-fit:contain;"/>`
-      : `<span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;white-space:nowrap;">${item.name}</span>`;
-    return `<div class="admin-company-chip">${inner}</div>`;
-  };
-
-  const html = items.map(makeChip).join('');
-  track.innerHTML = html + html;
-  initAdminMarqueeEffect();
-}
-
-function initAdminMarqueeEffect() {
-  const wrapper = document.querySelector('#companies-preview-box > div:last-child');
-  const track = document.getElementById('admin-marquee-track');
-  if (!wrapper || !track) return;
-
-  let running = true;
-  function tick() {
-    if (!running) return;
-    const items = track.querySelectorAll('.admin-company-chip');
-    const wRect = wrapper.getBoundingClientRect();
-    const center = wRect.left + wRect.width / 2;
-    const maxDist = wRect.width / 2;
-
-    items.forEach(item => {
-      const iRect = item.getBoundingClientRect();
-      const iCenter = iRect.left + iRect.width / 2;
-      const t = Math.min(Math.abs(iCenter - center) / maxDist, 1);
-      const scale = 1.0 - t * 0.3;
-      const opacity = 1.0 - t * 0.8;
-      const brightness = 1.0 - t * 0.75;
-      const grayscale = t;
-      item.style.transform = `scale(${scale})`;
-      item.style.opacity = opacity;
-      const img = item.querySelector('img');
-      const txt = item.querySelector('span');
-      if (img) img.style.filter = `brightness(0) invert(1) opacity(${(1 - t * 0.8).toFixed(2)})`;
-      if (txt) { const r = Math.round(220 * brightness); txt.style.color = `rgb(${r},${r},${r})`; txt.style.fontSize = '18px'; txt.style.fontWeight = '800'; }
-    });
-    requestAnimationFrame(tick);
-  }
-  requestAnimationFrame(tick);
-}
-
-// ============ TOAST ============
-function showToast(msg) {
-  const toast = document.getElementById('toast');
-  document.getElementById('toast-msg').textContent = msg;
-  toast.classList.add('show');
-  setTimeout(() => toast.classList.remove('show'), 2800);
-}
-
-// ============ GITHUB PUSH ============
-async function pushToGitHub() {
-  const cfg = JSON.parse(localStorage.getItem('github_config') || '{}');
-  const token = cfg.token;
-  const repo = cfg.repo || 'zari004/portfolio';
-  const branch = cfg.branch || 'main';
-
-  if (!token) {
-    showToast('GitHub token kiritilmagan! Sozlamalar > GitHub');
-    setBadge('blue', 'Lokal saqlandi');
-    return;
-  }
-
-  setBadge('blue', '<i class="fas fa-spinner fa-spin" style="font-size:10px"></i> Yuborilmoqda...');
-
-  try {
-    // 1. Mavjud index.html SHA sini olish
-    const getRes = await fetch('https://api.github.com/repos/' + repo + '/contents/index.html', {
-      headers: { 'Authorization': 'token ' + token, 'Accept': 'application/vnd.github.v3+json' }
-    });
-    if (!getRes.ok) { throw new Error('index.html topilmadi (status: ' + getRes.status + ')'); }
-    const getJson = await getRes.json();
-    const sha = getJson.sha;
-
-    // 2. Mavjud contentni decode qilish va data inject qilish
-    const existingHTML = decodeURIComponent(escape(atob(getJson.content.replace(/\n/g,''))));
-    const injected = injectDataIntoPortfolio(existingHTML, data);
-    const encoded = btoa(unescape(encodeURIComponent(injected)));
-
-    // 3. GitHub ga push
-    const pushRes = await fetch('https://api.github.com/repos/' + repo + '/contents/index.html', {
-      method: 'PUT',
-      headers: {
-        'Authorization': 'token ' + token,
-        'Accept': 'application/vnd.github.v3+json',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        message: 'Admin panel: sayt yangilandi ' + new Date().toLocaleString('uz'),
-        content: encoded,
-        sha: sha,
-        branch: branch
-      })
-    });
-
-    if (pushRes.ok) {
-      showToast('GitHub ga muvaffaqiyatli yuborildi!');
-      setBadge('green', '<i class="fas fa-check-circle" style="font-size:9px"></i> GitHub da saqlandi');
-    } else {
-      const err = await pushRes.json();
-      throw new Error(err.message || 'Push amalga oshmadi');
-    }
-  } catch(e) {
-    showToast('Xato: ' + e.message);
-    setBadge('red', 'Xato yuz berdi');
-  }
-}
-
-function injectDataIntoPortfolio(html, d) {
-  const dataScript = '<script id="__admin_data__">window.__PORTFOLIO_DATA__=' + JSON.stringify(d) + ';<\/script>';
-  // Agar avval inject qilingan bo'lsa, yangilaymiz
-  if (html.includes('id="__admin_data__"')) {
-    return html.replace(/<script id="__admin_data__">[\s\S]*?<\/script>/, dataScript);
-  }
-  // Aks holda </head> dan oldin qo'shamiz
-  return html.replace('</head>', dataScript + '\n</head>');
-}
-
-function setBadge(color, text) {
-  const badge = document.querySelector('.badge');
-  badge.className = 'badge ' + (color === 'red' ? '' : color);
-  if (color === 'red') {
-    badge.style.background = 'rgba(245,66,66,0.1)';
-    badge.style.color = 'var(--red)';
-  } else {
-    badge.style.background = '';
-    badge.style.color = '';
-  }
-  badge.innerHTML = text;
-}
-
-function saveGitHubConfig() {
-  const token = document.getElementById('gh-token').value.trim();
-  const repo = document.getElementById('gh-repo').value.trim() || 'zari004/portfolio';
-  const branch = document.getElementById('gh-branch').value.trim() || 'main';
-  if (!token) { alert('Token kiriting!'); return; }
-  localStorage.setItem('github_config', JSON.stringify({ token, repo, branch }));
-  showToast('GitHub sozlamalari saqlandi!');
-}
-
-function loadGitHubConfig() {
-  const cfg = JSON.parse(localStorage.getItem('github_config') || '{}');
-  const t = document.getElementById('gh-token');
-  if (t) {
-    t.value = cfg.token || '';
-    document.getElementById('gh-repo').value = cfg.repo || 'zari004/portfolio';
-    document.getElementById('gh-branch').value = cfg.branch || 'main';
-  }
-}
-
-// ============ MOBILE SIDEBAR ============
-function toggleSidebar() {
-  const sidebar = document.querySelector('.sidebar');
-  const icon = document.getElementById('sidebar-toggle-icon');
-  sidebar.classList.toggle('open');
-  icon.className = sidebar.classList.contains('open') ? 'fas fa-times' : 'fas fa-bars';
-}
-
-// Nav item bosilganda sidebarni yopish (mobilda)
-document.addEventListener('DOMContentLoaded', () => {
-  document.querySelectorAll('.nav-item').forEach(item => {
-    item.addEventListener('click', () => {
-      if (window.innerWidth <= 900) {
-        const sidebar = document.querySelector('.sidebar');
-        sidebar.classList.remove('open');
-        document.getElementById('sidebar-toggle-icon').className = 'fas fa-bars';
-      }
-    });
-  });
-});
-
-// ============ BADGE STATUS ============
-function updateBadgeStatus() {
-  const isOpen = document.getElementById('badge-open').checked;
-  const track = document.getElementById('badge-toggle-track');
-  const thumb = document.getElementById('badge-toggle-thumb');
-  const dot = document.getElementById('badge-preview-dot');
-  const text = document.getElementById('badge-preview-text');
-  const statusText = document.getElementById('badge-status-text');
-  const preview = document.getElementById('badge-preview');
-
-  if (isOpen) {
-    track.style.background = 'var(--accent)';
-    thumb.style.left = '28px';
-    dot.style.background = 'var(--accent)';
-    text.textContent = 'Yangi loyihalar qabul qilinmoqda';
-    preview.style.borderColor = 'var(--border)';
-    statusText.textContent = 'Loyihalar qabul qilinmoqda';
-    statusText.style.color = 'var(--accent)';
-  } else {
-    track.style.background = '#f54242';
-    thumb.style.left = '4px';
-    dot.style.background = '#f54242';
-    text.textContent = 'Loyihalar qabul qilish tugatildi';
-    preview.style.borderColor = 'rgba(245,66,66,0.3)';
-    statusText.textContent = 'Loyihalar qabul qilish tugatildi';
-    statusText.style.color = '#f54242';
-  }
-}
-
-// ============ AUTH ============
-const DEFAULT_USERS = [
-  { id: 1, username: 'admin', password: 'admin123', role: 'admin' }
-];
-
-function getUsers() {
-  try {
-    const saved = localStorage.getItem('admin_users');
-    if (saved) return JSON.parse(saved);
-  } catch(e) {}
-  // Birinchi marta — default user saqlash
-  localStorage.setItem('admin_users', JSON.stringify(DEFAULT_USERS));
-  return DEFAULT_USERS;
-}
-
-function saveUsers(users) {
-  localStorage.setItem('admin_users', JSON.stringify(users));
+/* ============================================================
+   AUTH
+   ============================================================ */
+function togglePwd() {
+  const inp = document.getElementById('loginPass');
+  const icon = inp.nextElementSibling.querySelector('i');
+  if (inp.type === 'password') { inp.type = 'text'; icon.className = 'fas fa-eye-slash'; }
+  else { inp.type = 'password'; icon.className = 'fas fa-eye'; }
 }
 
 function doLogin() {
-  const username = document.getElementById('login-username').value.trim();
-  const password = document.getElementById('login-password').value;
-  const errEl = document.getElementById('login-error');
-  const errMsg = document.getElementById('login-error-msg');
-
-  if (!username || !password) {
-    errMsg.textContent = 'Login va parolni kiriting!';
-    errEl.classList.add('show'); return;
-  }
-
-  const users = getUsers();
-  const user = users.find(u => u.username === username && u.password === password);
-
-  if (user) {
-    sessionStorage.setItem('admin_session', JSON.stringify({ id: user.id, username: user.username, role: user.role }));
-    document.getElementById('login-screen').classList.add('hidden');
-    errEl.classList.remove('show');
-    showToast('Xush kelibsiz, ' + user.username + '!');
-  } else {
-    errMsg.textContent = 'Login yoki parol noto\'g\'ri!';
-    errEl.classList.add('show');
-    document.getElementById('login-password').value = '';
-    document.getElementById('login-password').focus();
-  }
+  const u = document.getElementById('loginUser').value.trim();
+  const p = document.getElementById('loginPass').value;
+  const errEl = document.getElementById('loginError');
+  if (!u || !p) { errEl.textContent = 'Login va parolni kiriting'; return; }
+  const found = users.find(x => x.username === u && x.password === p);
+  if (!found) { errEl.textContent = 'Login yoki parol noto\'g\'ri'; return; }
+  sessionStorage.setItem('admin_session', JSON.stringify({ id: found.id, username: found.username, role: found.role }));
+  errEl.textContent = '';
+  enterApp(found);
 }
 
 function checkSession() {
-  const session = sessionStorage.getItem('admin_session');
-  if (session) {
-    document.getElementById('login-screen').classList.add('hidden');
-    return true;
-  }
-  return false;
+  loadFromStorage();
+  try {
+    const sess = JSON.parse(sessionStorage.getItem('admin_session'));
+    if (sess && sess.username) {
+      const u = users.find(x => x.username === sess.username);
+      if (u) { enterApp(u); return; }
+    }
+  } catch {}
+  document.getElementById('loginScreen').style.display = 'flex';
+}
+
+function enterApp(user) {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('adminApp').classList.add('active');
+  document.getElementById('userName').textContent = sanitize(user.username);
+  document.getElementById('userRole').textContent = user.role === 'admin' ? 'Administrator' : 'Editor';
+  document.getElementById('userAvatar').textContent = user.username.charAt(0).toUpperCase();
+  fillAllForms();
 }
 
 function logout() {
+  if (isDirty && !confirm('Saqlanmagan o\'zgarishlar bor. Chiqishni xohlaysizmi?')) return;
   sessionStorage.removeItem('admin_session');
-  location.reload();
+  isDirty = false;
+  document.getElementById('adminApp').classList.remove('active');
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('loginUser').value = '';
+  document.getElementById('loginPass').value = '';
 }
 
-function togglePwd(inputId, btn) {
-  const inp = document.getElementById(inputId);
-  if (inp.type === 'password') {
-    inp.type = 'text';
-    btn.innerHTML = '<i class="fas fa-eye-slash"></i>';
+/* ============================================================
+   SIDEBAR & PANELS
+   ============================================================ */
+function showPanel(id, clickedEl) {
+  currentPanel = id;
+  // Update nav active state
+  document.querySelectorAll('.sidebar-nav .nav-item').forEach(el => el.classList.remove('active'));
+  if (clickedEl) {
+    clickedEl.classList.add('active');
   } else {
-    inp.type = 'password';
-    btn.innerHTML = '<i class="fas fa-eye"></i>';
+    const nav = document.querySelector('.sidebar-nav .nav-item[data-panel="' + id + '"]');
+    if (nav) nav.classList.add('active');
+  }
+  // Show panel
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  const target = document.getElementById('panel-' + id);
+  if (target) target.classList.add('active');
+  // Update topbar title
+  const titles = { hero:'Hero', companies:'Kompaniyalar', portfolio:'Portfolio', services:'Xizmatlar', about:'Haqida', contact:'Kontakt', settings:'Sozlamalar', github:'GitHub Push' };
+  document.getElementById('topbarTitle').textContent = titles[id] || id;
+  // Close mobile sidebar
+  closeSidebar();
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('active');
+}
+
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('active');
+}
+
+/* ============================================================
+   FILL FORMS
+   ============================================================ */
+function fillAllForms() {
+  // Hero
+  document.getElementById('hero-line1').value = data.hero.line1 || '';
+  document.getElementById('hero-line2').value = data.hero.line2 || '';
+  document.getElementById('hero-line3').value = data.hero.line3 || '';
+  document.getElementById('hero-desc').value = data.hero.desc || '';
+  document.getElementById('hero-badge').value = data.hero.badge || '';
+  initCharCount('hero-line1','cc-hero-line1',30);
+  initCharCount('hero-line2','cc-hero-line2',30);
+  initCharCount('hero-line3','cc-hero-line3',30);
+  initCharCount('hero-desc','cc-hero-desc',200);
+  initCharCount('hero-badge','cc-hero-badge',60);
+  renderStatsPreview();
+  renderStatsEdit();
+  // Companies
+  document.getElementById('comp-label').value = data.companies.label || '';
+  const compToggle = document.getElementById('comp-visible-toggle');
+  if (data.companies.visible) compToggle.classList.add('on'); else compToggle.classList.remove('on');
+  renderCompaniesList();
+  updateCompaniesPreview();
+  // Portfolio
+  renderPortfolioList();
+  // Services
+  renderServicesList();
+  // About
+  document.getElementById('about-title1').value = data.about.title1 || '';
+  document.getElementById('about-title2').value = data.about.title2 || '';
+  document.getElementById('about-desc1').value = data.about.desc1 || '';
+  document.getElementById('about-desc2').value = data.about.desc2 || '';
+  document.getElementById('about-exp').value = data.about.exp || '';
+  document.getElementById('about-expLabel').value = data.about.expLabel || '';
+  initCharCount('about-title1','cc-about-t1',40);
+  initCharCount('about-title2','cc-about-t2',40);
+  initCharCount('about-desc1','cc-about-d1',200);
+  initCharCount('about-desc2','cc-about-d2',200);
+  // About image
+  if (data.about.img) {
+    document.getElementById('about-img-data').value = data.about.img;
+    document.getElementById('aboutImgPreview').innerHTML = '<img src="' + sanitize(data.about.img) + '" alt="Profile"><button class="remove-img" onclick="removeAboutImg()"><i class="fas fa-times"></i></button>';
+  }
+  renderSkillTags();
+  // Contact
+  document.getElementById('contact-email').value = data.contact.email || '';
+  document.getElementById('contact-telegram').value = data.contact.telegram || '';
+  document.getElementById('contact-location').value = data.contact.location || '';
+  document.getElementById('contact-instagram').value = data.contact.instagram || '';
+  document.getElementById('contact-telegramUrl').value = data.contact.telegramUrl || '';
+  document.getElementById('contact-behance').value = data.contact.behance || '';
+  document.getElementById('contact-dribbble').value = data.contact.dribbble || '';
+  // Settings
+  document.getElementById('set-logoText').value = data.settings.logoText || '';
+  document.getElementById('set-logoAccent').value = data.settings.logoAccent || '';
+  document.getElementById('set-siteTitle').value = data.settings.siteTitle || '';
+  document.getElementById('set-footerText').value = data.settings.footerText || '';
+  document.getElementById('set-cvUrl').value = data.settings.cvUrl || '';
+  document.getElementById('set-fontHero').value = data.settings.fontSizeHero || '72';
+  document.getElementById('set-fontSection').value = data.settings.fontSizeSection || '40';
+  document.getElementById('set-fontBody').value = data.settings.fontSizeBody || '16';
+  updateBadgeStatus();
+  // Users
+  renderUsersTable();
+  // GitHub
+  loadGitHubConfig();
+}
+
+/* ============================================================
+   STATS
+   ============================================================ */
+function renderStatsPreview() {
+  const el = document.getElementById('statsPreview');
+  if (!data.hero.stats || !data.hero.stats.length) { el.innerHTML = '<div class="empty-state"><p>Statistika yo\'q</p></div>'; return; }
+  el.innerHTML = data.hero.stats.map(s =>
+    '<div class="stat-card"><div class="stat-num">' + sanitize(s.num) + sanitize(s.suffix) + '</div><div class="stat-label">' + sanitize(s.label) + '</div></div>'
+  ).join('');
+}
+
+function renderStatsEdit() {
+  const el = document.getElementById('statsEdit');
+  if (!data.hero.stats || !data.hero.stats.length) { el.innerHTML = ''; return; }
+  el.innerHTML = data.hero.stats.map((s, i) =>
+    '<div class="stat-edit-row" style="display:flex;gap:10px;margin-bottom:10px;align-items:center">'
+    + '<input class="form-input stat-num" value="' + sanitize(s.num) + '" placeholder="Raqam" style="width:70px" oninput="markDirty()">'
+    + '<input class="form-input stat-suffix" value="' + sanitize(s.suffix) + '" placeholder="+" style="width:50px" oninput="markDirty()">'
+    + '<input class="form-input stat-label" value="' + sanitize(s.label) + '" placeholder="Label" style="flex:1" oninput="markDirty()">'
+    + '<button class="btn-icon" onclick="removeStat(' + i + ')" title="O\'chirish"><i class="fas fa-trash" style="color:var(--red);font-size:0.75rem"></i></button>'
+    + '</div>'
+  ).join('');
+}
+
+function addStat() {
+  data.hero.stats.push({ num: '0', suffix: '+', label: 'Yangi statistika' });
+  renderStatsPreview();
+  renderStatsEdit();
+  markDirty();
+}
+
+function removeStat(idx) {
+  // Collect current form values first
+  const statEls = document.querySelectorAll('.stat-edit-row');
+  data.hero.stats = [];
+  statEls.forEach(row => {
+    data.hero.stats.push({
+      num: row.querySelector('.stat-num').value,
+      suffix: row.querySelector('.stat-suffix').value,
+      label: row.querySelector('.stat-label').value
+    });
+  });
+  data.hero.stats.splice(idx, 1);
+  renderStatsPreview();
+  renderStatsEdit();
+  markDirty();
+}
+
+/* ============================================================
+   COMPANIES
+   ============================================================ */
+function toggleCompVisible() {
+  const el = document.getElementById('comp-visible-toggle');
+  el.classList.toggle('on');
+  data.companies.visible = el.classList.contains('on');
+  markDirty();
+}
+
+function renderCompaniesList() {
+  const el = document.getElementById('companiesList');
+  if (!data.companies.items.length) { el.innerHTML = '<div class="empty-state"><i class="fas fa-building"></i><p>Kompaniyalar yo\'q</p></div>'; return; }
+  el.innerHTML = data.companies.items.map(c =>
+    '<div class="list-item">'
+    + (c.logo ? '<img class="item-img" src="' + sanitize(c.logo) + '" alt="">' : '<div class="item-img" style="display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:700;color:var(--accent)">' + sanitize(c.name.charAt(0)) + '</div>')
+    + '<div class="item-info"><div class="item-title">' + sanitize(c.name) + '</div><div class="item-sub">ID: ' + c.id + '</div></div>'
+    + '<div class="item-actions">'
+    + '<button class="btn-icon" onclick="editCompany(' + c.id + ')" title="Tahrirlash"><i class="fas fa-edit" style="font-size:0.75rem"></i></button>'
+    + '<button class="btn-icon" onclick="deleteCompany(' + c.id + ')" title="O\'chirish"><i class="fas fa-trash" style="color:var(--red);font-size:0.75rem"></i></button>'
+    + '</div></div>'
+  ).join('');
+}
+
+function openAddCompany() {
+  openModal('Kompaniya qo\'shish',
+    '<div class="form-group"><label>Nomi</label><input class="form-input" id="m-comp-name" placeholder="Kompaniya nomi"></div>'
+    + '<div class="form-group"><label>Logo (rasm)</label>'
+    + '<div class="img-upload-zone"><i class="fas fa-cloud-upload-alt"></i><p>Logo yuklash</p><div class="size-note">Avtomatik siqiladi</div>'
+    + '<input type="file" accept="image/*" onchange="previewImg(event,\'m-comp-logo-preview\',\'m-comp-logo-data\')"></div>'
+    + '<div class="img-preview" id="m-comp-logo-preview"></div><input type="hidden" id="m-comp-logo-data"></div>',
+    '<button class="btn btn-secondary" onclick="closeModal()">Bekor qilish</button><button class="btn btn-primary" onclick="saveCompanyItem()">Saqlash</button>',
+    null
+  );
+}
+
+function editCompany(id) {
+  const c = data.companies.items.find(x => x.id === id);
+  if (!c) return;
+  openModal('Kompaniyani tahrirlash',
+    '<div class="form-group"><label>Nomi</label><input class="form-input" id="m-comp-name" value="' + sanitize(c.name) + '"></div>'
+    + '<div class="form-group"><label>Logo (rasm)</label>'
+    + '<div class="img-upload-zone"><i class="fas fa-cloud-upload-alt"></i><p>Logo yuklash</p><div class="size-note">Avtomatik siqiladi</div>'
+    + '<input type="file" accept="image/*" onchange="previewImg(event,\'m-comp-logo-preview\',\'m-comp-logo-data\')"></div>'
+    + '<div class="img-preview" id="m-comp-logo-preview">' + (c.logo ? '<img src="' + sanitize(c.logo) + '"><button class="remove-img" onclick="document.getElementById(\'m-comp-logo-data\').value=\'\';this.parentElement.innerHTML=\'\'"><i class="fas fa-times"></i></button>' : '') + '</div>'
+    + '<input type="hidden" id="m-comp-logo-data" value="' + sanitize(c.logo) + '"></div>',
+    '<button class="btn btn-secondary" onclick="closeModal()">Bekor qilish</button><button class="btn btn-primary" onclick="saveCompanyItem(' + id + ')">Saqlash</button>',
+    null
+  );
+}
+
+function saveCompanyItem(id) {
+  const name = document.getElementById('m-comp-name').value.trim();
+  if (!name) { showToast('Nomini kiriting', 'warning'); return; }
+  const logo = document.getElementById('m-comp-logo-data').value || '';
+  if (id) {
+    const c = data.companies.items.find(x => x.id === id);
+    if (c) { c.name = name; c.logo = logo; }
+  } else {
+    data.companies.items.push({ id: nextId(data.companies.items), name, logo });
+  }
+  renderCompaniesList();
+  updateCompaniesPreview();
+  closeModal();
+  markDirty();
+  showToast('Kompaniya saqlandi', 'success');
+}
+
+function deleteCompany(id) {
+  if (!confirm('Bu kompaniyani o\'chirmoqchimisiz?')) return;
+  data.companies.items = data.companies.items.filter(x => x.id !== id);
+  renderCompaniesList();
+  updateCompaniesPreview();
+  markDirty();
+  showToast('Kompaniya o\'chirildi', 'success');
+}
+
+function updateCompaniesPreview() {
+  const el = document.getElementById('marqueePreview');
+  if (!data.companies.items.length) { el.innerHTML = '<p style="text-align:center;color:var(--muted);font-size:0.82rem">Kompaniyalar yo\'q</p>'; return; }
+  const items = data.companies.items.map(c =>
+    '<div class="marquee-item">'
+    + (c.logo ? '<img src="' + sanitize(c.logo) + '" alt="">' : '')
+    + sanitize(c.name) + '</div>'
+  ).join('');
+  el.innerHTML = '<div class="marquee-track">' + items + items + '</div>';
+}
+
+/* ============================================================
+   PORTFOLIO (with drag-to-reorder)
+   ============================================================ */
+let dragItem = null;
+
+function renderPortfolioList() {
+  const el = document.getElementById('portfolioList');
+  if (!data.portfolio.length) { el.innerHTML = '<div class="empty-state"><i class="fas fa-briefcase"></i><p>Loyihalar yo\'q</p></div>'; return; }
+  el.innerHTML = data.portfolio.map((p, idx) =>
+    '<div class="list-item" draggable="true" data-idx="' + idx + '" ondragstart="dragStart(event,' + idx + ')" ondragover="dragOver(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)" ondrop="dragDrop(event,' + idx + ')" ondragend="dragEnd(event)">'
+    + '<span class="drag-handle"><i class="fas fa-grip-vertical"></i></span>'
+    + (p.img ? '<img class="item-img" src="' + sanitize(p.img) + '" alt="">' : '<div class="item-img" style="background:linear-gradient(135deg,' + sanitize(p.color1) + ',' + sanitize(p.color2) + ')"></div>')
+    + '<div class="item-info"><div class="item-title">' + sanitize(p.title) + '</div><div class="item-sub">' + sanitize(p.tag) + ' — ' + sanitize(p.desc) + '</div></div>'
+    + '<div class="item-actions">'
+    + '<button class="btn-icon" onclick="editPortfolio(' + p.id + ')" title="Tahrirlash"><i class="fas fa-edit" style="font-size:0.75rem"></i></button>'
+    + '<button class="btn-icon" onclick="deletePortfolio(' + p.id + ')" title="O\'chirish"><i class="fas fa-trash" style="color:var(--red);font-size:0.75rem"></i></button>'
+    + '</div></div>'
+  ).join('');
+}
+
+function dragStart(e, idx) {
+  dragItem = idx;
+  e.currentTarget.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+}
+function dragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }
+function dragEnter(e) {
+  e.preventDefault();
+  const item = e.currentTarget.closest ? e.currentTarget : e.target.closest('.list-item');
+  if (item) item.classList.add('drag-over');
+}
+function dragLeave(e) {
+  const item = e.currentTarget.closest ? e.currentTarget : e.target.closest('.list-item');
+  if (item) item.classList.remove('drag-over');
+}
+function dragDrop(e, targetIdx) {
+  e.preventDefault();
+  const item = e.currentTarget.closest ? e.currentTarget : e.target.closest('.list-item');
+  if (item) item.classList.remove('drag-over');
+  if (dragItem === null || dragItem === targetIdx) return;
+  const moved = data.portfolio.splice(dragItem, 1)[0];
+  data.portfolio.splice(targetIdx, 0, moved);
+  renderPortfolioList();
+  markDirty();
+}
+function dragEnd(e) {
+  dragItem = null;
+  document.querySelectorAll('.list-item').forEach(el => { el.classList.remove('dragging'); el.classList.remove('drag-over'); });
+}
+
+function openAddPortfolio() {
+  openModal('Yangi loyiha',
+    portfolioFormHTML(),
+    '<button class="btn btn-secondary" onclick="closeModal()">Bekor qilish</button><button class="btn btn-primary" onclick="savePortfolioItem()">Saqlash</button>',
+    null
+  );
+}
+
+function editPortfolio(id) {
+  const p = data.portfolio.find(x => x.id === id);
+  if (!p) return;
+  openModal('Loyihani tahrirlash',
+    portfolioFormHTML(p),
+    '<button class="btn btn-secondary" onclick="closeModal()">Bekor qilish</button><button class="btn btn-primary" onclick="savePortfolioItem(' + id + ')">Saqlash</button>',
+    null
+  );
+}
+
+function portfolioFormHTML(p) {
+  const d = p || { title:'', tag:'', desc:'', color1:'#1a1a2e', color2:'#16213e', img:'', link:'' };
+  return '<div class="form-group"><label>Sarlavha</label><input class="form-input" id="m-pf-title" value="' + sanitize(d.title) + '" placeholder="Loyiha nomi"></div>'
+    + '<div class="form-row"><div class="form-group"><label>Tag</label><input class="form-input" id="m-pf-tag" value="' + sanitize(d.tag) + '" placeholder="Masalan: Brending"></div>'
+    + '<div class="form-group"><label>Havola</label><input class="form-input" id="m-pf-link" value="' + sanitize(d.link) + '" placeholder="https://..."></div></div>'
+    + '<div class="form-group"><label>Tavsif</label><textarea class="form-input" id="m-pf-desc" rows="2" placeholder="Qisqa tavsif">' + sanitize(d.desc) + '</textarea></div>'
+    + '<div class="form-group"><label>Ranglar</label><div class="color-pair">'
+    + '<div class="color-input-wrap"><input type="color" id="m-pf-color1" value="' + d.color1 + '"><span>Rang 1</span></div>'
+    + '<div class="color-input-wrap"><input type="color" id="m-pf-color2" value="' + d.color2 + '"><span>Rang 2</span></div>'
+    + '</div></div>'
+    + '<div class="form-group"><label>Rasm</label>'
+    + '<div class="img-upload-zone"><i class="fas fa-cloud-upload-alt"></i><p>Rasm yuklash</p><div class="size-note">Avtomatik siqiladi (maks. 1200px)</div>'
+    + '<input type="file" accept="image/*" onchange="previewImg(event,\'m-pf-img-preview\',\'m-pf-img-data\')"></div>'
+    + '<div class="img-preview" id="m-pf-img-preview">' + (d.img ? '<img src="' + sanitize(d.img) + '"><button class="remove-img" onclick="document.getElementById(\'m-pf-img-data\').value=\'\';this.parentElement.innerHTML=\'\'"><i class="fas fa-times"></i></button>' : '') + '</div>'
+    + '<input type="hidden" id="m-pf-img-data" value="' + sanitize(d.img) + '"></div>';
+}
+
+function savePortfolioItem(id) {
+  const title = document.getElementById('m-pf-title').value.trim();
+  if (!title) { showToast('Sarlavha kiriting', 'warning'); return; }
+  const item = {
+    id: id || nextId(data.portfolio),
+    title: title,
+    tag: document.getElementById('m-pf-tag').value.trim(),
+    desc: document.getElementById('m-pf-desc').value.trim(),
+    color1: document.getElementById('m-pf-color1').value,
+    color2: document.getElementById('m-pf-color2').value,
+    img: document.getElementById('m-pf-img-data').value || '',
+    link: document.getElementById('m-pf-link').value.trim()
+  };
+  if (id) {
+    const idx = data.portfolio.findIndex(x => x.id === id);
+    if (idx !== -1) data.portfolio[idx] = item;
+  } else {
+    data.portfolio.push(item);
+  }
+  renderPortfolioList();
+  closeModal();
+  markDirty();
+  showToast('Loyiha saqlandi', 'success');
+}
+
+function deletePortfolio(id) {
+  if (!confirm('Bu loyihani o\'chirmoqchimisiz?')) return;
+  data.portfolio = data.portfolio.filter(x => x.id !== id);
+  renderPortfolioList();
+  markDirty();
+  showToast('Loyiha o\'chirildi', 'success');
+}
+
+/* ============================================================
+   SERVICES
+   ============================================================ */
+function renderServicesList() {
+  const el = document.getElementById('servicesList');
+  if (!data.services.length) { el.innerHTML = '<div class="empty-state"><i class="fas fa-concierge-bell"></i><p>Xizmatlar yo\'q</p></div>'; return; }
+  el.innerHTML = data.services.map(s =>
+    '<div class="list-item">'
+    + '<div style="width:40px;height:40px;background:var(--panel);border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center"><i class="' + sanitize(s.icon) + '" style="color:var(--accent)"></i></div>'
+    + '<div class="item-info"><div class="item-title">' + sanitize(s.title) + '</div><div class="item-sub">' + sanitize(s.desc) + '</div></div>'
+    + '<div class="item-actions">'
+    + '<button class="btn-icon" onclick="editService(' + s.id + ')" title="Tahrirlash"><i class="fas fa-edit" style="font-size:0.75rem"></i></button>'
+    + '<button class="btn-icon" onclick="deleteService(' + s.id + ')" title="O\'chirish"><i class="fas fa-trash" style="color:var(--red);font-size:0.75rem"></i></button>'
+    + '</div></div>'
+  ).join('');
+}
+
+function openAddService() {
+  openModal('Yangi xizmat', serviceFormHTML(),
+    '<button class="btn btn-secondary" onclick="closeModal()">Bekor qilish</button><button class="btn btn-primary" onclick="saveServiceItem()">Saqlash</button>', null);
+}
+
+function editService(id) {
+  const s = data.services.find(x => x.id === id);
+  if (!s) return;
+  openModal('Xizmatni tahrirlash', serviceFormHTML(s),
+    '<button class="btn btn-secondary" onclick="closeModal()">Bekor qilish</button><button class="btn btn-primary" onclick="saveServiceItem(' + id + ')">Saqlash</button>', null);
+}
+
+function serviceFormHTML(s) {
+  const d = s || { title:'', icon:'fas fa-star', desc:'' };
+  return '<div class="form-group"><label>Nomi</label><input class="form-input" id="m-sv-title" value="' + sanitize(d.title) + '" placeholder="Xizmat nomi"></div>'
+    + '<div class="form-group"><label>Icon (FontAwesome class)</label><input class="form-input mono" id="m-sv-icon" value="' + sanitize(d.icon) + '" placeholder="fas fa-star">'
+    + '<div class="form-hint">Masalan: fas fa-pen-nib, fas fa-palette, fas fa-film</div></div>'
+    + '<div class="form-group"><label>Tavsif</label><textarea class="form-input" id="m-sv-desc" rows="2" placeholder="Qisqa tavsif">' + sanitize(d.desc) + '</textarea></div>';
+}
+
+function saveServiceItem(id) {
+  const title = document.getElementById('m-sv-title').value.trim();
+  if (!title) { showToast('Nomini kiriting', 'warning'); return; }
+  const item = {
+    id: id || nextId(data.services),
+    title: title,
+    icon: document.getElementById('m-sv-icon').value.trim() || 'fas fa-star',
+    desc: document.getElementById('m-sv-desc').value.trim()
+  };
+  if (id) {
+    const idx = data.services.findIndex(x => x.id === id);
+    if (idx !== -1) data.services[idx] = item;
+  } else {
+    data.services.push(item);
+  }
+  renderServicesList();
+  closeModal();
+  markDirty();
+  showToast('Xizmat saqlandi', 'success');
+}
+
+function deleteService(id) {
+  if (!confirm('Bu xizmatni o\'chirmoqchimisiz?')) return;
+  data.services = data.services.filter(x => x.id !== id);
+  renderServicesList();
+  markDirty();
+  showToast('Xizmat o\'chirildi', 'success');
+}
+
+/* ============================================================
+   SKILLS
+   ============================================================ */
+function renderSkillTags() {
+  const el = document.getElementById('skillTags');
+  if (!data.about.skills || !data.about.skills.length) { el.innerHTML = '<span style="color:var(--muted);font-size:0.82rem">Ko\'nikmalar yo\'q</span>'; return; }
+  el.innerHTML = data.about.skills.map((s, i) =>
+    '<div class="tag">' + sanitize(s) + '<button class="remove-tag" onclick="removeSkill(' + i + ')"><i class="fas fa-times"></i></button></div>'
+  ).join('');
+}
+
+function addSkill() {
+  const input = document.getElementById('newSkill');
+  const val = input.value.trim();
+  if (!val) return;
+  if (!data.about.skills) data.about.skills = [];
+  if (data.about.skills.includes(val)) { showToast('Bu ko\'nikma allaqachon mavjud', 'warning'); return; }
+  data.about.skills.push(val);
+  renderSkillTags();
+  input.value = '';
+  markDirty();
+}
+
+function removeSkill(idx) {
+  data.about.skills.splice(idx, 1);
+  renderSkillTags();
+  markDirty();
+}
+
+function removeAboutImg() {
+  data.about.img = '';
+  document.getElementById('about-img-data').value = '';
+  document.getElementById('aboutImgPreview').innerHTML = '';
+  markDirty();
+}
+
+/* ============================================================
+   IMAGE PREVIEW with compression
+   ============================================================ */
+async function previewImg(event, previewId, hiddenId) {
+  const file = event.target.files[0];
+  if (!file) return;
+  if (!file.type.startsWith('image/')) { showToast('Faqat rasm fayllarini yuklang', 'error'); return; }
+  try {
+    showToast('Rasm siqilmoqda...', 'warning');
+    const compressed = await compressImage(file, 1200, 0.8);
+    document.getElementById(hiddenId).value = compressed;
+    document.getElementById(previewId).innerHTML =
+      '<img src="' + compressed + '" alt="Preview">'
+      + '<button class="remove-img" onclick="document.getElementById(\'' + hiddenId + '\').value=\'\';document.getElementById(\'' + previewId + '\').innerHTML=\'\';markDirty()"><i class="fas fa-times"></i></button>';
+    markDirty();
+    // Show compressed size
+    const sizeKB = Math.round(compressed.length * 0.75 / 1024);
+    showToast('Rasm siqildi: ~' + sizeKB + 'KB', 'success');
+  } catch (err) {
+    showToast('Rasm yuklashda xatolik', 'error');
   }
 }
 
-// ============ USERS MANAGEMENT ============
-let editingUserId = null;
+/* ============================================================
+   BADGE STATUS
+   ============================================================ */
+function updateBadgeStatus() {
+  const el = document.getElementById('badge-toggle');
+  if (data.settings.badgeOpen) el.classList.add('on'); else el.classList.remove('on');
+}
 
+function toggleBadge() {
+  data.settings.badgeOpen = !data.settings.badgeOpen;
+  updateBadgeStatus();
+  markDirty();
+}
+
+function setBadge(val) {
+  data.settings.badgeOpen = val;
+  updateBadgeStatus();
+  markDirty();
+}
+
+/* ============================================================
+   USERS
+   ============================================================ */
 function renderUsersTable() {
-  const table = document.getElementById('users-table');
-  if (!table) return;
-  const session = JSON.parse(sessionStorage.getItem('admin_session') || '{}');
-  const users = getUsers();
-  table.innerHTML = `
-    <thead>
-      <tr>
-        <th>Login</th>
-        <th>Rol</th>
-        <th>Parol</th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody>
-      ${users.map(u => `
-        <tr>
-          <td style="font-weight:700;">${u.username} ${u.id === session.id ? '<span style="font-size:10px;color:var(--muted);font-family:\'JetBrains Mono\',monospace;">(siz)</span>' : ''}</td>
-          <td><span class="user-role-badge ${u.role}">${u.role === 'admin' ? 'Admin' : 'Editor'}</span></td>
-          <td style="font-family:'JetBrains Mono',monospace;color:var(--muted);">${'•'.repeat(Math.min(u.password.length, 10))}</td>
-          <td>
-            <div style="display:flex;gap:6px;justify-content:flex-end;">
-              <button class="btn-icon" onclick="openEditUser(${u.id})" title="Tahrirlash"><i class="fas fa-pen"></i></button>
-              ${u.id !== session.id ? `<button class="btn-icon danger" onclick="deleteUser(${u.id})" title="O'chirish"><i class="fas fa-trash"></i></button>` : ''}
-            </div>
-          </td>
-        </tr>
-      `).join('')}
-    </tbody>
-  `;
+  const el = document.getElementById('usersTable');
+  el.innerHTML = users.map(u =>
+    '<div class="list-item">'
+    + '<div style="width:36px;height:36px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#0d0d0d;font-weight:700;font-size:0.82rem">' + sanitize(u.username.charAt(0).toUpperCase()) + '</div>'
+    + '<div class="item-info"><div class="item-title">' + sanitize(u.username) + '</div><div class="item-sub">' + sanitize(u.role) + '</div></div>'
+    + '<div class="item-actions">'
+    + '<button class="btn-icon" onclick="openEditUser(' + u.id + ')" title="Tahrirlash"><i class="fas fa-edit" style="font-size:0.75rem"></i></button>'
+    + (users.length > 1 ? '<button class="btn-icon" onclick="deleteUser(' + u.id + ')" title="O\'chirish"><i class="fas fa-trash" style="color:var(--red);font-size:0.75rem"></i></button>' : '')
+    + '</div></div>'
+  ).join('');
 }
 
 function openAddUser() {
-  editingUserId = null;
-  document.getElementById('user-modal-title').textContent = 'Yangi foydalanuvchi';
-  document.getElementById('um-username').value = '';
-  document.getElementById('um-password').value = '';
-  document.getElementById('um-role').value = 'editor';
-  openModal('user-modal');
+  openModal('Yangi foydalanuvchi',
+    '<div class="form-group"><label>Username</label><input class="form-input" id="m-user-name" placeholder="login"></div>'
+    + '<div class="form-group"><label>Parol</label><input class="form-input" id="m-user-pass" type="password" placeholder="Parol"></div>'
+    + '<div class="form-group"><label>Role</label><select class="form-input" id="m-user-role"><option value="admin">Admin</option><option value="editor">Editor</option></select></div>',
+    '<button class="btn btn-secondary" onclick="closeModal()">Bekor qilish</button><button class="btn btn-primary" onclick="saveUser()">Saqlash</button>', null);
 }
 
 function openEditUser(id) {
-  editingUserId = id;
-  const users = getUsers();
   const u = users.find(x => x.id === id);
   if (!u) return;
-  document.getElementById('user-modal-title').textContent = 'Foydalanuvchini tahrirlash';
-  document.getElementById('um-username').value = u.username;
-  document.getElementById('um-password').value = '';
-  document.getElementById('um-role').value = u.role;
-  openModal('user-modal');
+  openModal('Foydalanuvchini tahrirlash',
+    '<div class="form-group"><label>Username</label><input class="form-input" id="m-user-name" value="' + sanitize(u.username) + '"></div>'
+    + '<div class="form-group"><label>Yangi parol (bo\'sh qoldiring agar o\'zgartirmaysiz)</label><input class="form-input" id="m-user-pass" type="password" placeholder="Yangi parol"></div>'
+    + '<div class="form-group"><label>Role</label><select class="form-input" id="m-user-role"><option value="admin"' + (u.role==='admin' ? ' selected' : '') + '>Admin</option><option value="editor"' + (u.role==='editor' ? ' selected' : '') + '>Editor</option></select></div>',
+    '<button class="btn btn-secondary" onclick="closeModal()">Bekor qilish</button><button class="btn btn-primary" onclick="saveUser(' + id + ')">Saqlash</button>', null);
 }
 
-function saveUser() {
-  const username = document.getElementById('um-username').value.trim();
-  const password = document.getElementById('um-password').value;
-  const role = document.getElementById('um-role').value;
-
-  if (!username) { alert('Login kiriting!'); return; }
-
-  const users = getUsers();
-
-  // Username takrorlanishini tekshirish
-  const duplicate = users.find(u => u.username === username && u.id !== editingUserId);
-  if (duplicate) { alert('Bu username allaqachon mavjud!'); return; }
-
-  if (editingUserId) {
-    const idx = users.findIndex(u => u.id === editingUserId);
-    if (idx > -1) {
-      users[idx].username = username;
-      users[idx].role = role;
-      if (password) users[idx].password = password;
+function saveUser(id) {
+  const name = document.getElementById('m-user-name').value.trim();
+  const pass = document.getElementById('m-user-pass').value;
+  const role = document.getElementById('m-user-role').value;
+  if (!name) { showToast('Username kiriting', 'warning'); return; }
+  if (id) {
+    const u = users.find(x => x.id === id);
+    if (u) {
+      u.username = name;
+      if (pass) u.password = pass;
+      u.role = role;
     }
   } else {
-    if (!password) { alert('Yangi foydalanuvchi uchun parol kiriting!'); return; }
-    users.push({ id: Date.now(), username, password, role });
+    if (!pass) { showToast('Parolni kiriting', 'warning'); return; }
+    if (users.find(x => x.username === name)) { showToast('Bu username band', 'error'); return; }
+    users.push({ id: nextId(users), username: name, password: pass, role: role });
   }
-
-  saveUsers(users);
+  localStorage.setItem('admin_users', JSON.stringify(users));
   renderUsersTable();
-  closeModal('user-modal');
-  showToast(editingUserId ? 'Foydalanuvchi yangilandi!' : 'Foydalanuvchi qo\'shildi!');
+  closeModal();
+  showToast('Foydalanuvchi saqlandi', 'success');
 }
 
 function deleteUser(id) {
-  const users = getUsers();
-  if (users.length <= 1) { alert('Kamida 1 ta foydalanuvchi bo\'lishi shart!'); return; }
-  if (!confirm('Bu foydalanuvchini o\'chirasizmi?')) return;
-  saveUsers(users.filter(u => u.id !== id));
+  if (users.length <= 1) { showToast('Oxirgi foydalanuvchini o\'chirib bo\'lmaydi', 'error'); return; }
+  if (!confirm('Bu foydalanuvchini o\'chirmoqchimisiz?')) return;
+  users = users.filter(x => x.id !== id);
+  localStorage.setItem('admin_users', JSON.stringify(users));
   renderUsersTable();
-  showToast('O\'chirildi');
+  showToast('Foydalanuvchi o\'chirildi', 'success');
 }
 
-// ============ INIT ============
+/* ============================================================
+   MODAL
+   ============================================================ */
+function openModal(title, bodyHTML, footerHTML) {
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalBody').innerHTML = bodyHTML;
+  document.getElementById('modalFooter').innerHTML = footerHTML || '';
+  const overlay = document.getElementById('modalOverlay');
+  overlay.classList.add('active');
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('active');
+}
+
+/* ============================================================
+   GITHUB PUSH
+   ============================================================ */
+function loadGitHubConfig() {
+  try {
+    const cfg = JSON.parse(localStorage.getItem('github_config'));
+    if (cfg) {
+      document.getElementById('gh-token').value = cfg.token || '';
+      document.getElementById('gh-owner').value = cfg.owner || '';
+      document.getElementById('gh-repo').value = cfg.repo || '';
+      document.getElementById('gh-branch').value = cfg.branch || 'main';
+      document.getElementById('gh-path').value = cfg.path || 'index.html';
+      updateGHStatus(cfg);
+    }
+  } catch {}
+}
+
+function saveGitHubConfig() {
+  const cfg = {
+    token: document.getElementById('gh-token').value.trim(),
+    owner: document.getElementById('gh-owner').value.trim(),
+    repo: document.getElementById('gh-repo').value.trim(),
+    branch: document.getElementById('gh-branch').value.trim() || 'main',
+    path: document.getElementById('gh-path').value.trim() || 'index.html'
+  };
+  localStorage.setItem('github_config', JSON.stringify(cfg));
+  updateGHStatus(cfg);
+  showToast('GitHub konfiguratsiyasi saqlandi', 'success');
+}
+
+function updateGHStatus(cfg) {
+  const el = document.getElementById('ghStatus');
+  if (cfg && cfg.token && cfg.owner && cfg.repo) {
+    el.innerHTML = '<div class="dot ok"></div><span>Sozlangan: ' + sanitize(cfg.owner) + '/' + sanitize(cfg.repo) + '</span>';
+  } else {
+    el.innerHTML = '<div class="dot no"></div><span>Sozlanmagan</span>';
+  }
+}
+
+async function pushToGitHub() {
+  let cfg;
+  try { cfg = JSON.parse(localStorage.getItem('github_config')); } catch { cfg = null; }
+  if (!cfg || !cfg.token || !cfg.owner || !cfg.repo) {
+    showToast('GitHub konfiguratsiyasini to\'ldiring', 'error'); return;
+  }
+  // Save current data first
+  collectFormData();
+  saveToStorage();
+  clearDirty();
+
+  showToast('GitHub\'ga yuborilmoqda...', 'warning');
+  try {
+    const apiBase = 'https://api.github.com/repos/' + cfg.owner + '/' + cfg.repo + '/contents/' + cfg.path;
+    // Get current file to get SHA
+    let sha = '';
+    try {
+      const getResp = await fetch(apiBase + '?ref=' + cfg.branch, {
+        headers: { 'Authorization': 'token ' + cfg.token, 'Accept': 'application/vnd.github.v3+json' }
+      });
+      if (getResp.ok) {
+        const fileData = await getResp.json();
+        sha = fileData.sha;
+        // Decode content and inject data
+        const currentContent = atob(fileData.content.replace(/\n/g, ''));
+        const newContent = injectDataIntoPortfolio(currentContent);
+        const encoded = btoa(unescape(encodeURIComponent(newContent)));
+        const putResp = await fetch(apiBase, {
+          method: 'PUT',
+          headers: { 'Authorization': 'token ' + cfg.token, 'Content-Type': 'application/json', 'Accept': 'application/vnd.github.v3+json' },
+          body: JSON.stringify({ message: 'Admin panel: update portfolio data', content: encoded, sha: sha, branch: cfg.branch })
+        });
+        if (putResp.ok) {
+          showToast('GitHub\'ga muvaffaqiyatli yuborildi!', 'success');
+        } else {
+          const err = await putResp.json();
+          showToast('Xatolik: ' + (err.message || 'Noma\'lum'), 'error');
+        }
+      } else if (getResp.status === 404) {
+        // File doesn't exist, create it
+        showToast('Fayl topilmadi. Avval portfolio faylini yarating.', 'error');
+      } else {
+        showToast('GitHub API xatolik: ' + getResp.status, 'error');
+      }
+    } catch (netErr) {
+      showToast('Tarmoq xatoligi: ' + netErr.message, 'error');
+    }
+  } catch (err) {
+    showToast('Xatolik: ' + err.message, 'error');
+  }
+}
+
+function injectDataIntoPortfolio(html) {
+  // Inject all admin data into the portfolio HTML
+  const d = data;
+  const s = d.settings;
+
+  // Replace site title
+  html = html.replace(/<title>[^<]*<\/title>/, '<title>' + s.siteTitle + '</title>');
+
+  // Inject data as a JSON script tag
+  const dataScript = '\n<script id="admin-injected-data" type="application/json">\n' + JSON.stringify(d) + '\n</' + 'script>\n';
+
+  // Remove old injected data
+  html = html.replace(/<script id="admin-injected-data"[^>]*>[\s\S]*?<\/script>\n?/g, '');
+
+  // Insert before closing </body>
+  html = html.replace('</body>', dataScript + '</body>');
+
+  return html;
+}
+
+/* ============================================================
+   RESET
+   ============================================================ */
+function resetAll() {
+  if (!confirm('DIQQAT! Barcha ma\'lumotlar o\'chiriladi. Davom etmoqchimisiz?')) return;
+  if (!confirm('Rostdan ham barchasini tozalashni xohlaysizmi? Bu qaytarib bo\'lmaydi!')) return;
+  localStorage.removeItem('portfolio_admin_data');
+  localStorage.removeItem('admin_users');
+  localStorage.removeItem('github_config');
+  data = deepClone(DEFAULT_DATA);
+  users = deepClone(DEFAULT_USERS);
+  localStorage.setItem('admin_users', JSON.stringify(users));
+  fillAllForms();
+  clearDirty();
+  showToast('Barcha ma\'lumotlar tozalandi', 'success');
+}
+
+/* ============================================================
+   KEYBOARD SHORTCUTS
+   ============================================================ */
+document.addEventListener('keydown', function(e) {
+  if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+    e.preventDefault();
+    // Only save if admin app is visible
+    if (document.getElementById('adminApp').classList.contains('active')) {
+      saveAll();
+    }
+  }
+  if (e.key === 'Escape') {
+    closeModal();
+  }
+});
+
+// Enter to login
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && document.getElementById('loginScreen').style.display !== 'none') {
+    const app = document.getElementById('adminApp');
+    if (!app.classList.contains('active')) {
+      doLogin();
+    }
+  }
+});
+
+/* ============================================================
+   INIT
+   ============================================================ */
 checkSession();
-loadFromStorage();
-loadGitHubConfig();
-renderUsersTable();
 </script>
 </body>
 </html>
