@@ -412,9 +412,116 @@
     }
     .btn-danger:hover { background: rgba(245,66,66,0.2); }
 
+    @keyframes marquee {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-50%); }
+    }
+    .admin-company-chip {
+      display: inline-flex; align-items: center; justify-content: center;
+      padding: 0 32px; height: 56px; flex-shrink: 0;
+      transition: transform 0.1s, opacity 0.1s;
+    }
+    .admin-company-chip span {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 1px;
+      white-space: nowrap;
+    }
+    .admin-company-chip img {
+      height: 28px; width: auto; max-width: 90px;
+      object-fit: contain;
+    }
+
+    /* ===== LOGIN SCREEN ===== */
+    #login-screen {
+      position: fixed; inset: 0; z-index: 9999;
+      background: var(--bg);
+      display: flex; align-items: center; justify-content: center;
+    }
+    #login-screen.hidden { display: none; }
+    .login-box {
+      width: 400px; max-width: 90vw;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 40px 36px;
+    }
+    .login-logo {
+      font-size: 22px; font-weight: 800;
+      margin-bottom: 6px;
+    }
+    .login-logo span { color: var(--accent); }
+    .login-sub {
+      font-size: 12px; color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+      margin-bottom: 32px;
+    }
+    .login-error {
+      background: rgba(245,66,66,0.1);
+      border: 1px solid rgba(245,66,66,0.25);
+      border-radius: 8px; padding: 10px 14px;
+      font-size: 13px; color: var(--red);
+      margin-bottom: 16px; display: none;
+    }
+    .login-error.show { display: block; }
+    .login-btn {
+      width: 100%; padding: 13px;
+      background: var(--accent); color: #0a0a0a;
+      border: none; border-radius: 10px; cursor: pointer;
+      font-size: 14px; font-weight: 700;
+      font-family: 'Syne', sans-serif;
+      transition: all 0.2s; margin-top: 8px;
+    }
+    .login-btn:hover { background: #8fc422; }
+
+    /* ===== USERS TABLE ===== */
+    .users-table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+    .users-table th {
+      text-align: left; padding: 10px 14px;
+      font-size: 10px; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 1.5px;
+      font-family: 'JetBrains Mono', monospace;
+      border-bottom: 1px solid var(--border);
+    }
+    .users-table td {
+      padding: 12px 14px; font-size: 13px;
+      border-bottom: 1px solid rgba(42,42,42,0.5);
+      vertical-align: middle;
+    }
+    .users-table tr:last-child td { border-bottom: none; }
+    .user-role-badge {
+      display: inline-flex; align-items: center;
+      padding: 3px 10px; border-radius: 50px;
+      font-size: 10px; font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .user-role-badge.admin { background: rgba(181,245,66,0.1); color: var(--accent); }
+    .user-role-badge.editor { background: rgba(66,200,245,0.1); color: var(--accent2); }
+
   </style>
 </head>
 <body>
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">dizay<span>n.</span> <span style="font-size:11px;color:var(--muted);font-weight:400">admin</span></div>
+    <div class="login-sub">// kirish uchun ma'lumotlaringizni kiriting</div>
+    <div class="login-error" id="login-error"><i class="fas fa-exclamation-circle"></i> <span id="login-error-msg">Login yoki parol noto'g'ri</span></div>
+    <div class="form-group">
+      <label>Login</label>
+      <input type="text" id="login-username" placeholder="username" autocomplete="username" onkeydown="if(event.key==='Enter')doLogin()"/>
+    </div>
+    <div class="form-group">
+      <label>Parol</label>
+      <div style="position:relative;">
+        <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()" style="padding-right:44px;"/>
+        <button onclick="togglePwd('login-password',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;"><i class="fas fa-eye"></i></button>
+      </div>
+    </div>
+    <button class="login-btn" onclick="doLogin()"><i class="fas fa-sign-in-alt"></i> Kirish</button>
+  </div>
+</div>
 
 <!-- SIDEBAR -->
 <aside class="sidebar">
@@ -426,6 +533,9 @@
   <div class="nav-section">Sahifalar</div>
   <div class="nav-item active" onclick="showPanel('hero')">
     <i class="fas fa-home"></i> Hero bo'limi
+  </div>
+  <div class="nav-item" onclick="showPanel('companies')">
+    <i class="fas fa-building"></i> Kompaniyalar
   </div>
   <div class="nav-item" onclick="showPanel('portfolio')">
     <i class="fas fa-images"></i> Portfolio
@@ -444,9 +554,12 @@
   </div>
 
   <div class="sidebar-bottom">
-    <a href="index.html" target="_blank" class="preview-btn">
+    <a href="index.html" target="_blank" class="preview-btn" style="margin-bottom:10px;">
       <i class="fas fa-external-link-alt"></i> Saytni ko'rish
     </a>
+    <button onclick="logout()" style="display:flex;align-items:center;gap:10px;width:100%;padding:11px 16px;border-radius:10px;background:transparent;border:1px solid var(--border);color:var(--muted);cursor:pointer;font-family:'Syne',sans-serif;font-size:13px;font-weight:600;transition:all 0.2s;" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
+      <i class="fas fa-sign-out-alt"></i> Chiqish
+    </button>
   </div>
 </aside>
 
@@ -497,6 +610,44 @@
       </div>
       <div class="section-divider">tahrirlash</div>
       <div id="stats-edit-area"></div>
+    </div>
+  </div>
+
+  <!-- ===== COMPANIES PANEL ===== -->
+  <div class="section-panel" id="panel-companies">
+    <div class="edit-card">
+      <h3><i class="fas fa-building"></i> Kompaniyalar bo'limi</h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Bo'lim sarlavhasi</label>
+          <input type="text" id="companies-label-input" placeholder="Ishlagan kompaniyalar va hamkorlar" oninput="updateCompaniesPreview()"/>
+        </div>
+        <div class="form-group" style="display:flex;align-items:flex-end;">
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:0;">
+            <input type="checkbox" id="companies-visible" style="width:16px;height:16px;accent-color:var(--accent);border-radius:4px;" onchange="updateCompaniesPreview()"/>
+            <span style="font-size:13px;color:var(--sub);">Bo'limni ko'rsatish</span>
+          </label>
+        </div>
+      </div>
+      <!-- MINI PREVIEW -->
+      <div style="margin-top:8px;">
+        <div style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">Ko'rinish preview</div>
+        <div id="companies-preview-box" style="background:var(--bg);border:1px solid var(--border);border-radius:12px;overflow:hidden;padding:20px 0;position:relative;">
+          <div id="companies-preview-label" style="text-align:center;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:2px;margin-bottom:14px;"></div>
+          <div style="position:relative;overflow:hidden;">
+            <div style="position:absolute;left:0;top:0;bottom:0;width:80px;background:linear-gradient(90deg,var(--bg),transparent);z-index:2;pointer-events:none;"></div>
+            <div style="position:absolute;right:0;top:0;bottom:0;width:80px;background:linear-gradient(270deg,var(--bg),transparent);z-index:2;pointer-events:none;"></div>
+            <div id="admin-marquee-track" style="display:flex;animation:marquee 20s linear infinite;width:max-content;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="edit-card">
+      <h3><i class="fas fa-list"></i> Kompaniyalar ro'yxati</h3>
+      <div class="portfolio-list" id="companies-list"></div>
+      <button class="add-btn" onclick="openAddCompany()">
+        <i class="fas fa-plus"></i> Yangi kompaniya qo'shish
+      </button>
     </div>
   </div>
 
@@ -633,6 +784,60 @@
         <label>Footer matni</label>
         <input type="text" id="footer-text" placeholder="© 2025 dizayn. Barcha huquqlar himoyalangan."/>
       </div>
+      <div class="form-group">
+        <label>CV havolasi (Google Docs URL)</label>
+        <input type="text" id="cv-url" placeholder="https://docs.google.com/document/d/..."/>
+        <div style="font-size:11px;color:var(--muted);margin-top:5px;font-family:'JetBrains Mono',monospace;">
+          <i class="fas fa-info-circle" style="color:var(--accent2)"></i> Google Docs → Fayl → Ulashish → Havola nusxalash. Bo'sh qolsa tugma ko'rinmaydi.
+        </div>
+      </div>
+    </div>
+
+    <div class="edit-card">
+      <h3><i class="fas fa-bell"></i> Loyiha qabul holati</h3>
+      <div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:16px 20px;">
+        <div>
+          <div style="font-size:14px;font-weight:700;margin-bottom:4px;" id="badge-status-text">Loyihalar qabul qilinmoqda</div>
+          <div style="font-size:12px;color:var(--muted);font-family:'JetBrains Mono',monospace;">Saytda hero qismida ko'rinadi</div>
+        </div>
+        <label style="position:relative;display:inline-block;width:52px;height:28px;cursor:pointer;">
+          <input type="checkbox" id="badge-open" onchange="updateBadgeStatus()" style="opacity:0;width:0;height:0;position:absolute;">
+          <span id="badge-toggle-track" style="position:absolute;inset:0;border-radius:28px;background:var(--border);transition:all 0.3s;">
+            <span id="badge-toggle-thumb" style="position:absolute;width:20px;height:20px;border-radius:50%;background:#fff;top:4px;left:4px;transition:all 0.3s;"></span>
+          </span>
+        </label>
+      </div>
+      <div id="badge-preview" style="margin-top:12px;display:inline-flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px 14px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--sub);">
+        <span id="badge-preview-dot" style="width:7px;height:7px;border-radius:50%;background:var(--accent);flex-shrink:0;"></span>
+        <span id="badge-preview-text">Yangi loyihalar qabul qilinmoqda</span>
+      </div>
+    </div>
+
+    <div class="edit-card">
+      <h3><i class="fas fa-text-height"></i> Shrift o'lchamlari</h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Hero sarlavha (px)</label>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <input type="range" id="font-hero" min="40" max="100" value="72" oninput="document.getElementById('font-hero-val').textContent=this.value+'px'" style="flex:1;accent-color:var(--accent);"/>
+            <span id="font-hero-val" style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent);min-width:36px;">72px</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Bo'lim sarlavhasi (px)</label>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <input type="range" id="font-section" min="24" max="60" value="40" oninput="document.getElementById('font-section-val').textContent=this.value+'px'" style="flex:1;accent-color:var(--accent);"/>
+            <span id="font-section-val" style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent);min-width:36px;">40px</span>
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Asosiy matn (px)</label>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <input type="range" id="font-body" min="12" max="22" value="16" oninput="document.getElementById('font-body-val').textContent=this.value+'px'" style="flex:1;accent-color:var(--accent);"/>
+          <span id="font-body-val" style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent);min-width:36px;">16px</span>
+        </div>
+      </div>
     </div>
     <div class="edit-card">
       <h3><i class="fab fa-github"></i> GitHub sozlamalari</h3>
@@ -653,6 +858,14 @@
       </div>
       <button class="btn-save" onclick="saveGitHubConfig()" style="margin-top:4px">
         <i class="fas fa-save"></i> GitHub sozlamalarini saqlash
+      </button>
+    </div>
+
+    <div class="edit-card">
+      <h3><i class="fas fa-users-cog"></i> Foydalanuvchilar boshqaruvi</h3>
+      <table class="users-table" id="users-table"><!-- JS --></table>
+      <button class="add-btn" onclick="openAddUser()" style="margin-top:4px;">
+        <i class="fas fa-user-plus"></i> Yangi foydalanuvchi qo'shish
       </button>
     </div>
 
@@ -765,6 +978,72 @@
   </div>
 </div>
 
+<!-- COMPANY MODAL -->
+<div class="modal-overlay" id="company-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="company-modal-title">Yangi kompaniya qo'shish</h3>
+      <button class="modal-close" onclick="closeModal('company-modal')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="form-group">
+      <label>Kompaniya nomi</label>
+      <input type="text" id="cm-name" placeholder="Adobe, Figma, TechStart..."/>
+    </div>
+    <div class="form-group">
+      <label>Logo URL (ixtiyoriy)</label>
+      <input type="text" id="cm-logo-url" placeholder="https://example.com/logo.png" oninput="previewLogoUrl()"/>
+      <div style="font-size:11px;color:var(--muted);margin-top:5px;font-family:'JetBrains Mono',monospace;">
+        PNG, SVG, WebP • Oq yoki shaffof fon tavsiya etiladi
+      </div>
+    </div>
+    <!-- URL preview -->
+    <div id="cm-url-preview-wrap" style="display:none;margin-top:-4px;margin-bottom:16px;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:16px;text-align:center;">
+      <img id="cm-url-preview" style="height:48px;width:auto;max-width:200px;object-fit:contain;filter:brightness(0.8);"/>
+      <div style="font-size:11px;color:var(--muted);margin-top:8px;font-family:'JetBrains Mono',monospace;">preview</div>
+    </div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:16px;">
+      <i class="fas fa-info-circle" style="color:var(--accent2)"></i> URL kiritilmasa, kompaniya nomi matn sifatida ko'rsatiladi.
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('company-modal')">Bekor qilish</button>
+      <button class="btn-save" onclick="saveCompanyItem()"><i class="fas fa-check"></i> Saqlash</button>
+    </div>
+  </div>
+</div>
+
+<!-- USER MODAL -->
+<div class="modal-overlay" id="user-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="user-modal-title">Yangi foydalanuvchi</h3>
+      <button class="modal-close" onclick="closeModal('user-modal')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="form-group">
+      <label>Login (username)</label>
+      <input type="text" id="um-username" placeholder="admin"/>
+    </div>
+    <div class="form-group">
+      <label>Parol</label>
+      <div style="position:relative;">
+        <input type="password" id="um-password" placeholder="••••••••" style="padding-right:44px;"/>
+        <button onclick="togglePwd('um-password',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;"><i class="fas fa-eye"></i></button>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:5px;font-family:'JetBrains Mono',monospace;">Tahrirlashda bo'sh qoldirsangiz parol o'zgarmaydi</div>
+    </div>
+    <div class="form-group">
+      <label>Rol</label>
+      <select id="um-role">
+        <option value="admin">Admin (to'liq huquq)</option>
+        <option value="editor">Editor (faqat kontent)</option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('user-modal')">Bekor qilish</button>
+      <button class="btn-save" onclick="saveUser()"><i class="fas fa-check"></i> Saqlash</button>
+    </div>
+  </div>
+</div>
+
 <!-- TOAST -->
 <div class="toast" id="toast"><i class="fas fa-check-circle"></i> <span id="toast-msg">Saqlandi!</span></div>
 
@@ -781,6 +1060,18 @@ const DEFAULT_DATA = {
       { num: '50', suffix: '+', label: 'Yakunlangan loyiha' },
       { num: '30', suffix: '+', label: 'Mamnun mijoz' },
       { num: '5', suffix: '+', label: 'Yillik tajriba' }
+    ]
+  },
+  companies: {
+    label: 'Ishlagan kompaniyalar va hamkorlar',
+    visible: true,
+    items: [
+      { id: 1, name: 'Adobe', logo: '' },
+      { id: 2, name: 'Figma', logo: '' },
+      { id: 3, name: 'Behance', logo: '' },
+      { id: 4, name: 'Canva', logo: '' },
+      { id: 5, name: 'Dribbble', logo: '' },
+      { id: 6, name: 'Notion', logo: '' }
     ]
   },
   portfolio: [
@@ -821,13 +1112,19 @@ const DEFAULT_DATA = {
     logoText: 'dizay',
     logoAccent: 'n.',
     siteTitle: 'Portfolio – Grafik Dizayner',
-    footerText: '© 2025 dizayn. Barcha huquqlar himoyalangan.'
+    footerText: '© 2025 dizayn. Barcha huquqlar himoyalangan.',
+    cvUrl: '',
+    badgeOpen: true,
+    fontSizeHero: '72',
+    fontSizeSection: '40',
+    fontSizeBody: '16'
   }
 };
 
 let data = JSON.parse(JSON.stringify(DEFAULT_DATA));
 let editingPortfolioId = null;
 let editingServiceId = null;
+let editingCompanyId = null;
 
 // ============ LOAD / SAVE ============
 function loadFromStorage() {
@@ -835,8 +1132,9 @@ function loadFromStorage() {
   if (saved) {
     try {
       data = JSON.parse(saved);
-      // merge missing keys
       data.settings = Object.assign({}, DEFAULT_DATA.settings, data.settings || {});
+      data.companies = Object.assign({}, DEFAULT_DATA.companies, data.companies || {});
+      if (!data.companies.items) data.companies.items = DEFAULT_DATA.companies.items;
     } catch(e) {}
   }
   fillAllForms();
@@ -882,6 +1180,17 @@ function saveAll() {
   data.settings.logoAccent = document.getElementById('logo-accent').value;
   data.settings.siteTitle = document.getElementById('site-title').value;
   data.settings.footerText = document.getElementById('footer-text').value;
+  data.settings.cvUrl = document.getElementById('cv-url').value.trim();
+  data.settings.badgeOpen = document.getElementById('badge-open').checked;
+  data.settings.fontSizeHero = document.getElementById('font-hero').value;
+  data.settings.fontSizeSection = document.getElementById('font-section').value;
+  data.settings.fontSizeBody = document.getElementById('font-body').value;
+  // Companies
+  if (!data.companies) data.companies = Object.assign({}, DEFAULT_DATA.companies);
+  const clInp = document.getElementById('companies-label-input');
+  const cvInp = document.getElementById('companies-visible');
+  if (clInp) data.companies.label = clInp.value;
+  if (cvInp) data.companies.visible = cvInp.checked;
 
   saveToStorage();
   showToast('Saqlandi! GitHub ga yuborilmoqda...');
@@ -912,6 +1221,7 @@ function fillAllForms() {
   renderPortfolioList();
   renderServicesList();
   renderSkillTags();
+  renderCompaniesList();
 
   const ab = data.about;
   document.getElementById('about-title1').value = ab.title1 || '';
@@ -935,6 +1245,31 @@ function fillAllForms() {
   document.getElementById('logo-accent').value = s.logoAccent || '';
   document.getElementById('site-title').value = s.siteTitle || '';
   document.getElementById('footer-text').value = s.footerText || '';
+  document.getElementById('cv-url').value = s.cvUrl || '';
+
+  // Badge toggle
+  const badgeOpen = s.badgeOpen !== false;
+  document.getElementById('badge-open').checked = badgeOpen;
+  updateBadgeStatus();
+
+  // Font sizes
+  const fh = parseInt(s.fontSizeHero) || 72;
+  const fs = parseInt(s.fontSizeSection) || 40;
+  const fb = parseInt(s.fontSizeBody) || 16;
+  document.getElementById('font-hero').value = fh;
+  document.getElementById('font-hero-val').textContent = fh + 'px';
+  document.getElementById('font-section').value = fs;
+  document.getElementById('font-section-val').textContent = fs + 'px';
+  document.getElementById('font-body').value = fb;
+  document.getElementById('font-body-val').textContent = fb + 'px';
+
+  // Companies
+  const co = data.companies || DEFAULT_DATA.companies;
+  const clEl = document.getElementById('companies-label-input');
+  const cvEl = document.getElementById('companies-visible');
+  if (clEl) clEl.value = co.label || '';
+  if (cvEl) cvEl.checked = co.visible !== false;
+  setTimeout(updateCompaniesPreview, 150);
 }
 
 // ============ STATS ============
@@ -1184,6 +1519,7 @@ document.querySelectorAll('.modal-overlay').forEach(m => {
 // ============ NAVIGATION ============
 const panelTitles = {
   hero: "Hero bo'limi",
+  companies: "Kompaniyalar",
   portfolio: "Portfolio ishlari",
   services: "Xizmatlar",
   about: "Men haqimda",
@@ -1197,6 +1533,167 @@ function showPanel(id) {
   document.getElementById('panel-' + id).classList.add('active');
   event.currentTarget.classList.add('active');
   document.getElementById('panel-title').textContent = panelTitles[id];
+}
+
+// ============ COMPANIES ============
+function renderCompaniesList() {
+  if (!data.companies) data.companies = Object.assign({}, DEFAULT_DATA.companies);
+  const list = document.getElementById('companies-list');
+  if (!list) return;
+  const items = data.companies.items || [];
+  if (!items.length) {
+    list.innerHTML = '<div style="text-align:center;color:var(--muted);padding:20px;font-size:13px;">Hozircha kompaniya yo\'q</div>';
+    return;
+  }
+  list.innerHTML = items.map(c => `
+    <div class="portfolio-item">
+      <div class="portfolio-item-thumb" style="background:var(--bg);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;">
+        ${c.logo
+          ? `<img src="${c.logo}" style="width:100%;height:100%;object-fit:contain;padding:6px;filter:grayscale(1) brightness(0.7)"/>`
+          : `<span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;">${c.name.substring(0,6)}</span>`
+        }
+      </div>
+      <div class="portfolio-item-info">
+        <div class="item-tag">Kompaniya</div>
+        <div class="item-title">${c.name}</div>
+        <div class="item-desc">${c.logo ? 'Logo yuklangan' : 'Faqat matn'}</div>
+      </div>
+      <div class="item-actions">
+        <button class="btn-icon" onclick="editCompany(${c.id})"><i class="fas fa-pen"></i></button>
+        <button class="btn-icon danger" onclick="deleteCompany(${c.id})"><i class="fas fa-trash"></i></button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function previewLogoUrl() {
+  const url = document.getElementById('cm-logo-url').value.trim();
+  const wrap = document.getElementById('cm-url-preview-wrap');
+  const img = document.getElementById('cm-url-preview');
+  if (url) {
+    img.src = url;
+    img.onload = () => { wrap.style.display = ''; };
+    img.onerror = () => { wrap.style.display = 'none'; };
+  } else {
+    wrap.style.display = 'none';
+  }
+}
+
+function openAddCompany() {
+  editingCompanyId = null;
+  document.getElementById('company-modal-title').textContent = 'Yangi kompaniya qo\'shish';
+  document.getElementById('cm-name').value = '';
+  document.getElementById('cm-logo-url').value = '';
+  document.getElementById('cm-url-preview-wrap').style.display = 'none';
+  openModal('company-modal');
+}
+
+function editCompany(id) {
+  editingCompanyId = id;
+  const c = data.companies.items.find(x => x.id === id);
+  if (!c) return;
+  document.getElementById('company-modal-title').textContent = 'Kompaniyani tahrirlash';
+  document.getElementById('cm-name').value = c.name;
+  document.getElementById('cm-logo-url').value = c.logo || '';
+  if (c.logo) {
+    const img = document.getElementById('cm-url-preview');
+    img.src = c.logo;
+    document.getElementById('cm-url-preview-wrap').style.display = '';
+  } else {
+    document.getElementById('cm-url-preview-wrap').style.display = 'none';
+  }
+  openModal('company-modal');
+}
+
+function saveCompanyItem() {
+  const name = document.getElementById('cm-name').value.trim();
+  if (!name) { alert('Kompaniya nomini kiriting!'); return; }
+  const logo = document.getElementById('cm-logo-url').value.trim();
+  const item = { id: editingCompanyId || Date.now(), name, logo };
+  if (!data.companies) data.companies = Object.assign({}, DEFAULT_DATA.companies);
+  if (editingCompanyId) {
+    const idx = data.companies.items.findIndex(x => x.id === editingCompanyId);
+    if (idx > -1) data.companies.items[idx] = item;
+  } else {
+    data.companies.items.push(item);
+  }
+  saveToStorage();
+  renderCompaniesList();
+  updateCompaniesPreview();
+  closeModal('company-modal');
+  showToast(editingCompanyId ? 'Kompaniya yangilandi!' : 'Kompaniya qo\'shildi!');
+}
+
+function deleteCompany(id) {
+  if (!confirm('Bu kompaniyani o\'chirasizmi?')) return;
+  data.companies.items = data.companies.items.filter(c => c.id !== id);
+  saveToStorage();
+  renderCompaniesList();
+  updateCompaniesPreview();
+  showToast('O\'chirildi');
+}
+
+function updateCompaniesPreview() {
+  const labelEl = document.getElementById('companies-preview-label');
+  const track = document.getElementById('admin-marquee-track');
+  const box = document.getElementById('companies-preview-box');
+  if (!track || !box) return;
+
+  const visible = document.getElementById('companies-visible');
+  box.style.display = (visible && !visible.checked) ? 'none' : '';
+
+  const lbl = document.getElementById('companies-label-input');
+  if (labelEl && lbl) labelEl.textContent = lbl.value;
+
+  const items = (data.companies && data.companies.items) || [];
+  if (!items.length) {
+    track.innerHTML = '<div style="padding:0 40px;color:var(--muted);font-size:12px;font-family:\'JetBrains Mono\',monospace;">Kompaniyalar yo\'q</div>';
+    return;
+  }
+
+  const makeChip = (item) => {
+    const inner = item.logo
+      ? `<img src="${item.logo}" alt="${item.name}" style="height:28px;width:auto;max-width:90px;object-fit:contain;"/>`
+      : `<span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;white-space:nowrap;">${item.name}</span>`;
+    return `<div class="admin-company-chip">${inner}</div>`;
+  };
+
+  const html = items.map(makeChip).join('');
+  track.innerHTML = html + html;
+  initAdminMarqueeEffect();
+}
+
+function initAdminMarqueeEffect() {
+  const wrapper = document.querySelector('#companies-preview-box > div:last-child');
+  const track = document.getElementById('admin-marquee-track');
+  if (!wrapper || !track) return;
+
+  let running = true;
+  function tick() {
+    if (!running) return;
+    const items = track.querySelectorAll('.admin-company-chip');
+    const wRect = wrapper.getBoundingClientRect();
+    const center = wRect.left + wRect.width / 2;
+    const maxDist = wRect.width / 2;
+
+    items.forEach(item => {
+      const iRect = item.getBoundingClientRect();
+      const iCenter = iRect.left + iRect.width / 2;
+      const t = Math.min(Math.abs(iCenter - center) / maxDist, 1);
+      const scale = 1.0 - t * 0.3;
+      const opacity = 1.0 - t * 0.8;
+      const brightness = 1.0 - t * 0.75;
+      const grayscale = t;
+      item.style.transform = `scale(${scale})`;
+      item.style.opacity = opacity;
+      const img = item.querySelector('img');
+      const txt = item.querySelector('span');
+      if (img) img.style.filter = `grayscale(${grayscale}) brightness(${brightness})`;
+      if (txt) { const r = Math.round(220 * brightness); txt.style.color = `rgb(${r},${r},${r})`; txt.style.fontSize = '18px'; txt.style.fontWeight = '800'; }
+    });
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
 }
 
 // ============ TOAST ============
@@ -1309,9 +1806,207 @@ function loadGitHubConfig() {
   }
 }
 
+// ============ BADGE STATUS ============
+function updateBadgeStatus() {
+  const isOpen = document.getElementById('badge-open').checked;
+  const track = document.getElementById('badge-toggle-track');
+  const thumb = document.getElementById('badge-toggle-thumb');
+  const dot = document.getElementById('badge-preview-dot');
+  const text = document.getElementById('badge-preview-text');
+  const statusText = document.getElementById('badge-status-text');
+  const preview = document.getElementById('badge-preview');
+
+  if (isOpen) {
+    track.style.background = 'var(--accent)';
+    thumb.style.left = '28px';
+    dot.style.background = 'var(--accent)';
+    text.textContent = 'Yangi loyihalar qabul qilinmoqda';
+    preview.style.borderColor = 'var(--border)';
+    statusText.textContent = 'Loyihalar qabul qilinmoqda';
+    statusText.style.color = 'var(--accent)';
+  } else {
+    track.style.background = '#f54242';
+    thumb.style.left = '4px';
+    dot.style.background = '#f54242';
+    text.textContent = 'Loyihalar qabul qilish tugatildi';
+    preview.style.borderColor = 'rgba(245,66,66,0.3)';
+    statusText.textContent = 'Loyihalar qabul qilish tugatildi';
+    statusText.style.color = '#f54242';
+  }
+}
+
+// ============ AUTH ============
+const DEFAULT_USERS = [
+  { id: 1, username: 'admin', password: 'admin123', role: 'admin' }
+];
+
+function getUsers() {
+  try {
+    const saved = localStorage.getItem('admin_users');
+    if (saved) return JSON.parse(saved);
+  } catch(e) {}
+  // Birinchi marta — default user saqlash
+  localStorage.setItem('admin_users', JSON.stringify(DEFAULT_USERS));
+  return DEFAULT_USERS;
+}
+
+function saveUsers(users) {
+  localStorage.setItem('admin_users', JSON.stringify(users));
+}
+
+function doLogin() {
+  const username = document.getElementById('login-username').value.trim();
+  const password = document.getElementById('login-password').value;
+  const errEl = document.getElementById('login-error');
+  const errMsg = document.getElementById('login-error-msg');
+
+  if (!username || !password) {
+    errMsg.textContent = 'Login va parolni kiriting!';
+    errEl.classList.add('show'); return;
+  }
+
+  const users = getUsers();
+  const user = users.find(u => u.username === username && u.password === password);
+
+  if (user) {
+    sessionStorage.setItem('admin_session', JSON.stringify({ id: user.id, username: user.username, role: user.role }));
+    document.getElementById('login-screen').classList.add('hidden');
+    errEl.classList.remove('show');
+    showToast('Xush kelibsiz, ' + user.username + '!');
+  } else {
+    errMsg.textContent = 'Login yoki parol noto\'g\'ri!';
+    errEl.classList.add('show');
+    document.getElementById('login-password').value = '';
+    document.getElementById('login-password').focus();
+  }
+}
+
+function checkSession() {
+  const session = sessionStorage.getItem('admin_session');
+  if (session) {
+    document.getElementById('login-screen').classList.add('hidden');
+    return true;
+  }
+  return false;
+}
+
+function logout() {
+  sessionStorage.removeItem('admin_session');
+  location.reload();
+}
+
+function togglePwd(inputId, btn) {
+  const inp = document.getElementById(inputId);
+  if (inp.type === 'password') {
+    inp.type = 'text';
+    btn.innerHTML = '<i class="fas fa-eye-slash"></i>';
+  } else {
+    inp.type = 'password';
+    btn.innerHTML = '<i class="fas fa-eye"></i>';
+  }
+}
+
+// ============ USERS MANAGEMENT ============
+let editingUserId = null;
+
+function renderUsersTable() {
+  const table = document.getElementById('users-table');
+  if (!table) return;
+  const session = JSON.parse(sessionStorage.getItem('admin_session') || '{}');
+  const users = getUsers();
+  table.innerHTML = `
+    <thead>
+      <tr>
+        <th>Login</th>
+        <th>Rol</th>
+        <th>Parol</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      ${users.map(u => `
+        <tr>
+          <td style="font-weight:700;">${u.username} ${u.id === session.id ? '<span style="font-size:10px;color:var(--muted);font-family:\'JetBrains Mono\',monospace;">(siz)</span>' : ''}</td>
+          <td><span class="user-role-badge ${u.role}">${u.role === 'admin' ? 'Admin' : 'Editor'}</span></td>
+          <td style="font-family:'JetBrains Mono',monospace;color:var(--muted);">${'•'.repeat(Math.min(u.password.length, 10))}</td>
+          <td>
+            <div style="display:flex;gap:6px;justify-content:flex-end;">
+              <button class="btn-icon" onclick="openEditUser(${u.id})" title="Tahrirlash"><i class="fas fa-pen"></i></button>
+              ${u.id !== session.id ? `<button class="btn-icon danger" onclick="deleteUser(${u.id})" title="O'chirish"><i class="fas fa-trash"></i></button>` : ''}
+            </div>
+          </td>
+        </tr>
+      `).join('')}
+    </tbody>
+  `;
+}
+
+function openAddUser() {
+  editingUserId = null;
+  document.getElementById('user-modal-title').textContent = 'Yangi foydalanuvchi';
+  document.getElementById('um-username').value = '';
+  document.getElementById('um-password').value = '';
+  document.getElementById('um-role').value = 'editor';
+  openModal('user-modal');
+}
+
+function openEditUser(id) {
+  editingUserId = id;
+  const users = getUsers();
+  const u = users.find(x => x.id === id);
+  if (!u) return;
+  document.getElementById('user-modal-title').textContent = 'Foydalanuvchini tahrirlash';
+  document.getElementById('um-username').value = u.username;
+  document.getElementById('um-password').value = '';
+  document.getElementById('um-role').value = u.role;
+  openModal('user-modal');
+}
+
+function saveUser() {
+  const username = document.getElementById('um-username').value.trim();
+  const password = document.getElementById('um-password').value;
+  const role = document.getElementById('um-role').value;
+
+  if (!username) { alert('Login kiriting!'); return; }
+
+  const users = getUsers();
+
+  // Username takrorlanishini tekshirish
+  const duplicate = users.find(u => u.username === username && u.id !== editingUserId);
+  if (duplicate) { alert('Bu username allaqachon mavjud!'); return; }
+
+  if (editingUserId) {
+    const idx = users.findIndex(u => u.id === editingUserId);
+    if (idx > -1) {
+      users[idx].username = username;
+      users[idx].role = role;
+      if (password) users[idx].password = password;
+    }
+  } else {
+    if (!password) { alert('Yangi foydalanuvchi uchun parol kiriting!'); return; }
+    users.push({ id: Date.now(), username, password, role });
+  }
+
+  saveUsers(users);
+  renderUsersTable();
+  closeModal('user-modal');
+  showToast(editingUserId ? 'Foydalanuvchi yangilandi!' : 'Foydalanuvchi qo\'shildi!');
+}
+
+function deleteUser(id) {
+  const users = getUsers();
+  if (users.length <= 1) { alert('Kamida 1 ta foydalanuvchi bo\'lishi shart!'); return; }
+  if (!confirm('Bu foydalanuvchini o\'chirasizmi?')) return;
+  saveUsers(users.filter(u => u.id !== id));
+  renderUsersTable();
+  showToast('O\'chirildi');
+}
+
 // ============ INIT ============
+checkSession();
 loadFromStorage();
 loadGitHubConfig();
+renderUsersTable();
 </script>
 </body>
 </html>
