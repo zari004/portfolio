@@ -635,6 +635,28 @@
       </div>
     </div>
     <div class="edit-card">
+      <h3><i class="fab fa-github"></i> GitHub sozlamalari</h3>
+      <div class="form-group">
+        <label>GitHub Personal Access Token</label>
+        <input type="password" id="gh-token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"/>
+        <div style="font-size:11px;color:var(--muted);margin-top:5px">Token hech qachon serverga yuborilmaydi, faqat brauzeringizda saqlanadi.</div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Repo (username/reponame)</label>
+          <input type="text" id="gh-repo" placeholder="zari004/portfolio"/>
+        </div>
+        <div class="form-group">
+          <label>Branch</label>
+          <input type="text" id="gh-branch" placeholder="main"/>
+        </div>
+      </div>
+      <button class="btn-save" onclick="saveGitHubConfig()" style="margin-top:4px">
+        <i class="fas fa-save"></i> GitHub sozlamalarini saqlash
+      </button>
+    </div>
+
+    <div class="edit-card">
       <h3><i class="fas fa-exclamation-triangle" style="color:var(--red)"></i> Xavfli zona</h3>
       <div class="danger-zone">
         <p>Barcha ma'lumotlarni o'chirib, boshlang'ich holatga qaytarish</p>
@@ -862,10 +884,11 @@ function saveAll() {
   data.settings.footerText = document.getElementById('footer-text').value;
 
   saveToStorage();
-  showToast('Barcha o\'zgarishlar saqlandi!');
-  document.querySelector('.badge').innerHTML = '<i class="fas fa-circle" style="font-size:7px"></i> Saqlangan';
+  showToast('Saqlandi! GitHub ga yuborilmoqda...');
+  document.querySelector('.badge').innerHTML = '<i class="fas fa-circle" style="font-size:7px"></i> Saqlandi';
   document.querySelector('.badge').className = 'badge green';
   renderStatsPreview();
+  pushToGitHub();
 }
 
 function resetAll() {
@@ -1184,8 +1207,111 @@ function showToast(msg) {
   setTimeout(() => toast.classList.remove('show'), 2800);
 }
 
+// ============ GITHUB PUSH ============
+async function pushToGitHub() {
+  const cfg = JSON.parse(localStorage.getItem('github_config') || '{}');
+  const token = cfg.token;
+  const repo = cfg.repo || 'zari004/portfolio';
+  const branch = cfg.branch || 'main';
+
+  if (!token) {
+    showToast('GitHub token kiritilmagan! Sozlamalar > GitHub');
+    setBadge('blue', 'Lokal saqlandi');
+    return;
+  }
+
+  setBadge('blue', '<i class="fas fa-spinner fa-spin" style="font-size:10px"></i> Yuborilmoqda...');
+
+  try {
+    // portfolio.html SHA olish
+    const getRes = await fetch('https://api.github.com/repos/' + repo + '/contents/portfolio.html', {
+      headers: { 'Authorization': 'token ' + token, 'Accept': 'application/vnd.github.v3+json' }
+    });
+    if (!getRes.ok) { throw new Error('portfolio.html topilmadi (status: ' + getRes.status + ')'); }
+    const getJson = await getRes.json();
+    const sha = getJson.sha;
+
+    // Mavjud portfolio.html contentini decode qilish
+    const existingContent = decodeURIComponent(escape(atob(getJson.content.replace(/\n/g,''))));
+
+    // Ma'lumotni portfolio.html ga inject qilish
+    const injected = injectDataIntoPortfolio(existingContent, data);
+    const encoded = btoa(unescape(encodeURIComponent(injected)));
+
+    // GitHub ga push
+    const pushRes = await fetch('https://api.github.com/repos/' + repo + '/contents/portfolio.html', {
+      method: 'PUT',
+      headers: {
+        'Authorization': 'token ' + token,
+        'Accept': 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        message: 'Admin panel: sayt yangilandi ' + new Date().toLocaleString('uz'),
+        content: encoded,
+        sha: sha,
+        branch: branch
+      })
+    });
+
+    if (pushRes.ok) {
+      showToast('GitHub ga muvaffaqiyatli yuborildi!');
+      setBadge('green', '<i class="fas fa-check-circle" style="font-size:9px"></i> GitHub da saqlandi');
+    } else {
+      const err = await pushRes.json();
+      throw new Error(err.message || 'Push amalga oshmadi');
+    }
+  } catch(e) {
+    showToast('Xato: ' + e.message);
+    setBadge('red', 'Xato yuz berdi');
+  }
+}
+
+function injectDataIntoPortfolio(html, d) {
+  const dataScript = '<script id="__admin_data__">window.__PORTFOLIO_DATA__=' + JSON.stringify(d) + ';<\/script>';
+  // Agar avval inject qilingan bo'lsa, yangilaymiz
+  if (html.includes('id="__admin_data__"')) {
+    return html.replace(/<script id="__admin_data__">[\s\S]*?<\/script>/, dataScript);
+  }
+  // Aks holda </head> dan oldin qo'shamiz
+  return html.replace('</head>', dataScript + '\n</head>');
+}
+
+function setBadge(color, text) {
+  const badge = document.querySelector('.badge');
+  badge.className = 'badge ' + (color === 'red' ? '' : color);
+  if (color === 'red') {
+    badge.style.background = 'rgba(245,66,66,0.1)';
+    badge.style.color = 'var(--red)';
+  } else {
+    badge.style.background = '';
+    badge.style.color = '';
+  }
+  badge.innerHTML = text;
+}
+
+function saveGitHubConfig() {
+  const token = document.getElementById('gh-token').value.trim();
+  const repo = document.getElementById('gh-repo').value.trim() || 'zari004/portfolio';
+  const branch = document.getElementById('gh-branch').value.trim() || 'main';
+  if (!token) { alert('Token kiriting!'); return; }
+  localStorage.setItem('github_config', JSON.stringify({ token, repo, branch }));
+  showToast('GitHub sozlamalari saqlandi!');
+}
+
+function loadGitHubConfig() {
+  const cfg = JSON.parse(localStorage.getItem('github_config') || '{}');
+  const t = document.getElementById('gh-token');
+  if (t) {
+    t.value = cfg.token || '';
+    document.getElementById('gh-repo').value = cfg.repo || 'zari004/portfolio';
+    document.getElementById('gh-branch').value = cfg.branch || 'main';
+  }
+}
+
 // ============ INIT ============
 loadFromStorage();
+loadGitHubConfig();
 </script>
 </body>
 </html>
