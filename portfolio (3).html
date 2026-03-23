@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Portfolio – Grafik Dizayner</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg-primary: #0a0a0a;
+      --bg-secondary: #111111;
+      --bg-card: #161616;
+      --accent: #b5f542;
+      --accent-dark: #8fc422;
+      --text-primary: #f0f0f0;
+      --text-secondary: #888888;
+      --text-muted: #555555;
+      --border: #222222;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      overflow-x: hidden;
+    }
+
+    /* SCROLLBAR */
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: var(--bg-primary); }
+    ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; }
+
+    /* NAV */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 999;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 20px 60px;
+      background: rgba(10,10,10,0.85);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo {
+      font-size: 22px; font-weight: 800; color: var(--text-primary);
+      text-decoration: none; letter-spacing: -0.5px;
+    }
+    .logo span { color: var(--accent); }
+
+    .nav-links { display: flex; gap: 36px; list-style: none; }
+    .nav-links a {
+      text-decoration: none; color: var(--text-secondary);
+      font-size: 14px; font-weight: 500; transition: color 0.3s;
+    }
+    .nav-links a:hover { color: var(--accent); }
+
+    .nav-cta {
+      background: var(--accent); color: #0a0a0a;
+      padding: 10px 22px; border-radius: 50px;
+      text-decoration: none; font-weight: 700; font-size: 14px;
+      transition: background 0.3s, transform 0.2s;
+    }
+    .nav-cta:hover { background: var(--accent-dark); transform: scale(1.04); }
+
+    /* HERO */
+    .hero {
+      min-height: 100vh;
+      display: flex; align-items: center;
+      padding: 120px 60px 80px;
+      position: relative; overflow: hidden;
+    }
+
+    .hero-bg-circle {
+      position: absolute; border-radius: 50%;
+      filter: blur(120px); opacity: 0.12; pointer-events: none;
+    }
+    .hero-bg-circle.c1 {
+      width: 600px; height: 600px;
+      background: var(--accent);
+      top: -100px; right: -100px;
+    }
+    .hero-bg-circle.c2 {
+      width: 400px; height: 400px;
+      background: #4af0c4;
+      bottom: -50px; left: 200px;
+    }
+
+    .hero-content { max-width: 680px; position: relative; z-index: 1; }
+
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 50px; padding: 8px 16px; margin-bottom: 28px;
+    }
+    .hero-badge .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--accent); animation: pulse 2s infinite;
+    }
+    .hero-badge span { font-size: 13px; color: var(--text-secondary); }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.8); }
+    }
+
+    .hero h1 {
+      font-size: clamp(44px, 6vw, 80px);
+      font-weight: 900; line-height: 1.05;
+      letter-spacing: -2px; margin-bottom: 24px;
+    }
+    .hero h1 .highlight {
+      color: var(--accent);
+      position: relative; display: inline-block;
+    }
+    .hero h1 .highlight::after {
+      content: '';
+      position: absolute; left: 0; bottom: -4px;
+      height: 3px; width: 100%;
+      background: var(--accent); border-radius: 2px;
+    }
+
+    .hero p {
+      font-size: 17px; color: var(--text-secondary);
+      line-height: 1.75; max-width: 500px; margin-bottom: 42px;
+    }
+
+    .hero-btns { display: flex; gap: 16px; flex-wrap: wrap; }
+
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--accent); color: #0a0a0a;
+      padding: 14px 28px; border-radius: 50px;
+      font-weight: 700; font-size: 15px;
+      text-decoration: none; transition: all 0.3s;
+    }
+    .btn-primary:hover { background: var(--accent-dark); transform: translateY(-2px); }
+
+    .btn-outline {
+      display: inline-flex; align-items: center; gap: 8px;
+      border: 1px solid var(--border); color: var(--text-primary);
+      padding: 14px 28px; border-radius: 50px;
+      font-weight: 600; font-size: 15px;
+      text-decoration: none; transition: all 0.3s;
+    }
+    .btn-outline:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-2px); }
+
+    .hero-stats {
+      display: flex; gap: 48px; margin-top: 64px; flex-wrap: wrap;
+    }
+    .stat-item { }
+    .stat-num {
+      font-size: 42px; font-weight: 900; color: var(--text-primary);
+      letter-spacing: -1px; line-height: 1;
+    }
+    .stat-num span { color: var(--accent); }
+    .stat-label { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+
+    /* SECTION */
+    section { padding: 100px 60px; }
+
+    .section-tag {
+      display: inline-flex; align-items: center; gap: 8px;
+      color: var(--accent); font-size: 13px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 2px; margin-bottom: 16px;
+    }
+    .section-tag::before {
+      content: ''; display: block;
+      width: 24px; height: 2px; background: var(--accent);
+    }
+
+    .section-title {
+      font-size: clamp(30px, 3.5vw, 48px);
+      font-weight: 800; line-height: 1.15;
+      letter-spacing: -1px; margin-bottom: 16px;
+    }
+
+    .section-sub {
+      font-size: 16px; color: var(--text-secondary);
+      max-width: 480px; line-height: 1.7;
+    }
+
+    /* SERVICES */
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px; margin-top: 56px;
+    }
+
+    .service-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 20px; padding: 36px 32px;
+      transition: all 0.3s; cursor: default;
+      position: relative; overflow: hidden;
+    }
+    .service-card::before {
+      content: ''; position: absolute;
+      top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      opacity: 0; transition: opacity 0.3s;
+    }
+    .service-card:hover { border-color: var(--accent); transform: translateY(-6px); }
+    .service-card:hover::before { opacity: 1; }
+
+    .service-icon {
+      width: 52px; height: 52px; border-radius: 14px;
+      background: rgba(181,245,66,0.1); border: 1px solid rgba(181,245,66,0.2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; color: var(--accent); margin-bottom: 24px;
+    }
+    .service-card h3 { font-size: 19px; font-weight: 700; margin-bottom: 12px; }
+    .service-card p { font-size: 14px; color: var(--text-secondary); line-height: 1.7; }
+
+    /* PORTFOLIO */
+    #portfolio { background: var(--bg-secondary); }
+
+    .portfolio-filter {
+      display: flex; gap: 12px; flex-wrap: wrap; margin: 40px 0;
+    }
+    .filter-btn {
+      padding: 8px 20px; border-radius: 50px; cursor: pointer;
+      font-size: 14px; font-weight: 500; border: 1px solid var(--border);
+      background: transparent; color: var(--text-secondary);
+      transition: all 0.3s;
+    }
+    .filter-btn.active, .filter-btn:hover {
+      background: var(--accent); color: #0a0a0a;
+      border-color: var(--accent); font-weight: 700;
+    }
+
+    .portfolio-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 24px;
+    }
+
+    .portfolio-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 20px; overflow: hidden; transition: all 0.3s;
+      cursor: pointer;
+    }
+    .portfolio-card:hover { transform: translateY(-8px); border-color: var(--accent); }
+
+    .portfolio-thumb {
+      height: 220px; position: relative; overflow: hidden;
+      background: linear-gradient(135deg, #1a1a1a, #222);
+    }
+    .portfolio-thumb .thumb-overlay {
+      position: absolute; inset: 0;
+      background: rgba(181,245,66,0.08);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; transition: opacity 0.3s;
+      font-size: 36px; color: var(--accent);
+    }
+    .portfolio-card:hover .thumb-overlay { opacity: 1; }
+
+    .thumb-placeholder {
+      width: 100%; height: 100%;
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column; gap: 10px;
+    }
+    .thumb-placeholder i { font-size: 40px; color: var(--text-muted); }
+    .thumb-placeholder span { font-size: 12px; color: var(--text-muted); }
+
+    .portfolio-info { padding: 24px; }
+    .portfolio-tag {
+      font-size: 11px; font-weight: 600; color: var(--accent);
+      text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px;
+    }
+    .portfolio-info h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+    .portfolio-info p { font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
+
+    /* ABOUT */
+    .about-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 80px;
+      align-items: center; margin-top: 60px;
+    }
+
+    .about-img-wrap {
+      position: relative;
+    }
+    .about-img-box {
+      width: 100%; aspect-ratio: 4/5; border-radius: 24px;
+      background: var(--bg-card); border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden; position: relative;
+    }
+    .about-img-box i { font-size: 80px; color: var(--text-muted); }
+    .about-img-badge {
+      position: absolute; bottom: -20px; right: -20px;
+      background: var(--accent); color: #0a0a0a;
+      border-radius: 16px; padding: 16px 20px; text-align: center;
+    }
+    .about-img-badge .badge-num { font-size: 28px; font-weight: 900; }
+    .about-img-badge .badge-text { font-size: 11px; font-weight: 600; }
+
+    .about-content { }
+    .about-content .section-tag { margin-top: 0; }
+
+    .skills-list { display: flex; flex-wrap: wrap; gap: 10px; margin: 32px 0; }
+    .skill-tag {
+      padding: 7px 16px; border-radius: 50px;
+      background: var(--bg-card); border: 1px solid var(--border);
+      font-size: 13px; color: var(--text-secondary);
+      transition: all 0.3s;
+    }
+    .skill-tag:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* PROCESS */
+    #process { background: var(--bg-secondary); }
+    .process-steps {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 24px; margin-top: 56px; counter-reset: step;
+    }
+    .step-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 20px; padding: 32px 28px;
+      counter-increment: step; position: relative; transition: all 0.3s;
+    }
+    .step-card:hover { border-color: var(--accent); transform: translateY(-4px); }
+    .step-num {
+      font-size: 52px; font-weight: 900; color: var(--border);
+      line-height: 1; margin-bottom: 16px; font-variant-numeric: tabular-nums;
+    }
+    .step-card:hover .step-num { color: rgba(181,245,66,0.15); }
+    .step-card h3 { font-size: 18px; font-weight: 700; margin-bottom: 10px; }
+    .step-card p { font-size: 14px; color: var(--text-secondary); line-height: 1.7; }
+
+    /* CONTACT */
+    .contact-wrapper {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 28px; padding: 64px;
+      display: flex; gap: 80px; align-items: flex-start;
+      margin-top: 60px;
+    }
+
+    .contact-info { flex: 1; }
+    .contact-info h2 { font-size: 36px; font-weight: 800; margin-bottom: 16px; }
+    .contact-info p { font-size: 15px; color: var(--text-secondary); line-height: 1.7; margin-bottom: 40px; }
+
+    .contact-items { display: flex; flex-direction: column; gap: 20px; }
+    .contact-item { display: flex; align-items: center; gap: 16px; }
+    .contact-item-icon {
+      width: 44px; height: 44px; border-radius: 12px;
+      background: rgba(181,245,66,0.1); border: 1px solid rgba(181,245,66,0.2);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--accent); font-size: 16px; flex-shrink: 0;
+    }
+    .contact-item-text .label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+    .contact-item-text .value { font-size: 15px; font-weight: 500; }
+
+    .contact-form { flex: 1.2; }
+
+    .form-group { margin-bottom: 20px; }
+    .form-group label { display: block; font-size: 13px; color: var(--text-secondary); margin-bottom: 8px; font-weight: 500; }
+    .form-group input,
+    .form-group textarea {
+      width: 100%; background: var(--bg-secondary);
+      border: 1px solid var(--border); border-radius: 12px;
+      padding: 14px 18px; color: var(--text-primary);
+      font-family: 'Inter', sans-serif; font-size: 14px;
+      transition: border-color 0.3s; resize: vertical;
+    }
+    .form-group input:focus,
+    .form-group textarea:focus {
+      outline: none; border-color: var(--accent);
+    }
+    .form-group textarea { min-height: 120px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+    .btn-submit {
+      width: 100%; padding: 15px;
+      background: var(--accent); color: #0a0a0a;
+      border: none; border-radius: 12px; cursor: pointer;
+      font-size: 15px; font-weight: 700; font-family: 'Inter', sans-serif;
+      transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn-submit:hover { background: var(--accent-dark); transform: translateY(-2px); }
+
+    /* FOOTER */
+    footer {
+      padding: 40px 60px;
+      border-top: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px;
+    }
+    footer p { font-size: 13px; color: var(--text-muted); }
+
+    .social-links { display: flex; gap: 12px; }
+    .social-link {
+      width: 40px; height: 40px; border-radius: 10px;
+      background: var(--bg-card); border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-secondary); font-size: 16px;
+      text-decoration: none; transition: all 0.3s;
+    }
+    .social-link:hover { background: var(--accent); color: #0a0a0a; border-color: var(--accent); }
+
+    /* MENU TOGGLE (mobile) */
+    .menu-toggle {
+      display: none; background: none; border: none;
+      color: var(--text-primary); font-size: 22px; cursor: pointer;
+    }
+
+    @media (max-width: 900px) {
+      nav { padding: 18px 24px; }
+      .nav-links { display: none; }
+      .menu-toggle { display: block; }
+      section, .hero { padding: 80px 24px; }
+      .hero { padding: 120px 24px 60px; }
+      .about-grid { grid-template-columns: 1fr; gap: 40px; }
+      .contact-wrapper { flex-direction: column; gap: 40px; padding: 36px 24px; }
+      footer { padding: 30px 24px; }
+      .form-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="logo">dizay<span>n.</span></a>
+  <ul class="nav-links">
+    <li><a href="#services">Xizmatlar</a></li>
+    <li><a href="#portfolio">Portfolio</a></li>
+    <li><a href="#about">Men haqimda</a></li>
+    <li><a href="#process">Jarayon</a></li>
+    <li><a href="#contact">Aloqa</a></li>
+  </ul>
+  <a href="#contact" class="nav-cta">Bog'lanish</a>
+  <button class="menu-toggle"><i class="fas fa-bars"></i></button>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="home">
+  <div class="hero-bg-circle c1"></div>
+  <div class="hero-bg-circle c2"></div>
+  <div class="hero-content">
+    <div class="hero-badge">
+      <div class="dot"></div>
+      <span>Yangi loyihalar qabul qilinmoqda</span>
+    </div>
+    <h1>
+      Grafik<br>
+      <span class="highlight">Dizayner</span><br>
+      & Kreativ
+    </h1>
+    <p>
+      Brendlar, mahsulotlar va raqamli tajribalar uchun vizual identifikatsiyalar
+      yarataman. Har bir loyiha – noyob hikoya.
+    </p>
+    <div class="hero-btns">
+      <a href="#portfolio" class="btn-primary">
+        <i class="fas fa-eye"></i> Ishlarni ko'rish
+      </a>
+      <a href="#contact" class="btn-outline">
+        <i class="fas fa-paper-plane"></i> Loyiha yuborish
+      </a>
+    </div>
+    <div class="hero-stats">
+      <div class="stat-item">
+        <div class="stat-num">50<span>+</span></div>
+        <div class="stat-label">Yakunlangan loyiha</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">30<span>+</span></div>
+        <div class="stat-label">Mamnun mijoz</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">5<span>+</span></div>
+        <div class="stat-label">Yillik tajriba</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SERVICES -->
+<section id="services">
+  <div class="section-tag">Xizmatlar</div>
+  <h2 class="section-title">Nima qila olaman</h2>
+  <p class="section-sub">Brendingizni ko'taradigan va auditoriyangizni jalb qiladigan professional dizayn yechimlar.</p>
+  <div class="services-grid">
+    <div class="service-card">
+      <div class="service-icon"><i class="fas fa-pen-nib"></i></div>
+      <h3>Logo & Brending</h3>
+      <p>Kompaniyangiz mohiyatini aks ettiruvchi noyob logo va to'liq brend identifikatsiyasi yaratiladi.</p>
+    </div>
+    <div class="service-card">
+      <div class="service-icon"><i class="fas fa-palette"></i></div>
+      <h3>Grafik Dizayn</h3>
+      <p>Bosma materiallar, banner, poster, buklet va har qanday vizual materiallar professional darajada.</p>
+    </div>
+    <div class="service-card">
+      <div class="service-icon"><i class="fas fa-mobile-alt"></i></div>
+      <h3>UI/UX Dizayn</h3>
+      <p>Foydalanuvchilar uchun qulay va vizual jihatdan chiroyli interfeys va tajriba dizayni.</p>
+    </div>
+    <div class="service-card">
+      <div class="service-icon"><i class="fas fa-photo-video"></i></div>
+      <h3>Ijtimoiy Tarmoq</h3>
+      <p>Instagram, Telegram va boshqa platformalar uchun e'lon, story va reklama dizaynlari.</p>
+    </div>
+    <div class="service-card">
+      <div class="service-icon"><i class="fas fa-box-open"></i></div>
+      <h3>Qadoqlash Dizayni</h3>
+      <p>Mahsulotingizni ajratib ko'rsatuvchi zamonaviy va qulay qadoqlash yechimlar.</p>
+    </div>
+    <div class="service-card">
+      <div class="service-icon"><i class="fas fa-film"></i></div>
+      <h3>Motion Grafika</h3>
+      <p>Brendingizni jonlantiruvchi animatsiya va motion grafik kontentlar yaratiladi.</p>
+    </div>
+  </div>
+</section>
+
+<!-- PORTFOLIO -->
+<section id="portfolio">
+  <div class="section-tag">Portfolio</div>
+  <h2 class="section-title">So'nggi Ishlar</h2>
+  <p class="section-sub">Yakunlangan loyihalardan tanlanma — har biri o'z muammosini yechish uchun yaratilgan.</p>
+  <div class="portfolio-filter">
+    <button class="filter-btn active">Barchasi</button>
+    <button class="filter-btn">Brending</button>
+    <button class="filter-btn">Bosma</button>
+    <button class="filter-btn">UI/UX</button>
+    <button class="filter-btn">Social Media</button>
+  </div>
+  <div class="portfolio-grid">
+    <div class="portfolio-card">
+      <div class="portfolio-thumb" style="background: linear-gradient(135deg, #1a1a2e, #16213e);">
+        <div class="thumb-placeholder">
+          <i class="fas fa-image"></i>
+          <span>Loyiha rasmi</span>
+        </div>
+        <div class="thumb-overlay"><i class="fas fa-external-link-alt"></i></div>
+      </div>
+      <div class="portfolio-info">
+        <div class="portfolio-tag">Brending</div>
+        <h3>TechStart Brend Identifikatsiyasi</h3>
+        <p>To'liq brend paketi: logo, rang palitasi, tipografiya va brend qo'llanma.</p>
+      </div>
+    </div>
+    <div class="portfolio-card">
+      <div class="portfolio-thumb" style="background: linear-gradient(135deg, #0f3460, #533483);">
+        <div class="thumb-placeholder">
+          <i class="fas fa-image"></i>
+          <span>Loyiha rasmi</span>
+        </div>
+        <div class="thumb-overlay"><i class="fas fa-external-link-alt"></i></div>
+      </div>
+      <div class="portfolio-info">
+        <div class="portfolio-tag">UI/UX</div>
+        <h3>E-commerce Mobil Ilova</h3>
+        <p>Online do'kon uchun foydalanuvchi yo'nalishli mobil ilova interfeysi.</p>
+      </div>
+    </div>
+    <div class="portfolio-card">
+      <div class="portfolio-thumb" style="background: linear-gradient(135deg, #1b2838, #2d4a22);">
+        <div class="thumb-placeholder">
+          <i class="fas fa-image"></i>
+          <span>Loyiha rasmi</span>
+        </div>
+        <div class="thumb-overlay"><i class="fas fa-external-link-alt"></i></div>
+      </div>
+      <div class="portfolio-info">
+        <div class="portfolio-tag">Bosma</div>
+        <h3>Restoran Menyu Dizayni</h3>
+        <p>Zamonaviy restoran uchun premium menyu va bosma material paketi.</p>
+      </div>
+    </div>
+    <div class="portfolio-card">
+      <div class="portfolio-thumb" style="background: linear-gradient(135deg, #2d1b33, #1a0a2e);">
+        <div class="thumb-placeholder">
+          <i class="fas fa-image"></i>
+          <span>Loyiha rasmi</span>
+        </div>
+        <div class="thumb-overlay"><i class="fas fa-external-link-alt"></i></div>
+      </div>
+      <div class="portfolio-info">
+        <div class="portfolio-tag">Social Media</div>
+        <h3>Fitnes Markaz SMM Paketi</h3>
+        <p>30 kunlik Instagram kontent plani va dizayn shablonlar to'plami.</p>
+      </div>
+    </div>
+    <div class="portfolio-card">
+      <div class="portfolio-thumb" style="background: linear-gradient(135deg, #1a2a1a, #0d1f0d);">
+        <div class="thumb-placeholder">
+          <i class="fas fa-image"></i>
+          <span>Loyiha rasmi</span>
+        </div>
+        <div class="thumb-overlay"><i class="fas fa-external-link-alt"></i></div>
+      </div>
+      <div class="portfolio-info">
+        <div class="portfolio-tag">Brending</div>
+        <h3>Organic Foods Brendi</h3>
+        <p>Ekologik mahsulotlar brendi uchun tabiiy va zamonaviy vizual identifikatsiya.</p>
+      </div>
+    </div>
+    <div class="portfolio-card">
+      <div class="portfolio-thumb" style="background: linear-gradient(135deg, #2a1a0a, #3d2b0f);">
+        <div class="thumb-placeholder">
+          <i class="fas fa-image"></i>
+          <span>Loyiha rasmi</span>
+        </div>
+        <div class="thumb-overlay"><i class="fas fa-external-link-alt"></i></div>
+      </div>
+      <div class="portfolio-info">
+        <div class="portfolio-tag">Qadoqlash</div>
+        <h3>Qahva Brendi Qadoqlash</h3>
+        <p>Premium qahva brendining mahsulot qadoqlash va vizual komunikatsiyasi.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="about-grid">
+    <div class="about-img-wrap">
+      <div class="about-img-box">
+        <i class="fas fa-user"></i>
+      </div>
+      <div class="about-img-badge">
+        <div class="badge-num">5+</div>
+        <div class="badge-text">Yil tajriba</div>
+      </div>
+    </div>
+    <div class="about-content">
+      <div class="section-tag">Men haqimda</div>
+      <h2 class="section-title">Dizayn orqali<br>qiymat yarataman</h2>
+      <p class="section-sub" style="max-width:100%; margin-bottom:16px;">
+        Toshkentda faoliyat yurituvchi grafik dizaynerman. Brendlar uchun vizual identifikatsiya,
+        raqamli kontentlar va UI/UX yechimlar yaratishga ixtisoslashganman.
+      </p>
+      <p style="font-size:15px; color:var(--text-secondary); line-height:1.75;">
+        Har bir loyihani noyob muammo sifatida ko'raman va uning uchun maxsus, qiziqarli
+        yechim topamanman. Mijozlarim bilan yaqin ishlashni va ularning g'oyalarini reallikka
+        aylantirishni yaxshi ko'raman.
+      </p>
+      <div class="skills-list">
+        <span class="skill-tag">Adobe Illustrator</span>
+        <span class="skill-tag">Photoshop</span>
+        <span class="skill-tag">Figma</span>
+        <span class="skill-tag">InDesign</span>
+        <span class="skill-tag">After Effects</span>
+        <span class="skill-tag">Canva Pro</span>
+        <span class="skill-tag">Brending</span>
+        <span class="skill-tag">Tipografiya</span>
+        <span class="skill-tag">Rang nazariyasi</span>
+      </div>
+      <a href="#contact" class="btn-primary" style="display:inline-flex; width:fit-content;">
+        <i class="fas fa-handshake"></i> Hamkorlik qilish
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- PROCESS -->
+<section id="process">
+  <div class="section-tag">Jarayon</div>
+  <h2 class="section-title">Qanday ishlayman</h2>
+  <p class="section-sub">Har bir loyiha uchun tuzilgan, aniq bosqichlarga asoslangan ish jarayoni.</p>
+  <div class="process-steps">
+    <div class="step-card">
+      <div class="step-num">01</div>
+      <h3>Tahlil & Briefing</h3>
+      <p>Mijoz bilan chuqur suhbat orqali maqsadlar, auditoriya va talablarni aniqlaymiz.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-num">02</div>
+      <h3>Tadqiqot</h3>
+      <p>Bozor, raqobatchilar va trendlarni o'rganib, kreativ konsepsiya ishlab chiqamiz.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-num">03</div>
+      <h3>Dizayn</h3>
+      <p>Bir nechta variant taklif qilinadi, kerakli o'zgartirishlar kiritiladi.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-num">04</div>
+      <h3>Tasdiq & Topshirish</h3>
+      <p>Barcha fayllar to'liq to'plamda, kerakli formatda tayyorlab beriladi.</p>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div class="section-tag">Aloqa</div>
+  <h2 class="section-title">Loyiha boshlaylikmi?</h2>
+  <p class="section-sub">G'oyangiz bor – keling, uni birgalikda amalga oshiramiz.</p>
+  <div class="contact-wrapper">
+    <div class="contact-info">
+      <h2>Bog'lanish<br><span style="color:var(--accent)">oson.</span></h2>
+      <p>Savollaringiz bo'lsa yoki yangi loyiha boshlashni xohlasangiz, menga xabar yuboring. 24 soat ichida javob beraman.</p>
+      <div class="contact-items">
+        <div class="contact-item">
+          <div class="contact-item-icon"><i class="fas fa-envelope"></i></div>
+          <div class="contact-item-text">
+            <div class="label">Email</div>
+            <div class="value"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="6013091a0e090e0720050d01090c4e151a">[email&#160;protected]</a></div>
+          </div>
+        </div>
+        <div class="contact-item">
+          <div class="contact-item-icon"><i class="fab fa-telegram"></i></div>
+          <div class="contact-item-text">
+            <div class="label">Telegram</div>
+            <div class="value">@username</div>
+          </div>
+        </div>
+        <div class="contact-item">
+          <div class="contact-item-icon"><i class="fas fa-map-marker-alt"></i></div>
+          <div class="contact-item-text">
+            <div class="label">Joylashuv</div>
+            <div class="value">Toshkent, O'zbekiston</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="contact-form">
+      <form>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Ismingiz</label>
+            <input type="text" placeholder="Ism Familiya" />
+          </div>
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" placeholder="email@example.com" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Xizmat turi</label>
+          <input type="text" placeholder="Logo, Brending, UI/UX..." />
+        </div>
+        <div class="form-group">
+          <label>Xabar</label>
+          <textarea placeholder="Loyihangiz haqida qisqacha ma'lumot bering..."></textarea>
+        </div>
+        <button type="submit" class="btn-submit">
+          <i class="fas fa-paper-plane"></i> Xabar yuborish
+        </button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <p>© 2025 dizayn. Barcha huquqlar himoyalangan.</p>
+  <div class="social-links">
+    <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+    <a href="#" class="social-link"><i class="fab fa-telegram"></i></a>
+    <a href="#" class="social-link"><i class="fab fa-behance"></i></a>
+    <a href="#" class="social-link"><i class="fab fa-dribbble"></i></a>
+  </div>
+</footer>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+  // Filter buttons
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+
+  // Smooth reveal on scroll
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.style.opacity = '1';
+        e.target.style.transform = 'translateY(0)';
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.service-card, .portfolio-card,
+  document.querySelectorAll('.service-card, .portfolio-card, .step-card').forEach(el => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(20px)';
+    el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+    observer.observe(el);
+  });
+</script>
+
+<script>
+// ============ ADMIN PANEL INTEGRATION ============
+// Reads saved data from localStorage and applies to the page
+
+const DEFAULT_DATA = {
+  hero: {
+    line1: 'Grafik', line2: 'Dizayner', line3: '& Kreativ',
+    desc: "Brendlar, mahsulotlar va raqamli tajribalar uchun vizual identifikatsiyalar yarataman. Har bir loyiha – noyob hikoya.",
+    badge: 'Yangi loyihalar qabul qilinmoqda',
+    stats: [
+      { num: '50', suffix: '+', label: 'Yakunlangan loyiha' },
+      { num: '30', suffix: '+', label: 'Mamnun mijoz' },
+      { num: '5', suffix: '+', label: 'Yillik tajriba' }
+    ]
+  },
+  portfolio: [
+    { id:1, title:'TechStart Brend Identifikatsiyasi', tag:'Brending', desc:"To'liq brend paketi: logo, rang palitasi, tipografiya va brend qo'llanma.", color1:'#1a1a2e', color2:'#16213e', img:'', link:'' },
+    { id:2, title:'E-commerce Mobil Ilova', tag:'UI/UX', desc:"Online do'kon uchun foydalanuvchi yo'nalishli mobil ilova interfeysi.", color1:'#0f3460', color2:'#533483', img:'', link:'' },
+    { id:3, title:'Restoran Menyu Dizayni', tag:'Bosma', desc:"Zamonaviy restoran uchun premium menyu va bosma material paketi.", color1:'#2a1a0a', color2:'#1a0a0a', img:'', link:'' },
+    { id:4, title:'Fitnes Markaz SMM Paketi', tag:'Social Media', desc:"30 kunlik Instagram kontent plani va dizayn shablonlar to'plami.", color1:'#2d1b33', color2:'#1a0a2e', img:'', link:'' },
+    { id:5, title:'Organic Foods Brendi', tag:'Brending', desc:"Ekologik mahsulotlar brendi uchun tabiiy va zamonaviy vizual identifikatsiya.", color1:'#1a2a1a', color2:'#0d1f0d', img:'', link:'' },
+    { id:6, title:'Qahva Brendi Qadoqlash', tag:'Qadoqlash', desc:"Premium qahva brendining mahsulot qadoqlash va vizual komunikatsiyasi.", color1:'#2a1a0a', color2:'#3d2b0f', img:'', link:'' }
+  ],
+  services: [
+    { id:1, title:'Logo & Brending', icon:'fas fa-pen-nib', desc:"Kompaniyangiz mohiyatini aks ettiruvchi noyob logo va to'liq brend identifikatsiyasi yaratiladi." },
+    { id:2, title:'Grafik Dizayn', icon:'fas fa-palette', desc:"Bosma materiallar, banner, poster, buklet va har qanday vizual materiallar professional darajada." },
+    { id:3, title:'UI/UX Dizayn', icon:'fas fa-mobile-alt', desc:"Foydalanuvchilar uchun qulay va vizual jihatdan chiroyli interfeys va tajriba dizayni." },
+    { id:4, title:'Ijtimoiy Tarmoq', icon:'fas fa-photo-video', desc:"Instagram, Telegram va boshqa platformalar uchun e'lon, story va reklama dizaynlari." },
+    { id:5, title:'Qadoqlash Dizayni', icon:'fas fa-box-open', desc:"Mahsulotingizni ajratib ko'rsatuvchi zamonaviy va qulay qadoqlash yechimlar." },
+    { id:6, title:'Motion Grafika', icon:'fas fa-film', desc:"Brendingizni jonlantiruvchi animatsiya va motion grafik kontentlar yaratiladi." }
+  ],
+  about: {
+    title1:"Dizayn orqali", title2:"qiymat yarataman",
+    desc1:"Toshkentda faoliyat yurituvchi grafik dizaynerman. Brendlar uchun vizual identifikatsiya, raqamli kontentlar va UI/UX yechimlar yaratishga ixtisoslashganman.",
+    desc2:"Har bir loyihani noyob muammo sifatida ko'raman va uning uchun maxsus, qiziqarli yechim topamanman. Mijozlarim bilan yaqin ishlashni va ularning g'oyalarini reallikka aylantirishni yaxshi ko'raman.",
+    exp:'5+', expLabel:'Yil tajriba',
+    skills:['Adobe Illustrator','Photoshop','Figma','InDesign','After Effects','Canva Pro','Brending','Tipografiya','Rang nazariyasi']
+  },
+  contact: {
+    email:'dizayn@gmail.com', telegram:'@username', location:"Toshkent, O'zbekiston",
+    instagram:'#', telegramUrl:'#', behance:'#', dribbble:'#'
+  },
+  settings: {
+    logoText:'dizay', logoAccent:'n.', siteTitle:'Portfolio – Grafik Dizayner',
+    footerText:'© 2025 dizayn. Barcha huquqlar himoyalangan.'
+  }
+};
+
+function applyAdminData() {
+  let d;
+  try {
+    const saved = localStorage.getItem('portfolio_admin_data');
+    d = saved ? JSON.parse(saved) : DEFAULT_DATA;
+    d.settings = Object.assign({}, DEFAULT_DATA.settings, d.settings || {});
+  } catch(e) { d = DEFAULT_DATA; }
+
+  // HERO
+  const h = d.hero;
+  const h1el = document.querySelector('.hero h1');
+  if (h1el) {
+    h1el.innerHTML = h.line1 + '<br><span class="highlight">' + h.line2 + '</span><br>' + h.line3;
+  }
+  const heroP = document.querySelector('.hero p');
+  if (heroP) heroP.textContent = h.desc;
+  const badge = document.querySelector('.hero-badge span');
+  if (badge) badge.textContent = h.badge;
+  const statNums = document.querySelectorAll('.stat-num');
+  h.stats.forEach((s, i) => {
+    if (statNums[i]) statNums[i].innerHTML = s.num + '<span>' + s.suffix + '</span>';
+    const labels = document.querySelectorAll('.stat-label');
+    if (labels[i]) labels[i].textContent = s.label;
+  });
+
+  // SERVICES
+  const servicesGrid = document.querySelector('.services-grid');
+  if (servicesGrid && d.services) {
+    servicesGrid.innerHTML = d.services.map(s => `
+      <div class="service-card">
+        <div class="service-icon"><i class="${s.icon}"></i></div>
+        <h3>${s.title}</h3>
+        <p>${s.desc}</p>
+      </div>
+    `).join('');
+  }
+
+  // PORTFOLIO
+  const portfolioGrid = document.querySelector('.portfolio-grid');
+  if (portfolioGrid && d.portfolio) {
+    // Build filter categories
+    const cats = ['Barchasi', ...new Set(d.portfolio.map(p => p.tag))];
+    const filterDiv = document.querySelector('.portfolio-filter');
+    if (filterDiv) {
+      filterDiv.innerHTML = cats.map((c,i) => `<button class="filter-btn${i===0?' active':''}" data-cat="${c}">${c}</button>`).join('');
+      filterDiv.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          filterDiv.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          const cat = btn.getAttribute('data-cat');
+          document.querySelectorAll('.portfolio-card').forEach(card => {
+            if (cat === 'Barchasi' || card.getAttribute('data-tag') === cat) {
+              card.style.display = '';
+            } else {
+              card.style.display = 'none';
+            }
+          });
+        });
+      });
+    }
+    portfolioGrid.innerHTML = d.portfolio.map(p => `
+      <div class="portfolio-card" data-tag="${p.tag}" ${p.link ? 'onclick="window.open(\'' + p.link + '\',\'_blank\')"' : ''}>
+        <div class="portfolio-thumb" style="background:linear-gradient(135deg,${p.color1},${p.color2})">
+          ${p.img ? `<img src="${p.img}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0"/>` : `
+          <div class="thumb-placeholder">
+            <i class="fas fa-image"></i>
+            <span>Loyiha rasmi</span>
+          </div>`}
+          <div class="thumb-overlay"><i class="fas fa-external-link-alt"></i></div>
+        </div>
+        <div class="portfolio-info">
+          <div class="portfolio-tag">${p.tag}</div>
+          <h3>${p.title}</h3>
+          <p>${p.desc}</p>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // ABOUT
+  const ab = d.about;
+  const aboutTitle = document.querySelector('#about .section-title');
+  if (aboutTitle) aboutTitle.innerHTML = ab.title1 + '<br>' + ab.title2;
+  const aboutDescs = document.querySelectorAll('#about .section-sub, #about p[style]');
+  if (aboutDescs[0]) aboutDescs[0].textContent = ab.desc1;
+  const aboutP2 = document.querySelector('#about p[style*="font-size:15px"]');
+  if (aboutP2) aboutP2.textContent = ab.desc2;
+  const badge2 = document.querySelector('.about-img-badge .badge-num');
+  if (badge2) badge2.textContent = ab.exp;
+  const badgeLabel = document.querySelector('.about-img-badge .badge-text');
+  if (badgeLabel) badgeLabel.textContent = ab.expLabel;
+  const skillsList = document.querySelector('.skills-list');
+  if (skillsList) {
+    skillsList.innerHTML = ab.skills.map(s => `<span class="skill-tag">${s}</span>`).join('');
+  }
+
+  // CONTACT
+  const c = d.contact;
+  const emailEl = document.querySelector('.contact-item-text .value a');
+  if (emailEl) { emailEl.textContent = c.email; emailEl.href = 'mailto:' + c.email; }
+  const contactValues = document.querySelectorAll('.contact-item-text .value');
+  if (contactValues[1]) contactValues[1].textContent = c.telegram;
+  if (contactValues[2]) contactValues[2].textContent = c.location;
+  const socialLinks = document.querySelectorAll('.social-link');
+  const urls = [c.instagram, c.telegramUrl, c.behance, c.dribbble];
+  socialLinks.forEach((l, i) => { if (urls[i]) l.href = urls[i]; });
+
+  // SETTINGS
+  const s = d.settings;
+  const logo = document.querySelector('.logo');
+  if (logo) logo.innerHTML = s.logoText + '<span>' + s.logoAccent + '</span>';
+  document.title = s.siteTitle;
+  const footer = document.querySelector('footer p');
+  if (footer) footer.textContent = s.footerText;
+}
+
+applyAdminData();
+</script>
+</body>
+</html>
