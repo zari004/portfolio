@@ -415,11 +415,35 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
   .form-row.three { grid-template-columns: 1fr; }
   .topbar { padding: 0 16px; }
   .panels-container { padding: 16px; }
+  .list-item { gap: 10px; padding: 12px; flex-wrap: wrap; }
+  .list-item .item-img { width: 40px; height: 40px; border-radius: 6px; flex-shrink: 0; }
+  .list-item .item-info { flex: 1; min-width: 0; }
+  .list-item .item-title { font-size: 0.82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .list-item .item-sub { font-size: 0.7rem; }
+  .list-item .item-actions { display: flex; gap: 4px; flex-shrink: 0; }
+  .list-item .drag-handle { display: none; }
+  .marquee-preview { padding: 12px 0; min-height: 50px; }
+  .panel-header h2 { font-size: 1.2rem; }
+  .panel-header p { font-size: 0.75rem; }
+  .form-card { padding: 16px; border-radius: 10px; }
+  .form-card-title { font-size: 0.82rem; flex-wrap: wrap; gap: 8px; }
+  .modal { width: 95vw; max-height: 90vh; padding: 20px; }
+  .toggle-wrap { flex-wrap: wrap; }
 }
 @media (max-width: 500px) {
   .login-card { padding: 32px 24px; }
   .stats-grid { grid-template-columns: 1fr; }
-  .modal { border-radius: 12px; }
+  .modal { border-radius: 12px; padding: 16px; }
+  .panels-container { padding: 10px; }
+  .list-item { gap: 8px; padding: 10px; }
+  .list-item .item-img { width: 36px; height: 36px; }
+  .list-item .item-title { font-size: 0.78rem; max-width: 140px; }
+  .list-item .item-actions .btn-icon { width: 28px; height: 28px; font-size: 0.65rem; }
+  .form-card { padding: 12px; }
+  .form-card-title { font-size: 0.78rem; }
+  .topbar h3 { font-size: 0.85rem; }
+  .topbar .save-hint { display: none; }
+  .btn-sm { padding: 6px 10px; font-size: 0.7rem; }
 }
 </style>
 </head>
@@ -1317,10 +1341,12 @@ function renderCompaniesList() {
   const el = document.getElementById('companiesList');
   if (!data.companies.items.length) { el.innerHTML = '<div class="empty-state"><i class="fas fa-building"></i><p>Kompaniyalar yo\'q</p></div>'; return; }
   el.innerHTML = data.companies.items.map(c =>
-    '<div class="list-item">'
-    + (c.logo ? '<img class="item-img" src="' + sanitize(c.logo) + '" alt="">' : '<div class="item-img" style="display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:700;color:var(--accent)">' + sanitize(c.name.charAt(0)) + '</div>')
-    + '<div class="item-info"><div class="item-title">' + sanitize(c.name) + '</div><div class="item-sub">ID: ' + c.id + '</div></div>'
-    + '<div class="item-actions">'
+    '<div class="list-item" style="align-items:center">'
+    + (c.logo
+      ? '<img class="item-img" src="' + sanitize(c.logo) + '" alt="' + sanitize(c.name) + '" style="object-fit:contain;padding:4px;background:var(--border)">'
+      : '<div class="item-img" style="display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:800;color:var(--accent);background:rgba(181,245,66,0.08);border:1px solid rgba(181,245,66,0.15);letter-spacing:0.5px;text-transform:uppercase;line-height:1.1;text-align:center;padding:2px;word-break:break-all">' + sanitize(c.name.substring(0,4)) + '</div>')
+    + '<div class="item-info" style="min-width:0;flex:1"><div class="item-title" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + sanitize(c.name) + '</div><div class="item-sub">' + (c.logo ? '<i class="fas fa-image" style="color:var(--accent);margin-right:3px"></i>Logo bor' : '<i class="fas fa-font" style="margin-right:3px"></i>Faqat matn') + '</div></div>'
+    + '<div class="item-actions" style="flex-shrink:0;margin-left:auto">'
     + '<button class="btn-icon" onclick="editCompany(' + c.id + ')" title="Tahrirlash"><i class="fas fa-edit" style="font-size:0.75rem"></i></button>'
     + '<button class="btn-icon" onclick="deleteCompany(' + c.id + ')" title="O\'chirish"><i class="fas fa-trash" style="color:var(--red);font-size:0.75rem"></i></button>'
     + '</div></div>'
