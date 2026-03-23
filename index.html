@@ -838,8 +838,14 @@ const DEFAULT_DATA = {
 function applyAdminData() {
   let d;
   try {
-    const saved = localStorage.getItem('portfolio_admin_data');
-    d = saved ? JSON.parse(saved) : DEFAULT_DATA;
+    // Birinchi: GitHub orqali inject qilingan ma'lumotni tekshir
+    if (window.__PORTFOLIO_DATA__) {
+      d = window.__PORTFOLIO_DATA__;
+    } else {
+      // Ikkinchi: localStorage dan o'qi
+      const saved = localStorage.getItem('portfolio_admin_data');
+      d = saved ? JSON.parse(saved) : DEFAULT_DATA;
+    }
     d.settings = Object.assign({}, DEFAULT_DATA.settings, d.settings || {});
   } catch(e) { d = DEFAULT_DATA; }
 
