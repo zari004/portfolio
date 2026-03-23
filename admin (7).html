@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Panel – Portfolio</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg: #0d0d0d;
+      --panel: #141414;
+      --card: #1a1a1a;
+      --border: #2a2a2a;
+      --accent: #b5f542;
+      --accent2: #42c8f5;
+      --red: #f54242;
+      --text: #f0f0f0;
+      --muted: #666;
+      --sub: #999;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Syne', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+    }
+
+    /* SIDEBAR */
+    .sidebar {
+      width: 260px; min-height: 100vh;
+      background: var(--panel);
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column;
+      position: fixed; top: 0; left: 0; bottom: 0;
+      z-index: 100;
+    }
+    .sidebar-logo {
+      padding: 28px 24px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .sidebar-logo h1 {
+      font-size: 20px; font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+    .sidebar-logo h1 span { color: var(--accent); }
+    .sidebar-logo p {
+      font-size: 11px; color: var(--muted);
+      margin-top: 4px; font-family: 'JetBrains Mono', monospace;
+    }
+    .nav-section {
+      padding: 16px 16px 8px;
+      font-size: 10px; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 2px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .nav-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 16px; margin: 2px 8px;
+      border-radius: 10px; cursor: pointer;
+      font-size: 14px; font-weight: 600; color: var(--sub);
+      transition: all 0.2s; user-select: none;
+    }
+    .nav-item i { width: 18px; text-align: center; font-size: 14px; }
+    .nav-item:hover { background: rgba(181,245,66,0.06); color: var(--text); }
+    .nav-item.active { background: rgba(181,245,66,0.1); color: var(--accent); }
+    .nav-item.active i { color: var(--accent); }
+    .sidebar-bottom {
+      margin-top: auto;
+      padding: 16px;
+      border-top: 1px solid var(--border);
+    }
+    .preview-btn {
+      display: flex; align-items: center; gap: 10px;
+      padding: 11px 16px; border-radius: 10px;
+      background: var(--accent); color: #0a0a0a;
+      font-weight: 700; font-size: 13px;
+      cursor: pointer; text-decoration: none;
+      transition: all 0.2s;
+    }
+    .preview-btn:hover { background: #8fc422; }
+
+    /* MAIN */
+    .main {
+      margin-left: 260px;
+      flex: 1; min-height: 100vh;
+      padding: 0;
+    }
+
+    /* TOPBAR */
+    .topbar {
+      padding: 20px 36px;
+      border-bottom: 1px solid var(--border);
+      background: var(--panel);
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 50;
+    }
+    .topbar h2 { font-size: 20px; font-weight: 800; }
+    .topbar-right { display: flex; gap: 10px; align-items: center; }
+    .save-all-btn {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--accent); color: #0a0a0a;
+      border: none; padding: 10px 20px; border-radius: 10px;
+      font-weight: 700; font-size: 13px; cursor: pointer;
+      font-family: 'Syne', sans-serif;
+      transition: all 0.2s;
+    }
+    .save-all-btn:hover { background: #8fc422; transform: translateY(-1px); }
+    .toast {
+      position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+      background: var(--accent); color: #0a0a0a;
+      padding: 12px 20px; border-radius: 10px;
+      font-weight: 700; font-size: 14px;
+      display: flex; align-items: center; gap: 8px;
+      opacity: 0; transform: translateY(10px);
+      transition: all 0.3s; pointer-events: none;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+
+    /* SECTIONS */
+    .section-panel {
+      display: none;
+      padding: 36px;
+      animation: fadeIn 0.3s ease;
+    }
+    .section-panel.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* CARDS */
+    .edit-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px 32px;
+      margin-bottom: 20px;
+    }
+    .edit-card h3 {
+      font-size: 15px; font-weight: 700; margin-bottom: 20px;
+      color: var(--accent); display: flex; align-items: center; gap: 8px;
+    }
+    .edit-card h3 i { font-size: 14px; }
+
+    /* FORM ELEMENTS */
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label {
+      display: block; font-size: 11px;
+      color: var(--muted); margin-bottom: 6px;
+      text-transform: uppercase; letter-spacing: 1px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width: 100%; background: var(--bg);
+      border: 1px solid var(--border); border-radius: 10px;
+      padding: 11px 14px; color: var(--text);
+      font-family: 'Syne', sans-serif; font-size: 14px;
+      transition: border-color 0.2s;
+    }
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus {
+      outline: none; border-color: var(--accent);
+    }
+    .form-group textarea { min-height: 90px; resize: vertical; }
+    .form-group select option { background: var(--card); }
+
+    /* PORTFOLIO ITEMS */
+    .portfolio-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
+    .portfolio-item {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 20px;
+      display: flex; align-items: center; gap: 16px;
+      transition: all 0.2s;
+    }
+    .portfolio-item:hover { border-color: #333; }
+    .portfolio-item-thumb {
+      width: 60px; height: 45px;
+      border-radius: 8px; overflow: hidden;
+      flex-shrink: 0; position: relative;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; color: var(--muted);
+    }
+    .portfolio-item-thumb img {
+      width: 100%; height: 100%; object-fit: cover;
+    }
+    .portfolio-item-info { flex: 1; min-width: 0; }
+    .portfolio-item-info .item-tag {
+      font-size: 10px; color: var(--accent);
+      font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1.5px; margin-bottom: 3px;
+    }
+    .portfolio-item-info .item-title {
+      font-size: 14px; font-weight: 700;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .portfolio-item-info .item-desc {
+      font-size: 12px; color: var(--sub);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .item-actions { display: flex; gap: 6px; }
+    .btn-icon {
+      width: 32px; height: 32px; border-radius: 8px;
+      border: 1px solid var(--border);
+      background: transparent; cursor: pointer; color: var(--sub);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; transition: all 0.2s;
+    }
+    .btn-icon:hover { border-color: var(--accent); color: var(--accent); background: rgba(181,245,66,0.06); }
+    .btn-icon.danger:hover { border-color: var(--red); color: var(--red); background: rgba(245,66,66,0.06); }
+
+    /* ADD BUTTON */
+    .add-btn {
+      display: flex; align-items: center; gap: 8px;
+      padding: 11px 20px; border-radius: 10px;
+      border: 1px dashed var(--border);
+      background: transparent; color: var(--sub);
+      cursor: pointer; font-family: 'Syne', sans-serif;
+      font-size: 13px; font-weight: 600;
+      transition: all 0.2s; width: 100%;
+      justify-content: center;
+    }
+    .add-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(181,245,66,0.04); }
+
+    /* MODAL */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+      z-index: 200; display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none; transition: opacity 0.2s;
+      backdrop-filter: blur(4px);
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+    .modal {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 20px; padding: 32px; width: 560px;
+      max-width: 90vw; max-height: 85vh; overflow-y: auto;
+      transform: scale(0.96); transition: transform 0.2s;
+    }
+    .modal-overlay.open .modal { transform: scale(1); }
+    .modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 24px;
+    }
+    .modal-header h3 { font-size: 18px; font-weight: 800; }
+    .modal-close {
+      width: 32px; height: 32px; border-radius: 8px;
+      border: 1px solid var(--border); background: transparent;
+      cursor: pointer; color: var(--sub); font-size: 14px;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+    }
+    .modal-close:hover { border-color: var(--red); color: var(--red); }
+    .modal-footer { display: flex; gap: 10px; margin-top: 24px; justify-content: flex-end; }
+    .btn-save {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--accent); color: #0a0a0a;
+      border: none; padding: 11px 24px; border-radius: 10px;
+      font-weight: 700; font-size: 14px; cursor: pointer;
+      font-family: 'Syne', sans-serif; transition: all 0.2s;
+    }
+    .btn-save:hover { background: #8fc422; }
+    .btn-cancel {
+      display: flex; align-items: center; gap: 8px;
+      background: transparent; color: var(--sub);
+      border: 1px solid var(--border); padding: 11px 20px; border-radius: 10px;
+      font-weight: 600; font-size: 14px; cursor: pointer;
+      font-family: 'Syne', sans-serif; transition: all 0.2s;
+    }
+    .btn-cancel:hover { border-color: var(--sub); color: var(--text); }
+
+    /* IMAGE UPLOAD */
+    .img-upload-area {
+      border: 2px dashed var(--border); border-radius: 12px;
+      padding: 24px; text-align: center; cursor: pointer;
+      transition: all 0.2s; position: relative; overflow: hidden;
+    }
+    .img-upload-area:hover { border-color: var(--accent); background: rgba(181,245,66,0.03); }
+    .img-upload-area input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+    .img-upload-area i { font-size: 28px; color: var(--muted); margin-bottom: 8px; }
+    .img-upload-area p { font-size: 13px; color: var(--muted); }
+    .img-upload-area p strong { color: var(--accent); }
+    .img-preview {
+      width: 100%; max-height: 180px; object-fit: cover;
+      border-radius: 10px; margin-top: 12px; display: none;
+    }
+
+    /* COLOR PICKER ROW */
+    .color-row {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+    }
+    .color-input-wrap {
+      display: flex; align-items: center; gap: 10px;
+    }
+    .color-input-wrap input[type="color"] {
+      width: 40px; height: 40px; border-radius: 8px;
+      padding: 2px; cursor: pointer; border: 1px solid var(--border);
+      background: var(--bg);
+    }
+    .color-input-wrap input[type="text"] {
+      flex: 1;
+    }
+
+    /* STATS EDITOR */
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+    .stat-edit-card {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 12px; padding: 16px; text-align: center;
+    }
+    .stat-edit-card .stat-preview {
+      font-size: 32px; font-weight: 900; color: var(--text);
+      letter-spacing: -1px;
+    }
+    .stat-edit-card .stat-preview span { color: var(--accent); }
+
+    /* SKILL TAGS EDITOR */
+    .skill-tags-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+    .skill-tag-item {
+      display: flex; align-items: center; gap: 6px;
+      padding: 6px 12px; border-radius: 50px;
+      background: var(--bg); border: 1px solid var(--border);
+      font-size: 13px; color: var(--sub);
+    }
+    .skill-tag-item button {
+      background: none; border: none; cursor: pointer;
+      color: var(--muted); font-size: 11px; padding: 0;
+      transition: color 0.2s; line-height: 1;
+    }
+    .skill-tag-item button:hover { color: var(--red); }
+    .add-skill-row { display: flex; gap: 8px; }
+    .add-skill-row input { flex: 1; }
+    .add-skill-row button {
+      padding: 11px 16px; border-radius: 10px;
+      background: var(--accent); color: #0a0a0a;
+      border: none; cursor: pointer; font-weight: 700;
+      font-size: 13px; font-family: 'Syne', sans-serif;
+      white-space: nowrap; transition: all 0.2s;
+    }
+    .add-skill-row button:hover { background: #8fc422; }
+
+    /* SERVICES LIST */
+    .services-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+    .service-item {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 10px; padding: 14px 16px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .service-item-icon {
+      width: 36px; height: 36px; border-radius: 8px;
+      background: rgba(181,245,66,0.1); border: 1px solid rgba(181,245,66,0.2);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--accent); font-size: 15px; flex-shrink: 0;
+    }
+    .service-item-info { flex: 1; }
+    .service-item-info .s-title { font-size: 14px; font-weight: 700; }
+    .service-item-info .s-desc { font-size: 12px; color: var(--sub); }
+
+    /* CONTACT ITEMS */
+    .contact-list { display: flex; flex-direction: column; gap: 12px; }
+    .contact-edit-item {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 10px; padding: 14px 16px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .contact-edit-item i { color: var(--accent); font-size: 16px; width: 20px; }
+
+    /* SECTION DIVIDER */
+    .section-divider {
+      display: flex; align-items: center; gap: 12px;
+      margin: 24px 0 20px; font-size: 12px;
+      color: var(--muted); text-transform: uppercase;
+      letter-spacing: 2px; font-family: 'JetBrains Mono', monospace;
+    }
+    .section-divider::before, .section-divider::after {
+      content: ''; flex: 1; height: 1px; background: var(--border);
+    }
+
+    /* STATUS BADGE */
+    .badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 3px 10px; border-radius: 50px;
+      font-size: 11px; font-weight: 700;
+    }
+    .badge.green { background: rgba(181,245,66,0.1); color: var(--accent); }
+    .badge.blue { background: rgba(66,200,245,0.1); color: var(--accent2); }
+
+    /* SCROLLBAR */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    /* DANGER CONFIRM */
+    .danger-zone {
+      border: 1px solid rgba(245,66,66,0.2);
+      border-radius: 12px; padding: 16px 20px;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 16px; margin-top: 16px;
+    }
+    .danger-zone p { font-size: 13px; color: var(--sub); }
+    .btn-danger {
+      display: flex; align-items: center; gap: 8px;
+      background: rgba(245,66,66,0.1); color: var(--red);
+      border: 1px solid rgba(245,66,66,0.3); padding: 9px 16px; border-radius: 10px;
+      font-weight: 700; font-size: 13px; cursor: pointer;
+      font-family: 'Syne', sans-serif; transition: all 0.2s; white-space: nowrap;
+    }
+    .btn-danger:hover { background: rgba(245,66,66,0.2); }
+
+  </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <h1>dizay<span>n.</span> <span style="font-size:11px;color:var(--muted);font-weight:400">admin</span></h1>
+    <p>// boshqaruv paneli</p>
+  </div>
+
+  <div class="nav-section">Sahifalar</div>
+  <div class="nav-item active" onclick="showPanel('hero')">
+    <i class="fas fa-home"></i> Hero bo'limi
+  </div>
+  <div class="nav-item" onclick="showPanel('portfolio')">
+    <i class="fas fa-images"></i> Portfolio
+  </div>
+  <div class="nav-item" onclick="showPanel('services')">
+    <i class="fas fa-briefcase"></i> Xizmatlar
+  </div>
+  <div class="nav-item" onclick="showPanel('about')">
+    <i class="fas fa-user"></i> Men haqimda
+  </div>
+  <div class="nav-item" onclick="showPanel('contact')">
+    <i class="fas fa-envelope"></i> Aloqa
+  </div>
+  <div class="nav-item" onclick="showPanel('settings')">
+    <i class="fas fa-cog"></i> Sozlamalar
+  </div>
+
+  <div class="sidebar-bottom">
+    <a href="portfolio.html" target="_blank" class="preview-btn">
+      <i class="fas fa-external-link-alt"></i> Saytni ko'rish
+    </a>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <h2 id="panel-title">Hero bo'limi</h2>
+    <div class="topbar-right">
+      <span class="badge green"><i class="fas fa-circle" style="font-size:7px"></i> Saqlangan</span>
+      <button class="save-all-btn" onclick="saveAll()">
+        <i class="fas fa-save"></i> Saqlash
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== HERO PANEL ===== -->
+  <div class="section-panel active" id="panel-hero">
+    <div class="edit-card">
+      <h3><i class="fas fa-heading"></i> Asosiy sarlavha</h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Birinchi qator</label>
+          <input type="text" id="hero-line1" placeholder="Grafik"/>
+        </div>
+        <div class="form-group">
+          <label>Ikkinchi qator (aksent rang)</label>
+          <input type="text" id="hero-line2" placeholder="Dizayner"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Uchinchi qator</label>
+        <input type="text" id="hero-line3" placeholder="& Kreativ"/>
+      </div>
+      <div class="form-group">
+        <label>Tavsif matni</label>
+        <textarea id="hero-desc" placeholder="Brendlar, mahsulotlar..."></textarea>
+      </div>
+      <div class="form-group">
+        <label>Holat xabari (badge)</label>
+        <input type="text" id="hero-badge" placeholder="Yangi loyihalar qabul qilinmoqda"/>
+      </div>
+    </div>
+
+    <div class="edit-card">
+      <h3><i class="fas fa-chart-bar"></i> Statistikalar</h3>
+      <div class="stats-grid" id="stats-preview">
+        <!-- rendered by JS -->
+      </div>
+      <div class="section-divider">tahrirlash</div>
+      <div id="stats-edit-area"></div>
+    </div>
+  </div>
+
+  <!-- ===== PORTFOLIO PANEL ===== -->
+  <div class="section-panel" id="panel-portfolio">
+    <div class="edit-card">
+      <h3><i class="fas fa-images"></i> Portfolio ishlari</h3>
+      <div class="portfolio-list" id="portfolio-list"></div>
+      <button class="add-btn" onclick="openAddPortfolio()">
+        <i class="fas fa-plus"></i> Yangi ish qo'shish
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== SERVICES PANEL ===== -->
+  <div class="section-panel" id="panel-services">
+    <div class="edit-card">
+      <h3><i class="fas fa-briefcase"></i> Xizmatlar ro'yxati</h3>
+      <div class="services-list" id="services-list"></div>
+      <button class="add-btn" onclick="openAddService()">
+        <i class="fas fa-plus"></i> Yangi xizmat qo'shish
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== ABOUT PANEL ===== -->
+  <div class="section-panel" id="panel-about">
+    <div class="edit-card">
+      <h3><i class="fas fa-user-circle"></i> Shaxsiy ma'lumotlar</h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Sarlavha birinchi qator</label>
+          <input type="text" id="about-title1" placeholder="Dizayn orqali"/>
+        </div>
+        <div class="form-group">
+          <label>Sarlavha ikkinchi qator</label>
+          <input type="text" id="about-title2" placeholder="qiymat yarataman"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Asosiy tavsif</label>
+        <textarea id="about-desc1" placeholder="Toshkentda faoliyat yurituvchi..."></textarea>
+      </div>
+      <div class="form-group">
+        <label>Qo'shimcha matn</label>
+        <textarea id="about-desc2" placeholder="Har bir loyihani..."></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Tajriba yillari (raqam)</label>
+          <input type="text" id="about-exp" placeholder="5+"/>
+        </div>
+        <div class="form-group">
+          <label>Badge matni</label>
+          <input type="text" id="about-exp-label" placeholder="Yil tajriba"/>
+        </div>
+      </div>
+    </div>
+
+    <div class="edit-card">
+      <h3><i class="fas fa-tags"></i> Ko'nikmalar (skill tags)</h3>
+      <div class="skill-tags-list" id="skill-tags-list"></div>
+      <div class="add-skill-row">
+        <input type="text" id="new-skill-input" placeholder="Yangi ko'nikma qo'shing..." onkeydown="if(event.key==='Enter')addSkill()"/>
+        <button onclick="addSkill()"><i class="fas fa-plus"></i> Qo'shish</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== CONTACT PANEL ===== -->
+  <div class="section-panel" id="panel-contact">
+    <div class="edit-card">
+      <h3><i class="fas fa-address-card"></i> Aloqa ma'lumotlari</h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="contact-email" placeholder="email@example.com"/>
+        </div>
+        <div class="form-group">
+          <label>Telegram username</label>
+          <input type="text" id="contact-telegram" placeholder="@username"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Joylashuv</label>
+        <input type="text" id="contact-location" placeholder="Toshkent, O'zbekiston"/>
+      </div>
+    </div>
+
+    <div class="edit-card">
+      <h3><i class="fas fa-share-alt"></i> Ijtimoiy tarmoqlar</h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Instagram URL</label>
+          <input type="text" id="social-instagram" placeholder="https://instagram.com/username"/>
+        </div>
+        <div class="form-group">
+          <label>Telegram URL</label>
+          <input type="text" id="social-telegram" placeholder="https://t.me/username"/>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Behance URL</label>
+          <input type="text" id="social-behance" placeholder="https://behance.net/username"/>
+        </div>
+        <div class="form-group">
+          <label>Dribbble URL</label>
+          <input type="text" id="social-dribbble" placeholder="https://dribbble.com/username"/>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SETTINGS PANEL ===== -->
+  <div class="section-panel" id="panel-settings">
+    <div class="edit-card">
+      <h3><i class="fas fa-paint-brush"></i> Sayt sozlamalari</h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Logo matni (aksentsiz)</label>
+          <input type="text" id="logo-text" placeholder="dizay"/>
+        </div>
+        <div class="form-group">
+          <label>Logo aksent qismi</label>
+          <input type="text" id="logo-accent" placeholder="n."/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Sahifa nomi (title)</label>
+        <input type="text" id="site-title" placeholder="Portfolio – Grafik Dizayner"/>
+      </div>
+      <div class="form-group">
+        <label>Footer matni</label>
+        <input type="text" id="footer-text" placeholder="© 2025 dizayn. Barcha huquqlar himoyalangan."/>
+      </div>
+    </div>
+    <div class="edit-card">
+      <h3><i class="fas fa-exclamation-triangle" style="color:var(--red)"></i> Xavfli zona</h3>
+      <div class="danger-zone">
+        <p>Barcha ma'lumotlarni o'chirib, boshlang'ich holatga qaytarish</p>
+        <button class="btn-danger" onclick="resetAll()">
+          <i class="fas fa-trash"></i> Tozalash
+        </button>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- PORTFOLIO MODAL -->
+<div class="modal-overlay" id="portfolio-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="portfolio-modal-title">Yangi ish qo'shish</h3>
+      <button class="modal-close" onclick="closeModal('portfolio-modal')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="form-group">
+      <label>Loyiha nomi</label>
+      <input type="text" id="pm-title" placeholder="TechStart Brend Identifikatsiyasi"/>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Kategoriya</label>
+        <select id="pm-tag">
+          <option>Brending</option>
+          <option>UI/UX</option>
+          <option>Bosma</option>
+          <option>Social Media</option>
+          <option>Qadoqlash</option>
+          <option>Motion</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Loyiha havolasi (ixtiyoriy)</label>
+        <input type="text" id="pm-link" placeholder="https://..."/>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Tavsif</label>
+      <textarea id="pm-desc" placeholder="Loyiha haqida qisqacha..."></textarea>
+    </div>
+    <div class="form-group">
+      <label>Rasm</label>
+      <div class="img-upload-area" onclick="document.getElementById('pm-img-input').click()">
+        <input type="file" id="pm-img-input" accept="image/*" onchange="previewImg(this, 'pm-img-preview')" style="display:none"/>
+        <i class="fas fa-cloud-upload-alt"></i>
+        <p>Rasm yuklash uchun bosing<br><strong>JPG, PNG, WebP</strong> • Max 5MB</p>
+        <img id="pm-img-preview" class="img-preview"/>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Fon gradienti (rasm yo'q bo'lsa)</label>
+      <div class="color-row">
+        <div class="form-group" style="margin-bottom:0">
+          <label>Rang 1</label>
+          <div class="color-input-wrap">
+            <input type="color" id="pm-color1" value="#1a1a2e" oninput="document.getElementById('pm-color1-text').value=this.value"/>
+            <input type="text" id="pm-color1-text" value="#1a1a2e" oninput="document.getElementById('pm-color1').value=this.value"/>
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label>Rang 2</label>
+          <div class="color-input-wrap">
+            <input type="color" id="pm-color2" value="#16213e" oninput="document.getElementById('pm-color2-text').value=this.value"/>
+            <input type="text" id="pm-color2-text" value="#16213e" oninput="document.getElementById('pm-color2').value=this.value"/>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('portfolio-modal')">Bekor qilish</button>
+      <button class="btn-save" onclick="savePortfolioItem()"><i class="fas fa-check"></i> Saqlash</button>
+    </div>
+  </div>
+</div>
+
+<!-- SERVICE MODAL -->
+<div class="modal-overlay" id="service-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="service-modal-title">Yangi xizmat qo'shish</h3>
+      <button class="modal-close" onclick="closeModal('service-modal')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="form-group">
+      <label>Xizmat nomi</label>
+      <input type="text" id="sm-title" placeholder="Logo & Brending"/>
+    </div>
+    <div class="form-group">
+      <label>Font Awesome ikonka kodi</label>
+      <input type="text" id="sm-icon" placeholder="fas fa-pen-nib"/>
+      <div style="font-size:11px;color:var(--muted);margin-top:5px">
+        Misollar: fas fa-pen-nib, fas fa-palette, fas fa-mobile-alt, fas fa-photo-video
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Tavsif</label>
+      <textarea id="sm-desc" placeholder="Xizmat haqida qisqacha..."></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('service-modal')">Bekor qilish</button>
+      <button class="btn-save" onclick="saveServiceItem()"><i class="fas fa-check"></i> Saqlash</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"><i class="fas fa-check-circle"></i> <span id="toast-msg">Saqlandi!</span></div>
+
+<script>
+// ============ DATA ============
+const DEFAULT_DATA = {
+  hero: {
+    line1: 'Grafik',
+    line2: 'Dizayner',
+    line3: '& Kreativ',
+    desc: "Brendlar, mahsulotlar va raqamli tajribalar uchun vizual identifikatsiyalar yarataman. Har bir loyiha – noyob hikoya.",
+    badge: 'Yangi loyihalar qabul qilinmoqda',
+    stats: [
+      { num: '50', suffix: '+', label: 'Yakunlangan loyiha' },
+      { num: '30', suffix: '+', label: 'Mamnun mijoz' },
+      { num: '5', suffix: '+', label: 'Yillik tajriba' }
+    ]
+  },
+  portfolio: [
+    { id: 1, title: 'TechStart Brend Identifikatsiyasi', tag: 'Brending', desc: "To'liq brend paketi: logo, rang palitasi, tipografiya va brend qo'llanma.", color1: '#1a1a2e', color2: '#16213e', img: '', link: '' },
+    { id: 2, title: 'E-commerce Mobil Ilova', tag: 'UI/UX', desc: "Online do'kon uchun foydalanuvchi yo'nalishli mobil ilova interfeysi.", color1: '#0f3460', color2: '#533483', img: '', link: '' },
+    { id: 3, title: 'Restoran Menyu Dizayni', tag: 'Bosma', desc: "Zamonaviy restoran uchun premium menyu va bosma material paketi.", color1: '#2a1a0a', color2: '#1a0a0a', img: '', link: '' },
+    { id: 4, title: 'Fitnes Markaz SMM Paketi', tag: 'Social Media', desc: "30 kunlik Instagram kontent plani va dizayn shablonlar to'plami.", color1: '#2d1b33', color2: '#1a0a2e', img: '', link: '' },
+    { id: 5, title: 'Organic Foods Brendi', tag: 'Brending', desc: "Ekologik mahsulotlar brendi uchun tabiiy va zamonaviy vizual identifikatsiya.", color1: '#1a2a1a', color2: '#0d1f0d', img: '', link: '' },
+    { id: 6, title: 'Qahva Brendi Qadoqlash', tag: 'Qadoqlash', desc: "Premium qahva brendining mahsulot qadoqlash va vizual komunikatsiyasi.", color1: '#2a1a0a', color2: '#3d2b0f', img: '', link: '' }
+  ],
+  services: [
+    { id: 1, title: 'Logo & Brending', icon: 'fas fa-pen-nib', desc: "Kompaniyangiz mohiyatini aks ettiruvchi noyob logo va to'liq brend identifikatsiyasi yaratiladi." },
+    { id: 2, title: 'Grafik Dizayn', icon: 'fas fa-palette', desc: "Bosma materiallar, banner, poster, buklet va har qanday vizual materiallar professional darajada." },
+    { id: 3, title: 'UI/UX Dizayn', icon: 'fas fa-mobile-alt', desc: "Foydalanuvchilar uchun qulay va vizual jihatdan chiroyli interfeys va tajriba dizayni." },
+    { id: 4, title: 'Ijtimoiy Tarmoq', icon: 'fas fa-photo-video', desc: "Instagram, Telegram va boshqa platformalar uchun e'lon, story va reklama dizaynlari." },
+    { id: 5, title: 'Qadoqlash Dizayni', icon: 'fas fa-box-open', desc: "Mahsulotingizni ajratib ko'rsatuvchi zamonaviy va qulay qadoqlash yechimlar." },
+    { id: 6, title: 'Motion Grafika', icon: 'fas fa-film', desc: "Brendingizni jonlantiruvchi animatsiya va motion grafik kontentlar yaratiladi." }
+  ],
+  about: {
+    title1: "Dizayn orqali",
+    title2: "qiymat yarataman",
+    desc1: "Toshkentda faoliyat yurituvchi grafik dizaynerman. Brendlar uchun vizual identifikatsiya, raqamli kontentlar va UI/UX yechimlar yaratishga ixtisoslashganman.",
+    desc2: "Har bir loyihani noyob muammo sifatida ko'raman va uning uchun maxsus, qiziqarli yechim topamanman. Mijozlarim bilan yaqin ishlashni va ularning g'oyalarini reallikka aylantirishni yaxshi ko'raman.",
+    exp: '5+',
+    expLabel: 'Yil tajriba',
+    skills: ['Adobe Illustrator', 'Photoshop', 'Figma', 'InDesign', 'After Effects', 'Canva Pro', 'Brending', 'Tipografiya', 'Rang nazariyasi']
+  },
+  contact: {
+    email: 'dizayn@gmail.com',
+    telegram: '@username',
+    location: "Toshkent, O'zbekiston",
+    instagram: '#',
+    telegramUrl: '#',
+    behance: '#',
+    dribbble: '#'
+  },
+  settings: {
+    logoText: 'dizay',
+    logoAccent: 'n.',
+    siteTitle: 'Portfolio – Grafik Dizayner',
+    footerText: '© 2025 dizayn. Barcha huquqlar himoyalangan.'
+  }
+};
+
+let data = JSON.parse(JSON.stringify(DEFAULT_DATA));
+let editingPortfolioId = null;
+let editingServiceId = null;
+
+// ============ LOAD / SAVE ============
+function loadFromStorage() {
+  const saved = localStorage.getItem('portfolio_admin_data');
+  if (saved) {
+    try {
+      data = JSON.parse(saved);
+      // merge missing keys
+      data.settings = Object.assign({}, DEFAULT_DATA.settings, data.settings || {});
+    } catch(e) {}
+  }
+  fillAllForms();
+}
+
+function saveToStorage() {
+  localStorage.setItem('portfolio_admin_data', JSON.stringify(data));
+}
+
+function saveAll() {
+  // Hero
+  data.hero.line1 = document.getElementById('hero-line1').value;
+  data.hero.line2 = document.getElementById('hero-line2').value;
+  data.hero.line3 = document.getElementById('hero-line3').value;
+  data.hero.desc = document.getElementById('hero-desc').value;
+  data.hero.badge = document.getElementById('hero-badge').value;
+  // Stats
+  data.hero.stats.forEach((s, i) => {
+    const numEl = document.getElementById('stat-num-'+i);
+    const suffEl = document.getElementById('stat-suf-'+i);
+    const lblEl = document.getElementById('stat-lbl-'+i);
+    if (numEl) s.num = numEl.value;
+    if (suffEl) s.suffix = suffEl.value;
+    if (lblEl) s.label = lblEl.value;
+  });
+  // About
+  data.about.title1 = document.getElementById('about-title1').value;
+  data.about.title2 = document.getElementById('about-title2').value;
+  data.about.desc1 = document.getElementById('about-desc1').value;
+  data.about.desc2 = document.getElementById('about-desc2').value;
+  data.about.exp = document.getElementById('about-exp').value;
+  data.about.expLabel = document.getElementById('about-exp-label').value;
+  // Contact
+  data.contact.email = document.getElementById('contact-email').value;
+  data.contact.telegram = document.getElementById('contact-telegram').value;
+  data.contact.location = document.getElementById('contact-location').value;
+  data.contact.instagram = document.getElementById('social-instagram').value;
+  data.contact.telegramUrl = document.getElementById('social-telegram').value;
+  data.contact.behance = document.getElementById('social-behance').value;
+  data.contact.dribbble = document.getElementById('social-dribbble').value;
+  // Settings
+  data.settings.logoText = document.getElementById('logo-text').value;
+  data.settings.logoAccent = document.getElementById('logo-accent').value;
+  data.settings.siteTitle = document.getElementById('site-title').value;
+  data.settings.footerText = document.getElementById('footer-text').value;
+
+  saveToStorage();
+  showToast('Barcha o\'zgarishlar saqlandi!');
+  document.querySelector('.badge').innerHTML = '<i class="fas fa-circle" style="font-size:7px"></i> Saqlangan';
+  document.querySelector('.badge').className = 'badge green';
+  renderStatsPreview();
+}
+
+function resetAll() {
+  if (!confirm('Haqiqatan ham barcha ma\'lumotlarni o\'chirasizmi?')) return;
+  localStorage.removeItem('portfolio_admin_data');
+  data = JSON.parse(JSON.stringify(DEFAULT_DATA));
+  fillAllForms();
+  showToast('Boshlang\'ich holatga qaytarildi');
+}
+
+// ============ FILL FORMS ============
+function fillAllForms() {
+  const h = data.hero;
+  document.getElementById('hero-line1').value = h.line1 || '';
+  document.getElementById('hero-line2').value = h.line2 || '';
+  document.getElementById('hero-line3').value = h.line3 || '';
+  document.getElementById('hero-desc').value = h.desc || '';
+  document.getElementById('hero-badge').value = h.badge || '';
+  renderStatsPreview();
+  renderStatsEdit();
+  renderPortfolioList();
+  renderServicesList();
+  renderSkillTags();
+
+  const ab = data.about;
+  document.getElementById('about-title1').value = ab.title1 || '';
+  document.getElementById('about-title2').value = ab.title2 || '';
+  document.getElementById('about-desc1').value = ab.desc1 || '';
+  document.getElementById('about-desc2').value = ab.desc2 || '';
+  document.getElementById('about-exp').value = ab.exp || '';
+  document.getElementById('about-exp-label').value = ab.expLabel || '';
+
+  const c = data.contact;
+  document.getElementById('contact-email').value = c.email || '';
+  document.getElementById('contact-telegram').value = c.telegram || '';
+  document.getElementById('contact-location').value = c.location || '';
+  document.getElementById('social-instagram').value = c.instagram || '';
+  document.getElementById('social-telegram').value = c.telegramUrl || '';
+  document.getElementById('social-behance').value = c.behance || '';
+  document.getElementById('social-dribbble').value = c.dribbble || '';
+
+  const s = data.settings || DEFAULT_DATA.settings;
+  document.getElementById('logo-text').value = s.logoText || '';
+  document.getElementById('logo-accent').value = s.logoAccent || '';
+  document.getElementById('site-title').value = s.siteTitle || '';
+  document.getElementById('footer-text').value = s.footerText || '';
+}
+
+// ============ STATS ============
+function renderStatsPreview() {
+  const c = document.getElementById('stats-preview');
+  c.innerHTML = data.hero.stats.map(s => `
+    <div class="stat-edit-card">
+      <div class="stat-preview">${s.num}<span>${s.suffix}</span></div>
+      <div style="font-size:12px;color:var(--sub);margin-top:4px">${s.label}</div>
+    </div>
+  `).join('');
+}
+function renderStatsEdit() {
+  const c = document.getElementById('stats-edit-area');
+  c.innerHTML = data.hero.stats.map((s, i) => `
+    <div style="display:grid;grid-template-columns:1fr 80px 1fr;gap:12px;margin-bottom:12px;align-items:end">
+      <div class="form-group" style="margin-bottom:0">
+        <label>Raqam ${i+1}</label>
+        <input type="text" id="stat-num-${i}" value="${s.num}"/>
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label>Suffiks</label>
+        <input type="text" id="stat-suf-${i}" value="${s.suffix}"/>
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label>Yorliq</label>
+        <input type="text" id="stat-lbl-${i}" value="${s.label}"/>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ============ PORTFOLIO ============
+function renderPortfolioList() {
+  const list = document.getElementById('portfolio-list');
+  list.innerHTML = data.portfolio.map(p => `
+    <div class="portfolio-item">
+      <div class="portfolio-item-thumb" style="background:linear-gradient(135deg,${p.color1},${p.color2})">
+        ${p.img ? `<img src="${p.img}" style="width:100%;height:100%;object-fit:cover;border-radius:8px"/>` : '<i class="fas fa-image"></i>'}
+      </div>
+      <div class="portfolio-item-info">
+        <div class="item-tag">${p.tag}</div>
+        <div class="item-title">${p.title}</div>
+        <div class="item-desc">${p.desc}</div>
+      </div>
+      <div class="item-actions">
+        <button class="btn-icon" onclick="editPortfolio(${p.id})" title="Tahrirlash"><i class="fas fa-pen"></i></button>
+        <button class="btn-icon danger" onclick="deletePortfolio(${p.id})" title="O'chirish"><i class="fas fa-trash"></i></button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openAddPortfolio() {
+  editingPortfolioId = null;
+  document.getElementById('portfolio-modal-title').textContent = 'Yangi ish qo\'shish';
+  document.getElementById('pm-title').value = '';
+  document.getElementById('pm-tag').value = 'Brending';
+  document.getElementById('pm-desc').value = '';
+  document.getElementById('pm-link').value = '';
+  document.getElementById('pm-color1').value = '#1a1a2e';
+  document.getElementById('pm-color1-text').value = '#1a1a2e';
+  document.getElementById('pm-color2').value = '#16213e';
+  document.getElementById('pm-color2-text').value = '#16213e';
+  document.getElementById('pm-img-preview').style.display = 'none';
+  document.getElementById('pm-img-preview').src = '';
+  openModal('portfolio-modal');
+}
+
+function editPortfolio(id) {
+  editingPortfolioId = id;
+  const p = data.portfolio.find(x => x.id === id);
+  if (!p) return;
+  document.getElementById('portfolio-modal-title').textContent = 'Ishni tahrirlash';
+  document.getElementById('pm-title').value = p.title;
+  document.getElementById('pm-tag').value = p.tag;
+  document.getElementById('pm-desc').value = p.desc;
+  document.getElementById('pm-link').value = p.link || '';
+  document.getElementById('pm-color1').value = p.color1 || '#1a1a2e';
+  document.getElementById('pm-color1-text').value = p.color1 || '#1a1a2e';
+  document.getElementById('pm-color2').value = p.color2 || '#16213e';
+  document.getElementById('pm-color2-text').value = p.color2 || '#16213e';
+  if (p.img) {
+    document.getElementById('pm-img-preview').src = p.img;
+    document.getElementById('pm-img-preview').style.display = 'block';
+  } else {
+    document.getElementById('pm-img-preview').style.display = 'none';
+  }
+  openModal('portfolio-modal');
+}
+
+function savePortfolioItem() {
+  const title = document.getElementById('pm-title').value.trim();
+  if (!title) { alert('Iltimos, loyiha nomini kiriting!'); return; }
+  const item = {
+    id: editingPortfolioId || Date.now(),
+    title,
+    tag: document.getElementById('pm-tag').value,
+    desc: document.getElementById('pm-desc').value,
+    link: document.getElementById('pm-link').value,
+    color1: document.getElementById('pm-color1').value,
+    color2: document.getElementById('pm-color2').value,
+    img: document.getElementById('pm-img-preview').src !== window.location.href ? document.getElementById('pm-img-preview').src : ''
+  };
+  if (document.getElementById('pm-img-preview').style.display === 'none') item.img = '';
+  if (editingPortfolioId) {
+    const idx = data.portfolio.findIndex(x => x.id === editingPortfolioId);
+    if (idx > -1) data.portfolio[idx] = item;
+  } else {
+    data.portfolio.push(item);
+  }
+  saveToStorage();
+  renderPortfolioList();
+  closeModal('portfolio-modal');
+  showToast(editingPortfolioId ? 'Ish yangilandi!' : 'Yangi ish qo\'shildi!');
+}
+
+function deletePortfolio(id) {
+  if (!confirm('Bu ishni o\'chirasizmi?')) return;
+  data.portfolio = data.portfolio.filter(p => p.id !== id);
+  saveToStorage();
+  renderPortfolioList();
+  showToast('O\'chirildi');
+}
+
+// ============ SERVICES ============
+function renderServicesList() {
+  const list = document.getElementById('services-list');
+  list.innerHTML = data.services.map(s => `
+    <div class="service-item">
+      <div class="service-item-icon"><i class="${s.icon}"></i></div>
+      <div class="service-item-info">
+        <div class="s-title">${s.title}</div>
+        <div class="s-desc">${s.desc}</div>
+      </div>
+      <div class="item-actions">
+        <button class="btn-icon" onclick="editService(${s.id})"><i class="fas fa-pen"></i></button>
+        <button class="btn-icon danger" onclick="deleteService(${s.id})"><i class="fas fa-trash"></i></button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openAddService() {
+  editingServiceId = null;
+  document.getElementById('service-modal-title').textContent = 'Yangi xizmat qo\'shish';
+  document.getElementById('sm-title').value = '';
+  document.getElementById('sm-icon').value = 'fas fa-star';
+  document.getElementById('sm-desc').value = '';
+  openModal('service-modal');
+}
+
+function editService(id) {
+  editingServiceId = id;
+  const s = data.services.find(x => x.id === id);
+  if (!s) return;
+  document.getElementById('service-modal-title').textContent = 'Xizmatni tahrirlash';
+  document.getElementById('sm-title').value = s.title;
+  document.getElementById('sm-icon').value = s.icon;
+  document.getElementById('sm-desc').value = s.desc;
+  openModal('service-modal');
+}
+
+function saveServiceItem() {
+  const title = document.getElementById('sm-title').value.trim();
+  if (!title) { alert('Iltimos, xizmat nomini kiriting!'); return; }
+  const item = {
+    id: editingServiceId || Date.now(),
+    title,
+    icon: document.getElementById('sm-icon').value || 'fas fa-star',
+    desc: document.getElementById('sm-desc').value
+  };
+  if (editingServiceId) {
+    const idx = data.services.findIndex(x => x.id === editingServiceId);
+    if (idx > -1) data.services[idx] = item;
+  } else {
+    data.services.push(item);
+  }
+  saveToStorage();
+  renderServicesList();
+  closeModal('service-modal');
+  showToast(editingServiceId ? 'Xizmat yangilandi!' : 'Yangi xizmat qo\'shildi!');
+}
+
+function deleteService(id) {
+  if (!confirm('Bu xizmatni o\'chirasizmi?')) return;
+  data.services = data.services.filter(s => s.id !== id);
+  saveToStorage();
+  renderServicesList();
+  showToast('O\'chirildi');
+}
+
+// ============ SKILLS ============
+function renderSkillTags() {
+  const list = document.getElementById('skill-tags-list');
+  list.innerHTML = data.about.skills.map((s, i) => `
+    <div class="skill-tag-item">
+      ${s}
+      <button onclick="removeSkill(${i})" title="O'chirish"><i class="fas fa-times"></i></button>
+    </div>
+  `).join('');
+}
+
+function addSkill() {
+  const input = document.getElementById('new-skill-input');
+  const val = input.value.trim();
+  if (!val) return;
+  data.about.skills.push(val);
+  input.value = '';
+  renderSkillTags();
+  saveToStorage();
+  showToast('Ko\'nikma qo\'shildi!');
+}
+
+function removeSkill(i) {
+  data.about.skills.splice(i, 1);
+  renderSkillTags();
+  saveToStorage();
+}
+
+// ============ IMAGE PREVIEW ============
+function previewImg(input, previewId) {
+  const preview = document.getElementById(previewId);
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    preview.src = e.target.result;
+    preview.style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
+// ============ MODAL ============
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => {
+    if (e.target === m) m.classList.remove('open');
+  });
+});
+
+// ============ NAVIGATION ============
+const panelTitles = {
+  hero: "Hero bo'limi",
+  portfolio: "Portfolio ishlari",
+  services: "Xizmatlar",
+  about: "Men haqimda",
+  contact: "Aloqa ma'lumotlari",
+  settings: "Sozlamalar"
+};
+
+function showPanel(id) {
+  document.querySelectorAll('.section-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('panel-' + id).classList.add('active');
+  event.currentTarget.classList.add('active');
+  document.getElementById('panel-title').textContent = panelTitles[id];
+}
+
+// ============ TOAST ============
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2800);
+}
+
+// ============ INIT ============
+loadFromStorage();
+</script>
+</body>
+</html>
