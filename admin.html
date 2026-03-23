@@ -1341,15 +1341,24 @@ function renderCompaniesList() {
   const el = document.getElementById('companiesList');
   if (!data.companies.items.length) { el.innerHTML = '<div class="empty-state"><i class="fas fa-building"></i><p>Kompaniyalar yo\'q</p></div>'; return; }
   el.innerHTML = data.companies.items.map(c => {
-    const thumb = c.logo
-      ? '<img src="' + sanitize(c.logo) + '" alt="" style="width:48px;height:48px;border-radius:8px;object-fit:contain;padding:4px;background:#2a2a2a;flex-shrink:0">'
-      : '<div style="width:48px;height:48px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:800;color:#b5f542;background:rgba(181,245,66,0.08);border:1px solid rgba(181,245,66,0.15);text-transform:uppercase;text-align:center;flex-shrink:0">' + sanitize(c.name.substring(0,3)) + '</div>';
-    const info = '<div style="flex:1;min-width:0;overflow:hidden"><div style="font-size:0.88rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + sanitize(c.name) + '</div><div style="font-size:0.75rem;color:#999;margin-top:2px">' + (c.logo ? '<i class="fas fa-image" style="color:#b5f542;margin-right:3px"></i>Logo bor' : '<i class="fas fa-font" style="margin-right:3px"></i>Faqat matn') + '</div></div>';
-    const actions = '<div style="display:flex;gap:6px;flex-shrink:0;margin-left:auto">'
-      + '<button onclick="editCompany(' + c.id + ')" style="width:34px;height:34px;padding:0;display:flex;align-items:center;justify-content:center;border-radius:8px;border:1px solid #2a2a2a;background:#1a1a1a;color:#999;cursor:pointer;font-size:0.8rem" title="Tahrirlash"><i class="fas fa-edit"></i></button>'
-      + '<button onclick="deleteCompany(' + c.id + ')" style="width:34px;height:34px;padding:0;display:flex;align-items:center;justify-content:center;border-radius:8px;border:1px solid rgba(245,66,66,0.3);background:rgba(245,66,66,0.08);color:#f54242;cursor:pointer;font-size:0.8rem" title="O\'chirish"><i class="fas fa-trash"></i></button>'
-      + '</div>';
-    return '<div style="display:flex;align-items:center;gap:14px;padding:14px 16px;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:10px;margin-bottom:8px">' + thumb + info + actions + '</div>';
+    const logoChar = sanitize(c.name.substring(0,3));
+    const name = sanitize(c.name);
+    const hasLogo = !!c.logo;
+    return '<div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:10px;margin-bottom:8px;padding:12px 16px">'
+      + '<div style="display:flex;align-items:center;gap:12px">'
+        + (hasLogo
+          ? '<img src="' + sanitize(c.logo) + '" style="width:44px;height:44px;border-radius:8px;object-fit:contain;padding:3px;background:#2a2a2a">'
+          : '<div style="width:44px;height:44px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:800;color:#b5f542;background:rgba(181,245,66,0.08);border:1px solid rgba(181,245,66,0.15);text-transform:uppercase">' + logoChar + '</div>')
+        + '<div style="flex:1">'
+          + '<div style="font-size:0.9rem;font-weight:600">' + name + '</div>'
+          + '<div style="font-size:0.73rem;color:#999;margin-top:2px">' + (hasLogo ? '&#x2705; Logo bor' : '&#x1F524; Faqat matn') + '</div>'
+        + '</div>'
+      + '</div>'
+      + '<div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid #2a2a2a">'
+        + '<button onclick="editCompany(' + c.id + ')" style="flex:1;padding:8px 0;display:flex;align-items:center;justify-content:center;gap:6px;border-radius:8px;border:1px solid #2a2a2a;background:#141414;color:#b5f542;cursor:pointer;font-size:0.78rem;font-family:inherit;font-weight:600"><i class="fas fa-edit"></i> Tahrirlash</button>'
+        + '<button onclick="deleteCompany(' + c.id + ')" style="flex:1;padding:8px 0;display:flex;align-items:center;justify-content:center;gap:6px;border-radius:8px;border:1px solid rgba(245,66,66,0.3);background:rgba(245,66,66,0.06);color:#f54242;cursor:pointer;font-size:0.78rem;font-family:inherit;font-weight:600"><i class="fas fa-trash"></i> O\'chirish</button>'
+      + '</div>'
+    + '</div>';
   }).join('');
 }
 
@@ -1426,18 +1435,26 @@ function renderPortfolioList() {
   const el = document.getElementById('portfolioList');
   if (!data.portfolio.length) { el.innerHTML = '<div class="empty-state"><i class="fas fa-briefcase"></i><p>Loyihalar yo\'q</p></div>'; return; }
   el.innerHTML = data.portfolio.map((p, idx) => {
-    const thumb = p.img
-      ? '<img src="' + sanitize(p.img) + '" alt="" style="width:48px;height:48px;border-radius:8px;object-fit:cover;background:#2a2a2a;flex-shrink:0">'
-      : '<div style="width:48px;height:48px;border-radius:8px;background:linear-gradient(135deg,' + sanitize(p.color1) + ',' + sanitize(p.color2) + ');flex-shrink:0"></div>';
-    const actions = '<div style="display:flex;gap:6px;flex-shrink:0;margin-left:auto">'
-      + '<button onclick="editPortfolio(' + p.id + ')" style="width:34px;height:34px;padding:0;display:flex;align-items:center;justify-content:center;border-radius:8px;border:1px solid #2a2a2a;background:#1a1a1a;color:#999;cursor:pointer;font-size:0.75rem" title="Tahrirlash"><i class="fas fa-edit"></i></button>'
-      + '<button onclick="deletePortfolio(' + p.id + ')" style="width:34px;height:34px;padding:0;display:flex;align-items:center;justify-content:center;border-radius:8px;border:1px solid rgba(245,66,66,0.3);background:rgba(245,66,66,0.08);color:#f54242;cursor:pointer;font-size:0.75rem" title="O\'chirish"><i class="fas fa-trash"></i></button>'
-      + '</div>';
-    return '<div class="list-item" draggable="true" data-idx="' + idx + '" ondragstart="dragStart(event,' + idx + ')" ondragover="dragOver(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)" ondrop="dragDrop(event,' + idx + ')" ondragend="dragEnd(event)" style="display:flex;align-items:center;gap:14px;padding:14px 16px;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:10px;margin-bottom:8px">'
-      + '<span class="drag-handle" style="color:#666;cursor:grab;font-size:0.9rem;padding:4px;flex-shrink:0"><i class="fas fa-grip-vertical"></i></span>'
-      + thumb
-      + '<div style="flex:1;min-width:0;overflow:hidden"><div style="font-size:0.88rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + sanitize(p.title) + '</div><div style="font-size:0.75rem;color:#999;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + sanitize(p.tag) + ' — ' + sanitize(p.desc) + '</div></div>'
-      + actions + '</div>';
+    const title = sanitize(p.title);
+    const tag = sanitize(p.tag);
+    const desc = sanitize(p.desc);
+    const hasImg = !!p.img;
+    return '<div class="list-item" draggable="true" data-idx="' + idx + '" ondragstart="dragStart(event,' + idx + ')" ondragover="dragOver(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)" ondrop="dragDrop(event,' + idx + ')" ondragend="dragEnd(event)" style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:10px;margin-bottom:8px;padding:12px 16px">'
+      + '<div style="display:flex;align-items:center;gap:12px">'
+        + '<span class="drag-handle" style="color:#666;cursor:grab;font-size:0.9rem;padding:4px"><i class="fas fa-grip-vertical"></i></span>'
+        + (hasImg
+          ? '<img src="' + sanitize(p.img) + '" style="width:44px;height:44px;border-radius:8px;object-fit:cover;background:#2a2a2a">'
+          : '<div style="width:44px;height:44px;border-radius:8px;background:linear-gradient(135deg,' + sanitize(p.color1) + ',' + sanitize(p.color2) + ')"></div>')
+        + '<div style="flex:1;min-width:0">'
+          + '<div style="font-size:0.9rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + title + '</div>'
+          + '<div style="font-size:0.73rem;color:#999;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + tag + ' — ' + desc + '</div>'
+        + '</div>'
+      + '</div>'
+      + '<div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid #2a2a2a">'
+        + '<button onclick="editPortfolio(' + p.id + ')" style="flex:1;padding:8px 0;display:flex;align-items:center;justify-content:center;gap:6px;border-radius:8px;border:1px solid #2a2a2a;background:#141414;color:#b5f542;cursor:pointer;font-size:0.78rem;font-family:inherit;font-weight:600"><i class="fas fa-edit"></i> Tahrirlash</button>'
+        + '<button onclick="deletePortfolio(' + p.id + ')" style="flex:1;padding:8px 0;display:flex;align-items:center;justify-content:center;gap:6px;border-radius:8px;border:1px solid rgba(245,66,66,0.3);background:rgba(245,66,66,0.06);color:#f54242;cursor:pointer;font-size:0.78rem;font-family:inherit;font-weight:600"><i class="fas fa-trash"></i> O\'chirish</button>'
+      + '</div>'
+    + '</div>';
   }).join('');
 }
 
@@ -1546,15 +1563,22 @@ function renderServicesList() {
   const el = document.getElementById('servicesList');
   if (!data.services.length) { el.innerHTML = '<div class="empty-state"><i class="fas fa-concierge-bell"></i><p>Xizmatlar yo\'q</p></div>'; return; }
   el.innerHTML = data.services.map(s => {
-    const icon = '<div style="width:40px;height:40px;background:#141414;border:1px solid #2a2a2a;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="' + sanitize(s.icon) + '" style="color:#b5f542"></i></div>';
-    const actions = '<div style="display:flex;gap:6px;flex-shrink:0;margin-left:auto">'
-      + '<button onclick="editService(' + s.id + ')" style="width:34px;height:34px;padding:0;display:flex;align-items:center;justify-content:center;border-radius:8px;border:1px solid #2a2a2a;background:#1a1a1a;color:#999;cursor:pointer;font-size:0.75rem" title="Tahrirlash"><i class="fas fa-edit"></i></button>'
-      + '<button onclick="deleteService(' + s.id + ')" style="width:34px;height:34px;padding:0;display:flex;align-items:center;justify-content:center;border-radius:8px;border:1px solid rgba(245,66,66,0.3);background:rgba(245,66,66,0.08);color:#f54242;cursor:pointer;font-size:0.75rem" title="O\'chirish"><i class="fas fa-trash"></i></button>'
-      + '</div>';
-    return '<div style="display:flex;align-items:center;gap:14px;padding:14px 16px;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:10px;margin-bottom:8px">'
-      + icon
-      + '<div style="flex:1;min-width:0;overflow:hidden"><div style="font-size:0.88rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + sanitize(s.title) + '</div><div style="font-size:0.75rem;color:#999;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + sanitize(s.desc) + '</div></div>'
-      + actions + '</div>';
+    const title = sanitize(s.title);
+    const desc = sanitize(s.desc);
+    const iconCls = sanitize(s.icon);
+    return '<div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:10px;margin-bottom:8px;padding:12px 16px">'
+      + '<div style="display:flex;align-items:center;gap:12px">'
+        + '<div style="width:40px;height:40px;background:#141414;border:1px solid #2a2a2a;border-radius:8px;display:flex;align-items:center;justify-content:center"><i class="' + iconCls + '" style="color:#b5f542"></i></div>'
+        + '<div style="flex:1;min-width:0">'
+          + '<div style="font-size:0.9rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + title + '</div>'
+          + '<div style="font-size:0.73rem;color:#999;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + desc + '</div>'
+        + '</div>'
+      + '</div>'
+      + '<div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid #2a2a2a">'
+        + '<button onclick="editService(' + s.id + ')" style="flex:1;padding:8px 0;display:flex;align-items:center;justify-content:center;gap:6px;border-radius:8px;border:1px solid #2a2a2a;background:#141414;color:#b5f542;cursor:pointer;font-size:0.78rem;font-family:inherit;font-weight:600"><i class="fas fa-edit"></i> Tahrirlash</button>'
+        + '<button onclick="deleteService(' + s.id + ')" style="flex:1;padding:8px 0;display:flex;align-items:center;justify-content:center;gap:6px;border-radius:8px;border:1px solid rgba(245,66,66,0.3);background:rgba(245,66,66,0.06);color:#f54242;cursor:pointer;font-size:0.78rem;font-family:inherit;font-weight:600"><i class="fas fa-trash"></i> O\'chirish</button>'
+      + '</div>'
+    + '</div>';
   }).join('');
 }
 
