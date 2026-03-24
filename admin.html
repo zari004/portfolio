@@ -545,6 +545,7 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
         <div class="topbar-title" id="topbarTitle">Hero</div>
       </div>
       <div class="topbar-right">
+        <a href="index.html" target="_blank" style="padding:8px 14px;background:transparent;border:1px solid var(--border);border-radius:8px;color:var(--sub);font-size:0.82rem;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:6px;transition:all .15s;font-family:inherit" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--sub)'"><i class="fas fa-external-link-alt"></i> Saytni ko'rish</a>
         <div class="unsaved-badge" id="unsavedBadge"><i class="fas fa-circle" style="font-size:0.45rem"></i> Saqlanmagan</div>
         <span class="save-shortcut">Ctrl+S</span>
         <button class="topbar-save-btn" onclick="saveAll()"><i class="fas fa-save"></i> Saqlash</button>
@@ -1352,8 +1353,7 @@ function renderCompaniesList() {
     const logoChar = sanitize(c.name.substring(0,3));
     const name = sanitize(c.name);
     const hasLogo = !!c.logo;
-    return '<div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:10px;margin-bottom:8px;padding:12px 16px;box-sizing:border-box;width:100%">'
-      + '<div style="display:flex;align-items:center;gap:12px">'
+    return '<div style="display:flex;align-items:center;gap:12px;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:10px;margin-bottom:8px;padding:12px 16px;box-sizing:border-box">'
         + (hasLogo
           ? '<img src="' + sanitize(c.logo) + '" style="width:44px;height:44px;border-radius:8px;object-fit:contain;padding:3px;background:#2a2a2a;flex-shrink:0">'
           : '<div style="width:44px;height:44px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:800;color:#b5f542;background:rgba(181,245,66,0.08);border:1px solid rgba(181,245,66,0.15);text-transform:uppercase;flex-shrink:0">' + logoChar + '</div>')
@@ -1361,11 +1361,10 @@ function renderCompaniesList() {
           + '<div style="font-size:0.9rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + name + '</div>'
           + '<div style="font-size:0.73rem;color:#999;margin-top:2px">' + (hasLogo ? '&#x2705; Logo bor' : '&#x1F524; Faqat matn') + '</div>'
         + '</div>'
-      + '</div>'
-      + '<div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid #2a2a2a">'
-        + '<button onclick="editCompany(' + c.id + ')" style="flex:1;min-width:0;padding:8px 0;display:flex;align-items:center;justify-content:center;gap:6px;border-radius:8px;border:1px solid #2a2a2a;background:#141414;color:#b5f542;cursor:pointer;font-size:0.78rem;font-family:inherit;font-weight:600"><i class="fas fa-edit"></i> Tahrirlash</button>'
-        + '<button onclick="deleteCompany(' + c.id + ')" style="flex:1;min-width:0;padding:8px 0;display:flex;align-items:center;justify-content:center;gap:6px;border-radius:8px;border:1px solid rgba(245,66,66,0.3);background:rgba(245,66,66,0.06);color:#f54242;cursor:pointer;font-size:0.78rem;font-family:inherit;font-weight:600"><i class="fas fa-trash"></i> O\'chirish</button>'
-      + '</div>'
+        + '<div style="display:flex;gap:6px;flex-shrink:0">'
+          + '<button onclick="editCompany(' + c.id + ')" style="width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:8px;border:1px solid #2a2a2a;background:#141414;color:#b5f542;cursor:pointer;font-size:0.8rem" title="Tahrirlash"><i class="fas fa-edit"></i></button>'
+          + '<button onclick="deleteCompany(' + c.id + ')" style="width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:8px;border:1px solid rgba(245,66,66,0.3);background:rgba(245,66,66,0.06);color:#f54242;cursor:pointer;font-size:0.8rem" title="O\'chirish"><i class="fas fa-trash"></i></button>'
+        + '</div>'
     + '</div>';
   }).join('');
 }
@@ -1447,8 +1446,7 @@ function renderPortfolioList() {
     const tag = sanitize(p.tag);
     const desc = sanitize(p.desc);
     const hasImg = !!p.img;
-    return '<div class="list-item" draggable="true" data-idx="' + idx + '" ondragstart="dragStart(event,' + idx + ')" ondragover="dragOver(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)" ondrop="dragDrop(event,' + idx + ')" ondragend="dragEnd(event)" style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:10px;margin-bottom:8px;padding:12px 16px;box-sizing:border-box;width:100%">'
-      + '<div style="display:flex;align-items:center;gap:12px">'
+    return '<div class="list-item" draggable="true" data-idx="' + idx + '" ondragstart="dragStart(event,' + idx + ')" ondragover="dragOver(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)" ondrop="dragDrop(event,' + idx + ')" ondragend="dragEnd(event)" style="display:flex;align-items:center;gap:12px;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:10px;margin-bottom:8px;padding:12px 16px;box-sizing:border-box">'
         + '<span class="drag-handle" style="color:#666;cursor:grab;font-size:0.9rem;padding:4px;flex-shrink:0"><i class="fas fa-grip-vertical"></i></span>'
         + (hasImg
           ? '<img src="' + sanitize(p.img) + '" style="width:44px;height:44px;border-radius:8px;object-fit:cover;background:#2a2a2a;flex-shrink:0">'
@@ -1457,11 +1455,10 @@ function renderPortfolioList() {
           + '<div style="font-size:0.9rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + title + '</div>'
           + '<div style="font-size:0.73rem;color:#999;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + tag + ' — ' + desc + '</div>'
         + '</div>'
-      + '</div>'
-      + '<div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid #2a2a2a">'
-        + '<button onclick="editPortfolio(' + p.id + ')" style="flex:1;min-width:0;padding:8px 0;display:flex;align-items:center;justify-content:center;gap:6px;border-radius:8px;border:1px solid #2a2a2a;background:#141414;color:#b5f542;cursor:pointer;font-size:0.78rem;font-family:inherit;font-weight:600"><i class="fas fa-edit"></i> Tahrirlash</button>'
-        + '<button onclick="deletePortfolio(' + p.id + ')" style="flex:1;min-width:0;padding:8px 0;display:flex;align-items:center;justify-content:center;gap:6px;border-radius:8px;border:1px solid rgba(245,66,66,0.3);background:rgba(245,66,66,0.06);color:#f54242;cursor:pointer;font-size:0.78rem;font-family:inherit;font-weight:600"><i class="fas fa-trash"></i> O\'chirish</button>'
-      + '</div>'
+        + '<div style="display:flex;gap:6px;flex-shrink:0">'
+          + '<button onclick="editPortfolio(' + p.id + ')" style="width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:8px;border:1px solid #2a2a2a;background:#141414;color:#b5f542;cursor:pointer;font-size:0.8rem" title="Tahrirlash"><i class="fas fa-edit"></i></button>'
+          + '<button onclick="deletePortfolio(' + p.id + ')" style="width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:8px;border:1px solid rgba(245,66,66,0.3);background:rgba(245,66,66,0.06);color:#f54242;cursor:pointer;font-size:0.8rem" title="O\'chirish"><i class="fas fa-trash"></i></button>'
+        + '</div>'
     + '</div>';
   }).join('');
 }
@@ -1574,18 +1571,16 @@ function renderServicesList() {
     const title = sanitize(s.title);
     const desc = sanitize(s.desc);
     const iconCls = sanitize(s.icon);
-    return '<div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:10px;margin-bottom:8px;padding:12px 16px;box-sizing:border-box;width:100%">'
-      + '<div style="display:flex;align-items:center;gap:12px">'
+    return '<div style="display:flex;align-items:center;gap:12px;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:10px;margin-bottom:8px;padding:12px 16px;box-sizing:border-box">'
         + '<div style="width:40px;height:40px;background:#141414;border:1px solid #2a2a2a;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="' + iconCls + '" style="color:#b5f542"></i></div>'
         + '<div style="flex:1;min-width:0">'
           + '<div style="font-size:0.9rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + title + '</div>'
           + '<div style="font-size:0.73rem;color:#999;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + desc + '</div>'
         + '</div>'
-      + '</div>'
-      + '<div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid #2a2a2a">'
-        + '<button onclick="editService(' + s.id + ')" style="flex:1;min-width:0;padding:8px 0;display:flex;align-items:center;justify-content:center;gap:6px;border-radius:8px;border:1px solid #2a2a2a;background:#141414;color:#b5f542;cursor:pointer;font-size:0.78rem;font-family:inherit;font-weight:600"><i class="fas fa-edit"></i> Tahrirlash</button>'
-        + '<button onclick="deleteService(' + s.id + ')" style="flex:1;min-width:0;padding:8px 0;display:flex;align-items:center;justify-content:center;gap:6px;border-radius:8px;border:1px solid rgba(245,66,66,0.3);background:rgba(245,66,66,0.06);color:#f54242;cursor:pointer;font-size:0.78rem;font-family:inherit;font-weight:600"><i class="fas fa-trash"></i> O\'chirish</button>'
-      + '</div>'
+        + '<div style="display:flex;gap:6px;flex-shrink:0">'
+          + '<button onclick="editService(' + s.id + ')" style="width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:8px;border:1px solid #2a2a2a;background:#141414;color:#b5f542;cursor:pointer;font-size:0.8rem" title="Tahrirlash"><i class="fas fa-edit"></i></button>'
+          + '<button onclick="deleteService(' + s.id + ')" style="width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:8px;border:1px solid rgba(245,66,66,0.3);background:rgba(245,66,66,0.06);color:#f54242;cursor:pointer;font-size:0.8rem" title="O\'chirish"><i class="fas fa-trash"></i></button>'
+        + '</div>'
     + '</div>';
   }).join('');
 }
