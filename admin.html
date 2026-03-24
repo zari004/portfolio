@@ -90,8 +90,12 @@ input, textarea, select, button { font-family: inherit; }
   flex: 1; padding: 13px 14px 13px 42px; border: none; background: transparent; color: var(--text); font-size: 0.95rem; outline: none; min-width: 0;
 }
 .login-field .input-wrap .pwd-toggle {
-  flex-shrink: 0; background: none; border: none; color: var(--muted); cursor: pointer; padding: 10px 14px;
+  flex-shrink: 0; background: none; border: none; color: var(--muted); cursor: pointer; padding: 0 14px;
   font-size: 1rem; transition: color .2s; z-index: 2; position: relative;
+  display: flex; align-items: center; justify-content: center; height: 100%;
+}
+.login-field .input-wrap .pwd-toggle i {
+  position: static !important; left: auto !important; color: inherit; font-size: 0.9rem;
 }
 .login-field .input-wrap .pwd-toggle:hover { color: var(--text); }
 .login-btn {
