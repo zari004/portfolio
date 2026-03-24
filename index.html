@@ -1851,9 +1851,10 @@
       if (url) {
         const a = document.createElement('a');
         a.href = url;
-        a.download = '';
-        a.target = '_blank';
+        a.download = url.split('/').pop() || 'CV';
+        document.body.appendChild(a);
         a.click();
+        document.body.removeChild(a);
       }
     }
 
