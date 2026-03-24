@@ -15,24 +15,24 @@
   <meta name="twitter:title" content="Portfolio – Grafik Dizayner">
   <meta name="twitter:description" content="Brendlar, mahsulotlar va raqamli tajribalar uchun vizual identifikatsiyalar yarataman.">
   <link rel="icon" type="image/png" href="logo.png">
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500;1,600;1,700;1,800;1,900&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500;1,600;1,700;1,800;1,900&family=Syne:wght@400;500;600;700;800&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <style>
     *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
     :root {
-      --bg: #0a0a0a;
-      --bg2: #0d0d0d;
-      --panel: #111111;
-      --card: #141414;
-      --card2: #1a1a1a;
-      --border: #222222;
-      --border2: #2a2a2a;
+      --bg: #0d0d0d;
+      --bg2: #111111;
+      --panel: #141414;
+      --card: #1a1a1a;
+      --card2: #1e1e1e;
+      --border: #2a2a2a;
+      --border2: #333333;
       --accent: #b5f542;
-      --accent2: #e8963f;
-      --accent3: #ff6b35;
+      --accent2: #42c8f5;
+      --accent3: #e8963f;
       --text: #f0f0f0;
-      --muted: #666666;
-      --sub: #999999;
+      --muted: #666;
+      --sub: #999;
     }
     html { scroll-behavior: smooth; scrollbar-width: thin; scrollbar-color: var(--accent) var(--bg); }
     body {
@@ -400,7 +400,7 @@
 
     .hero-label {
       font-size: 14px;
-      color: var(--accent2);
+      color: var(--accent);
       font-weight: 500;
       letter-spacing: 2px;
       text-transform: uppercase;
@@ -415,11 +415,11 @@
     }
 
     .hero-title {
-      font-family: 'Inter', sans-serif;
+      font-family: 'Syne', sans-serif;
       font-weight: 800;
       line-height: 1.0;
       margin-bottom: 0;
-      letter-spacing: -3px;
+      letter-spacing: -2px;
       text-transform: uppercase;
     }
     .hero-title .line {
@@ -434,11 +434,11 @@
       transition: all 0.7s cubic-bezier(0.16,1,0.3,1);
     }
     .hero-title .highlight {
-      color: var(--accent2);
-      font-family: 'Playfair Display', serif;
+      color: var(--accent3);
+      font-family: 'Cormorant Garamond', serif;
       font-style: italic;
-      font-weight: 700;
-      letter-spacing: -1px;
+      font-weight: 600;
+      letter-spacing: 0px;
       text-transform: none;
     }
 
@@ -546,7 +546,7 @@
       color: var(--sub);
     }
     .hero-bottom-item .bottom-num {
-      color: var(--accent2);
+      color: var(--accent);
       font-weight: 700;
       font-size: 13px;
       margin-right: 4px;
@@ -623,14 +623,14 @@
     .section-label {
       font-family: 'Plus Jakarta Sans', sans-serif;
       font-size: 12px;
-      color: var(--accent2);
+      color: var(--accent);
       text-transform: uppercase;
       letter-spacing: 4px;
       margin-bottom: 14px;
       font-weight: 600;
     }
     .section-title {
-      font-family: 'Playfair Display', serif;
+      font-family: 'Syne', sans-serif;
       font-weight: 700;
       letter-spacing: -0.5px;
       line-height: 1.15;
@@ -2191,54 +2191,42 @@
         time += 0.002;
         ctx.clearRect(0, 0, w, h);
 
-        // Layer 1 - subtle warm glow
-        ctx.globalAlpha = 0.06;
+        // Layer 1 - deep green
+        ctx.globalAlpha = 0.08;
         const g1 = ctx.createRadialGradient(
-          w * (0.3 + 0.15 * Math.sin(time * 0.7)), h * (0.35 + 0.2 * Math.cos(time * 0.5)),
+          w * (0.3 + 0.15 * Math.sin(time * 0.7)), h * (0.4 + 0.2 * Math.cos(time * 0.5)),
           0,
-          w * 0.5, h * 0.5, w * 0.55
+          w * 0.5, h * 0.5, w * 0.6
         );
-        g1.addColorStop(0, '#e8963f');
-        g1.addColorStop(0.4, '#7a4a1a');
+        g1.addColorStop(0, '#b5f542');
+        g1.addColorStop(0.5, '#6a9f20');
         g1.addColorStop(1, 'transparent');
         ctx.fillStyle = g1;
         ctx.fillRect(0, 0, w, h);
 
-        // Layer 2 - green accent
-        ctx.globalAlpha = 0.04;
+        // Layer 2 - cyan accent
+        ctx.globalAlpha = 0.05;
         const g2 = ctx.createRadialGradient(
           w * (0.7 + 0.2 * Math.cos(time * 0.8)), h * (0.3 + 0.25 * Math.sin(time * 0.6)),
           0,
-          w * 0.5, h * 0.5, w * 0.45
+          w * 0.5, h * 0.5, w * 0.5
         );
-        g2.addColorStop(0, '#b5f542');
-        g2.addColorStop(0.5, '#5a7a20');
+        g2.addColorStop(0, '#42c8f5');
+        g2.addColorStop(0.6, '#1a6b8a');
         g2.addColorStop(1, 'transparent');
         ctx.fillStyle = g2;
         ctx.fillRect(0, 0, w, h);
 
-        // Layer 3 - subtle cool accent
-        ctx.globalAlpha = 0.03;
+        // Layer 3 - moving green blob
+        ctx.globalAlpha = 0.06;
         const g3 = ctx.createRadialGradient(
           w * (0.5 + 0.3 * Math.sin(time * 1.1)), h * (0.6 + 0.15 * Math.cos(time * 0.9)),
           0,
-          w * 0.5, h * 0.5, w * 0.35
+          w * 0.5, h * 0.5, w * 0.4
         );
-        g3.addColorStop(0, '#4a6aff');
+        g3.addColorStop(0, '#b5f542');
         g3.addColorStop(1, 'transparent');
         ctx.fillStyle = g3;
-        ctx.fillRect(0, 0, w, h);
-
-        // Layer 4 - warm amber glow
-        ctx.globalAlpha = 0.03;
-        const g4 = ctx.createRadialGradient(
-          w * (0.6 + 0.15 * Math.cos(time * 0.9)), h * (0.5 + 0.1 * Math.sin(time * 0.7)),
-          0,
-          w * 0.5, h * 0.5, w * 0.3
-        );
-        g4.addColorStop(0, '#ff6b35');
-        g4.addColorStop(1, 'transparent');
-        ctx.fillStyle = g4;
         ctx.fillRect(0, 0, w, h);
 
         ctx.globalAlpha = 1;
