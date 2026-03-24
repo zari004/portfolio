@@ -15,7 +15,7 @@
   <meta name="twitter:title" content="Portfolio – Grafik Dizayner">
   <meta name="twitter:description" content="Brendlar, mahsulotlar va raqamli tajribalar uchun vizual identifikatsiyalar yarataman.">
   <link rel="icon" type="image/png" href="logo.png">
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <style>
     *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -32,7 +32,7 @@
     }
     html { scroll-behavior: smooth; scrollbar-width: thin; scrollbar-color: var(--accent) var(--bg); }
     body {
-      font-family: 'Space Grotesk', sans-serif;
+      font-family: 'Plus Jakarta Sans', sans-serif;
       background: var(--bg);
       color: var(--text);
       line-height: 1.6;
@@ -91,12 +91,13 @@
       visibility: hidden;
     }
     .preloader-logo {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 36px;
+      font-family: 'Playfair Display', serif;
+      font-size: 42px;
       font-weight: 700;
       color: var(--text);
       margin-bottom: 32px;
       letter-spacing: -1px;
+      font-style: italic;
     }
     .preloader-logo span { color: var(--accent); }
     .preloader-bar-wrap {
@@ -115,9 +116,10 @@
     }
     .preloader-percent {
       margin-top: 16px;
-      font-family: 'JetBrains Mono', monospace;
+      font-family: 'Plus Jakarta Sans', sans-serif;
       font-size: 13px;
       color: var(--sub);
+      letter-spacing: 2px;
     }
 
     /* ===== NAV ===== */
@@ -141,13 +143,14 @@
       background: rgba(13,13,13,0.92);
     }
     .nav-logo {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 22px;
+      font-family: 'Playfair Display', serif;
+      font-size: 24px;
       font-weight: 700;
       color: var(--text);
       text-decoration: none;
-      letter-spacing: -1px;
+      letter-spacing: -0.5px;
       flex-shrink: 0;
+      font-style: italic;
     }
     .nav-logo span { color: var(--accent); }
     .nav-links {
@@ -208,7 +211,7 @@
       font-size: 13px;
       font-weight: 600;
       cursor: pointer;
-      font-family: 'Space Grotesk', sans-serif;
+      font-family: 'Plus Jakarta Sans', sans-serif;
       transition: background 0.3s, color 0.3s, transform 0.3s;
       white-space: nowrap;
     }
@@ -357,10 +360,11 @@
     .hero-badge.closed .badge-dot { background: var(--muted); animation: none; }
     .hero-badge.closed { color: var(--muted); border-color: var(--border); background: rgba(255,255,255,0.03); }
     .hero-title {
-      font-weight: 700;
+      font-family: 'Playfair Display', serif;
+      font-weight: 800;
       line-height: 1.05;
       margin-bottom: 24px;
-      letter-spacing: -2px;
+      letter-spacing: -1px;
     }
     .hero-title .line {
       display: block;
@@ -407,7 +411,7 @@
       font-weight: 600;
       text-decoration: none;
       transition: transform 0.3s, box-shadow 0.3s;
-      font-family: 'Space Grotesk', sans-serif;
+      font-family: 'Plus Jakarta Sans', sans-serif;
       border: none;
       cursor: pointer;
     }
@@ -428,7 +432,7 @@
       text-decoration: none;
       border: 1.5px solid var(--border);
       transition: border-color 0.3s, transform 0.3s;
-      font-family: 'Space Grotesk', sans-serif;
+      font-family: 'Plus Jakarta Sans', sans-serif;
       cursor: pointer;
     }
     .btn-secondary:hover {
@@ -446,11 +450,12 @@
     .hero-stats.revealed { opacity: 1; transform: translateY(0); transition: all 0.7s 0.6s cubic-bezier(0.16,1,0.3,1); }
     .stat-item { text-align: left; }
     .stat-num {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 36px;
+      font-family: 'Playfair Display', serif;
+      font-size: 42px;
       font-weight: 700;
       color: var(--accent);
       line-height: 1;
+      font-style: italic;
     }
     .stat-label {
       font-size: 13px;
@@ -467,16 +472,18 @@
       margin-bottom: 56px;
     }
     .section-label {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 12px;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 13px;
       color: var(--accent);
       text-transform: uppercase;
-      letter-spacing: 3px;
+      letter-spacing: 4px;
       margin-bottom: 12px;
+      font-weight: 600;
     }
     .section-title {
+      font-family: 'Playfair Display', serif;
       font-weight: 700;
-      letter-spacing: -1.5px;
+      letter-spacing: -0.5px;
       line-height: 1.15;
     }
     .section-line {
@@ -518,9 +525,10 @@
       font-size: 12px;
       color: var(--muted);
       text-transform: uppercase;
-      letter-spacing: 3px;
+      letter-spacing: 4px;
       margin-bottom: 28px;
-      font-family: 'JetBrains Mono', monospace;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-weight: 600;
     }
     .marquee-track {
       display: flex;
@@ -618,10 +626,11 @@
       transform: scale(1.08);
     }
     .service-card h3 {
-      font-size: 18px;
+      font-family: 'Playfair Display', serif;
+      font-size: 20px;
       font-weight: 600;
       margin-bottom: 10px;
-      letter-spacing: -0.5px;
+      letter-spacing: -0.3px;
     }
     .service-card p {
       font-size: 14px;
@@ -642,7 +651,7 @@
       border-radius: 50px;
       background: transparent;
       color: var(--sub);
-      font-family: 'Space Grotesk', sans-serif;
+      font-family: 'Plus Jakarta Sans', sans-serif;
       font-size: 14px;
       font-weight: 500;
       cursor: pointer;
@@ -692,12 +701,13 @@
     }
     .portfolio-card:hover .card-overlay { opacity: 1; }
     .portfolio-card .card-tag {
-      font-family: 'JetBrains Mono', monospace;
+      font-family: 'Plus Jakarta Sans', sans-serif;
       font-size: 11px;
       color: var(--accent);
       text-transform: uppercase;
-      letter-spacing: 2px;
+      letter-spacing: 3px;
       margin-bottom: 8px;
+      font-weight: 600;
     }
     .portfolio-card .card-title {
       font-size: 18px;
@@ -781,9 +791,10 @@
       box-shadow: 0 8px 24px rgba(181,245,66,0.3);
     }
     .about-exp-badge .exp-num {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 28px;
+      font-family: 'Playfair Display', serif;
+      font-size: 32px;
       line-height: 1;
+      font-style: italic;
     }
     .about-exp-badge .exp-label {
       font-size: 11px;
@@ -792,9 +803,10 @@
       letter-spacing: 1px;
     }
     .about-text h2 {
+      font-family: 'Playfair Display', serif;
       font-weight: 700;
       line-height: 1.15;
-      letter-spacing: -1.5px;
+      letter-spacing: -0.5px;
       margin-bottom: 24px;
     }
     .about-text h2 span { color: var(--accent); }
@@ -846,18 +858,20 @@
       border-color: rgba(181,245,66,0.2);
     }
     .process-num {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 48px;
+      font-family: 'Playfair Display', serif;
+      font-size: 52px;
       font-weight: 700;
-      color: rgba(181,245,66,0.1);
+      color: rgba(181,245,66,0.08);
       line-height: 1;
       margin-bottom: 20px;
+      font-style: italic;
     }
     .process-card h3 {
-      font-size: 18px;
+      font-family: 'Playfair Display', serif;
+      font-size: 20px;
       font-weight: 600;
       margin-bottom: 10px;
-      letter-spacing: -0.5px;
+      letter-spacing: -0.3px;
     }
     .process-card p {
       font-size: 14px;
@@ -884,8 +898,9 @@
       gap: 64px;
     }
     .contact-info h2 {
+      font-family: 'Playfair Display', serif;
       font-weight: 700;
-      letter-spacing: -1.5px;
+      letter-spacing: -0.5px;
       margin-bottom: 20px;
       line-height: 1.15;
     }
@@ -954,7 +969,7 @@
       border-radius: 12px;
       padding: 14px 18px;
       color: var(--text);
-      font-family: 'Space Grotesk', sans-serif;
+      font-family: 'Plus Jakarta Sans', sans-serif;
       font-size: 15px;
       transition: border-color 0.3s, box-shadow 0.3s;
       outline: none;
@@ -983,7 +998,7 @@
       color: #0d0d0d;
       border: none;
       border-radius: 12px;
-      font-family: 'Space Grotesk', sans-serif;
+      font-family: 'Plus Jakarta Sans', sans-serif;
       font-size: 16px;
       font-weight: 700;
       cursor: pointer;
@@ -1029,7 +1044,8 @@
       100% { transform: scale(1); }
     }
     .form-success h3 {
-      font-size: 20px;
+      font-family: 'Playfair Display', serif;
+      font-size: 22px;
       font-weight: 600;
       margin-bottom: 8px;
     }
@@ -1167,17 +1183,19 @@
       padding: 32px;
     }
     .lightbox-tag {
-      font-family: 'JetBrains Mono', monospace;
+      font-family: 'Plus Jakarta Sans', sans-serif;
       font-size: 11px;
       color: var(--accent);
       text-transform: uppercase;
-      letter-spacing: 2px;
+      letter-spacing: 3px;
       margin-bottom: 12px;
+      font-weight: 600;
     }
     .lightbox-title {
-      font-size: 24px;
+      font-family: 'Playfair Display', serif;
+      font-size: 28px;
       font-weight: 700;
-      letter-spacing: -1px;
+      letter-spacing: -0.5px;
       margin-bottom: 16px;
     }
     .lightbox-desc {
