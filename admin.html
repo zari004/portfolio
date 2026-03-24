@@ -86,10 +86,10 @@ input, textarea, select, button { font-family: inherit; }
 .login-field .input-wrap:focus-within { border-color: var(--accent); }
 .login-field .input-wrap i { position: absolute; left: 14px; color: var(--muted); font-size: 0.9rem; }
 .login-field .input-wrap input {
-  width: 100%; padding: 13px 14px 13px 42px; border: none; background: transparent; color: var(--text); font-size: 0.95rem; outline: none;
+  flex: 1; padding: 13px 14px 13px 42px; border: none; background: transparent; color: var(--text); font-size: 0.95rem; outline: none; min-width: 0;
 }
 .login-field .input-wrap .pwd-toggle {
-  position: absolute; right: 10px; background: none; border: none; color: var(--muted); cursor: pointer; padding: 6px;
+  flex-shrink: 0; background: none; border: none; color: var(--muted); cursor: pointer; padding: 10px 12px;
   font-size: 0.9rem; transition: color .2s;
 }
 .login-field .input-wrap .pwd-toggle:hover { color: var(--text); }

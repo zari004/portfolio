@@ -1848,14 +1848,23 @@
     function downloadCV() {
       const data = getData();
       const url = data.settings && data.settings.cvUrl;
-      if (url) {
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = url.split('/').pop() || 'CV';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
+      if (!url) return;
+      let downloadUrl = url;
+      // Google Docs/Drive linkni yuklab olish formatiga o'zgartirish
+      const gdocsMatch = url.match(/docs\.google\.com\/document\/d\/([a-zA-Z0-9_-]+)/);
+      const gdriveMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+      if (gdocsMatch) {
+        downloadUrl = 'https://docs.google.com/document/d/' + gdocsMatch[1] + '/export?format=pdf';
+      } else if (gdriveMatch) {
+        downloadUrl = 'https://drive.google.com/uc?export=download&id=' + gdriveMatch[1];
       }
+      const a = document.createElement('a');
+      a.href = downloadUrl;
+      a.download = 'CV.pdf';
+      a.target = '_blank';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
     }
 
     /* ========================================
