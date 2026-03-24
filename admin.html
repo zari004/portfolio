@@ -161,7 +161,7 @@ input, textarea, select, button { font-family: inherit; }
 .main-content {
   margin-left: var(--sidebar-w); flex: 1; min-height: 100vh;
   display: flex; flex-direction: column;
-  max-width: calc(100vw - var(--sidebar-w)); overflow-x: hidden; min-width: 0;
+  max-width: calc(100vw - var(--sidebar-w)); min-width: 0;
 }
 .topbar {
   height: var(--topbar-h); border-bottom: 1px solid var(--border); background: var(--panel);
@@ -189,7 +189,7 @@ input, textarea, select, button { font-family: inherit; }
 .topbar-save-btn:hover { background: #c8ff5a; }
 
 /* Panels */
-.panels-container { flex: 1; padding: 28px; overflow-x: hidden; max-width: 100%; min-width: 0; }
+.panels-container { flex: 1; padding: 28px; overflow: hidden; max-width: 100%; min-width: 0; overflow-y: auto; }
 .panel { display: none; animation: fadePanel .3s ease; }
 .panel.active { display: block; }
 @keyframes fadePanel { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
