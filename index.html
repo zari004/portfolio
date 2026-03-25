@@ -371,10 +371,6 @@
     .portfolio-thumb {
       aspect-ratio: 5/4; position: relative; overflow: hidden;
     }
-    .portfolio-thumb iframe, .portfolio-thumb .yt-lite {
-      pointer-events: none;
-    }
-    .yt-lite:hover > div:last-child { transform: scale(1.1); }
     .portfolio-thumb .thumb-overlay {
       position: absolute; inset: 0;
       background: rgba(181,245,66,0.06);
@@ -701,28 +697,6 @@
     }
     .pd-block-video { margin: 32px 0; border-radius: 12px; overflow: hidden; }
     .pd-block-video video { width: 100%; display: block; border-radius: 12px; }
-    .pd-block-video iframe { width: 100%; aspect-ratio: 16/9; display: block; border-radius: 12px; }
-
-    /* Video lightbox */
-    .video-lightbox {
-      position: fixed; inset: 0; z-index: 3000;
-      background: rgba(0,0,0,0.95);
-      display: flex; align-items: center; justify-content: center;
-      animation: fadeIn 0.25s ease;
-    }
-    .video-lightbox-close {
-      position: absolute; top: 16px; right: 24px;
-      font-size: 36px; color: #fff; cursor: pointer;
-      width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
-      border-radius: 50%; background: rgba(255,255,255,0.1);
-      transition: background 0.2s; z-index: 10;
-    }
-    .video-lightbox-close:hover { background: rgba(255,255,255,0.2); }
-    .video-lightbox-wrap {
-      width: 90vw; max-width: 960px; aspect-ratio: 16/9;
-      border-radius: 12px; overflow: hidden;
-    }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
     /* Gallery lightbox */
     .pd-lightbox {
@@ -1124,72 +1098,6 @@ const DEFAULT_DATA = {
   }
 };
 
-// ============ VIDEO HELPERS ============
-function getYouTubeId(url) {
-  if (!url) return '';
-  var m;
-  // youtu.be/ID yoki youtu.be/ID?si=...
-  m = url.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
-  if (m) return m[1];
-  // youtube.com/watch?v=ID yoki watch?si=xxx&v=ID
-  m = url.match(/youtube\.com\/watch.*[?&]v=([a-zA-Z0-9_-]{11})/);
-  if (m) return m[1];
-  // youtube.com/embed/ID
-  m = url.match(/youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/);
-  if (m) return m[1];
-  // youtube.com/shorts/ID
-  m = url.match(/youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/);
-  if (m) return m[1];
-  // youtube.com/v/ID
-  m = url.match(/youtube\.com\/v\/([a-zA-Z0-9_-]{11})/);
-  if (m) return m[1];
-  return '';
-}
-
-function playYouTube(el, ytId) {
-  // Lightbox modal — Behance uslubida
-  var overlay = document.createElement('div');
-  overlay.className = 'video-lightbox';
-  overlay.innerHTML = '<div class="video-lightbox-close" onclick="this.parentElement.remove()">&times;</div>'
-    + '<div class="video-lightbox-wrap">'
-    + '<iframe src="https://www.youtube-nocookie.com/embed/' + ytId + '?autoplay=1&rel=0&modestbranding=1&iv_load_policy=3&showinfo=0&color=white" style="width:100%;height:100%;border:none" allow="autoplay;encrypted-media;fullscreen" allowfullscreen></iframe>'
-    + '</div>';
-  overlay.addEventListener('click', function(e) {
-    if (e.target === overlay) overlay.remove();
-  });
-  var escHandler = function(e) {
-    if (e.key === 'Escape') { overlay.remove(); document.removeEventListener('keydown', escHandler); }
-  };
-  document.addEventListener('keydown', escHandler);
-  document.body.appendChild(overlay);
-}
-
-function renderVideoTag(src, style, options) {
-  if (!src) return '';
-  options = options || {};
-  var ytId = getYouTubeId(src);
-  if (ytId) {
-    // Karta uchun (autoplay) — thumbnail + overlay, interaktiv emas
-    if (options.autoplay && !options.controls) {
-      return '<div class="yt-lite" style="' + style + ';position:relative;overflow:hidden;background:#000">'
-        + '<img src="https://img.youtube.com/vi/' + ytId + '/hqdefault.jpg" style="width:100%;height:100%;object-fit:cover" onerror="this.src=\'https://img.youtube.com/vi/' + ytId + '/mqdefault.jpg\'">'
-        + '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><div style="width:48px;height:34px;background:rgba(255,0,0,0.85);border-radius:8px;display:flex;align-items:center;justify-content:center"><div style="width:0;height:0;border-left:14px solid #fff;border-top:8px solid transparent;border-bottom:8px solid transparent;margin-left:3px"></div></div></div>'
-        + '</div>';
-    }
-    // Batafsil sahifa uchun — thumbnail + bosganda iframe
-    return '<div class="yt-lite" style="' + style + ';position:relative;overflow:hidden;background:#000;cursor:pointer;aspect-ratio:16/9" onclick="playYouTube(this.querySelector(\'img\'),\'' + ytId + '\')">'
-      + '<img src="https://img.youtube.com/vi/' + ytId + '/hqdefault.jpg" style="width:100%;height:100%;object-fit:cover" onerror="this.src=\'https://img.youtube.com/vi/' + ytId + '/mqdefault.jpg\'">'
-      + '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;transition:transform 0.2s"><div style="width:68px;height:48px;background:rgba(255,0,0,0.9);border-radius:12px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,0,0,0.4)"><div style="width:0;height:0;border-left:20px solid #fff;border-top:12px solid transparent;border-bottom:12px solid transparent;margin-left:4px"></div></div></div>'
-      + '</div>';
-  }
-  // Oddiy video (.mp4, .webm va h.k.)
-  var attrs = 'playsinline';
-  if (options.autoplay) attrs += ' autoplay muted';
-  if (options.loop) attrs += ' loop';
-  if (options.controls) attrs += ' controls';
-  return '<video src="' + src + '" style="' + style + '" ' + attrs + '></video>';
-}
-
 // ============ LOAD DATA ============
 function getData() {
   try {
@@ -1278,17 +1186,23 @@ function applyData() {
     // Store portfolio data globally for detail view
     window.__portfolioItems = d.portfolio;
     pg.innerHTML = d.portfolio.map((p, idx) => {
-      // Oblojka: yoki rasm yoki video (ikkalasi emas)
+      // Asosiy rasm yoki bloklardagi birinchi rasmni olish
       var coverImg = p.img || '';
-      var coverVideo = p.video || '';
-      // Rasm yo'q bo'lsa bloklardagi birinchi rasmni olish
-      if (!coverImg && !coverVideo && p.blocks && p.blocks.length) {
-        var imgBlock = p.blocks.find(function(b){ return b.type === 'image' && b.content && (Array.isArray(b.content) ? b.content.length > 0 : true); });
+      if (!coverImg && p.blocks && p.blocks.length) {
+        var imgBlock = p.blocks.find(function(b){ return b.type === 'image' && b.content; });
         if (imgBlock) coverImg = Array.isArray(imgBlock.content) ? imgBlock.content[0] : imgBlock.content;
       }
+      // Video: asosiy video yoki bloklardagi birinchi video
+      var coverVideo = p.video || '';
+      if (!coverVideo && p.blocks && p.blocks.length) {
+        var vidBlock = p.blocks.find(function(b){ return b.type === 'video' && b.content; });
+        if (vidBlock) coverVideo = Array.isArray(vidBlock.content) ? vidBlock.content[0] : vidBlock.content;
+      }
+      const isVideo = coverVideo || (coverImg && /\.(mp4|webm|mov|ogg)(\?|$)/i.test(coverImg));
+      const mediaSrc = coverVideo || coverImg;
       let mediaHTML = '';
-      if (coverVideo) {
-        mediaHTML = renderVideoTag(coverVideo, 'width:100%;height:100%;object-fit:cover;position:absolute;inset:0', {autoplay:true, loop:true});
+      if (isVideo && mediaSrc) {
+        mediaHTML = `<video src="${mediaSrc}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0" autoplay loop muted playsinline></video>`;
       } else if (coverImg) {
         mediaHTML = `<img src="${coverImg}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0"/>`;
       } else {
@@ -1618,16 +1532,22 @@ function openProjectDetail(idx) {
   // Push state for browser back button
   history.pushState({ projectDetail: true, idx: idx }, '', '#project-' + idx);
 
-  // Oblojka: yoki rasm yoki video
+  // Build hero media — asosiy rasm yoki bloklardagi birinchi rasm
   var heroImg = p.img || '';
-  var heroVideo = p.video || '';
-  if (!heroImg && !heroVideo && p.blocks && p.blocks.length) {
-    var firstImgBlock = p.blocks.find(function(b){ return b.type === 'image' && b.content && (Array.isArray(b.content) ? b.content.length > 0 : true); });
+  if (!heroImg && p.blocks && p.blocks.length) {
+    var firstImgBlock = p.blocks.find(function(b){ return b.type === 'image' && b.content; });
     if (firstImgBlock) heroImg = Array.isArray(firstImgBlock.content) ? firstImgBlock.content[0] : firstImgBlock.content;
   }
+  var heroVideo = p.video || '';
+  if (!heroVideo && p.blocks && p.blocks.length) {
+    var firstVidBlock = p.blocks.find(function(b){ return b.type === 'video' && b.content; });
+    if (firstVidBlock) heroVideo = Array.isArray(firstVidBlock.content) ? firstVidBlock.content[0] : firstVidBlock.content;
+  }
+  const isVideo = heroVideo || (heroImg && /\.(mp4|webm|mov|ogg)(\?|$)/i.test(heroImg));
+  const mediaSrc = heroVideo || heroImg;
   let heroMediaHTML = '';
-  if (heroVideo) {
-    heroMediaHTML = renderVideoTag(heroVideo, '', {autoplay:true, loop:true, controls:false}).replace('<video ', '<video class="pd-hero-media" ').replace('<iframe ', '<iframe class="pd-hero-media" ');
+  if (isVideo && mediaSrc) {
+    heroMediaHTML = `<video class="pd-hero-media" src="${mediaSrc}" autoplay loop muted playsinline></video>`;
   } else if (heroImg) {
     heroMediaHTML = `<img class="pd-hero-media" src="${heroImg}" alt="${p.title}"/>`;
   } else {
@@ -1691,10 +1611,10 @@ function openProjectDetail(idx) {
           }).join('')
           + '</div>';
       } else if (block.type === 'video') {
-        // Support single video (string) or multiple videos (array) + YouTube
+        // Support single video (string) or multiple videos (array)
         var videos = Array.isArray(block.content) ? block.content : [block.content];
         return videos.filter(function(s){return s;}).map(function(src) {
-          return '<div class="pd-block-video">' + renderVideoTag(src, 'width:100%;border-radius:12px', {controls:true, autoplay:false}) + '</div>';
+          return '<div class="pd-block-video"><video src="' + src + '" controls playsinline preload="auto" autoplay muted loop></video></div>';
         }).join('');
       }
       return '';
