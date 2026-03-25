@@ -1568,9 +1568,7 @@ function portfolioFormHTML(p) {
     + '<div style="position:relative;display:inline-block" id="m-pf-blocks-add-wrap">'
     + '<button type="button" class="btn btn-secondary btn-sm" onclick="toggleBlockMenu()" style="display:inline-flex;align-items:center;gap:6px"><i class="fas fa-plus"></i> Blok qo\'shish</button>'
     + '<div id="m-pf-block-menu" style="display:none;position:absolute;top:100%;left:0;margin-top:6px;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:6px;z-index:100;min-width:200px;box-shadow:0 8px 24px rgba(0,0,0,0.4)">'
-    + '<div class="block-menu-item" onclick="addBlock(\'title\')"><i class="fas fa-heading" style="color:var(--accent);width:20px;text-align:center"></i> Sarlavha</div>'
-    + '<div class="block-menu-item" onclick="addBlock(\'subtitle\')"><i class="fas fa-font" style="color:var(--accent2);width:20px;text-align:center"></i> Kichik sarlavha</div>'
-    + '<div class="block-menu-item" onclick="addBlock(\'text\')"><i class="fas fa-align-left" style="color:var(--sub);width:20px;text-align:center"></i> Matn</div>'
+    + '<div class="block-menu-item" onclick="addBlock(\'text\')"><i class="fas fa-align-left" style="color:var(--accent);width:20px;text-align:center"></i> Matn</div>'
     + '<div class="block-menu-item" onclick="addBlock(\'image\')"><i class="fas fa-image" style="color:#f5a623;width:20px;text-align:center"></i> Rasm</div>'
     + '<div class="block-menu-item" onclick="addBlock(\'video\')"><i class="fas fa-play-circle" style="color:#e74c3c;width:20px;text-align:center"></i> Video</div>'
     + '</div>'
@@ -1776,28 +1774,16 @@ function addBlock(type) {
     return;
   }
 
-  // For text-based types, show inline input with type selector
+  // Matn bloki — oddiy textarea, turi keyinroq o'zgartiriladi
   var blocksContainer = document.getElementById('m-pf-blocks');
   var existing = document.getElementById('block-add-input-wrap');
   if (existing) existing.remove();
 
-  var inputType = type === 'text' ? 'textarea' : 'input';
-  var placeholder = type === 'title' ? 'Sarlavha matnini kiriting...' : type === 'subtitle' ? 'Kichik sarlavha matnini kiriting...' : 'Matn yozing...';
-
   var wrapDiv = document.createElement('div');
   wrapDiv.id = 'block-add-input-wrap';
   wrapDiv.style.cssText = 'background:var(--card);border:1px solid var(--accent);border-radius:8px;padding:12px;margin-bottom:8px';
-  wrapDiv.innerHTML = '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">'
-    + '<span style="font-size:0.72rem;color:var(--accent);font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Matn qo\'shish</span>'
-    + '<div style="display:flex;gap:3px;margin-left:auto" id="block-add-type-btns">'
-    + '<button type="button" onclick="switchAddBlockType(\'title\')" class="block-type-btn' + (type === 'title' ? ' active' : '') + '" data-type="title" style="font-size:0.65rem;padding:2px 8px;border-radius:4px;border:1px solid ' + (type === 'title' ? 'var(--accent)' : 'var(--border)') + ';background:' + (type === 'title' ? 'rgba(181,245,66,0.15)' : 'transparent') + ';color:' + (type === 'title' ? 'var(--accent)' : 'var(--muted)') + ';cursor:pointer">Sarlavha</button>'
-    + '<button type="button" onclick="switchAddBlockType(\'subtitle\')" class="block-type-btn' + (type === 'subtitle' ? ' active' : '') + '" data-type="subtitle" style="font-size:0.65rem;padding:2px 8px;border-radius:4px;border:1px solid ' + (type === 'subtitle' ? 'var(--accent2)' : 'var(--border)') + ';background:' + (type === 'subtitle' ? 'rgba(66,200,245,0.15)' : 'transparent') + ';color:' + (type === 'subtitle' ? 'var(--accent2)' : 'var(--muted)') + ';cursor:pointer">Kichik</button>'
-    + '<button type="button" onclick="switchAddBlockType(\'text\')" class="block-type-btn' + (type === 'text' ? ' active' : '') + '" data-type="text" style="font-size:0.65rem;padding:2px 8px;border-radius:4px;border:1px solid ' + (type === 'text' ? 'var(--sub)' : 'var(--border)') + ';background:' + (type === 'text' ? 'rgba(153,153,153,0.15)' : 'transparent') + ';color:' + (type === 'text' ? 'var(--text)' : 'var(--muted)') + ';cursor:pointer">Matn</button>'
-    + '</div></div>'
-    + '<input type="hidden" id="block-add-type" value="' + type + '">'
-    + (inputType === 'textarea'
-      ? '<textarea class="form-input" id="block-add-value" rows="4" placeholder="' + placeholder + '" style="margin-bottom:8px"></textarea>'
-      : '<input class="form-input" id="block-add-value" placeholder="' + placeholder + '" style="margin-bottom:8px">')
+  wrapDiv.innerHTML = '<div style="font-size:0.72rem;color:var(--accent);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Matn qo\'shish</div>'
+    + '<textarea class="form-input" id="block-add-value" rows="3" placeholder="Matn yozing..." style="margin-bottom:8px"></textarea>'
     + '<div style="display:flex;gap:6px">'
     + '<button type="button" class="btn btn-primary btn-sm" onclick="confirmAddTextBlock()"><i class="fas fa-plus"></i> Qo\'shish</button>'
     + '<button type="button" class="btn btn-secondary btn-sm" onclick="cancelAddBlock()">Bekor</button>'
@@ -1822,10 +1808,9 @@ function switchAddBlockType(newType) {
 }
 
 function confirmAddTextBlock() {
-  var type = document.getElementById('block-add-type').value;
   var val = document.getElementById('block-add-value').value.trim();
   if (!val) { showToast('Maydon bo\'sh bo\'lmasligi kerak', 'warning'); return; }
-  _blocksData.push({ type: type, content: val });
+  _blocksData.push({ type: 'text', content: val });
   cancelAddBlock();
   renderBlocksList();
   markDirty();
