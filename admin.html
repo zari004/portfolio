@@ -1250,6 +1250,8 @@ function toggleSocialsMenu() {
       + '<span style="font-size:0.82rem">' + o.label + '</span></div>';
   }).join('');
   menu.style.display = 'block';
+  // Scroll hodisasi sahifaga tarqalmasligi uchun
+  menu.onwheel = function(e) { e.stopPropagation(); e.preventDefault(); menu.scrollTop += e.deltaY; };
 }
 
 function addSocial(key) {
