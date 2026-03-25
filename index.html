@@ -1105,12 +1105,23 @@ const DEFAULT_DATA = {
 // ============ VIDEO HELPERS ============
 function getYouTubeId(url) {
   if (!url) return '';
-  var m = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
-  return m ? m[1] : '';
-}
-
-function isYouTubeUrl(url) {
-  return /(?:youtube\.com|youtu\.be)/.test(url || '');
+  var m;
+  // youtu.be/ID yoki youtu.be/ID?si=...
+  m = url.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
+  if (m) return m[1];
+  // youtube.com/watch?v=ID yoki watch?si=xxx&v=ID
+  m = url.match(/youtube\.com\/watch.*[?&]v=([a-zA-Z0-9_-]{11})/);
+  if (m) return m[1];
+  // youtube.com/embed/ID
+  m = url.match(/youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/);
+  if (m) return m[1];
+  // youtube.com/shorts/ID
+  m = url.match(/youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/);
+  if (m) return m[1];
+  // youtube.com/v/ID
+  m = url.match(/youtube\.com\/v\/([a-zA-Z0-9_-]{11})/);
+  if (m) return m[1];
+  return '';
 }
 
 function renderVideoTag(src, style, options) {
