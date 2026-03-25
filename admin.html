@@ -1512,6 +1512,7 @@ function openAddPortfolio() {
     null
   );
   initBlocksBuilder([]);
+  initToolsGrid('');
 }
 
 function editPortfolio(id) {
@@ -1523,6 +1524,7 @@ function editPortfolio(id) {
     null
   );
   initBlocksBuilder(p.blocks || []);
+  initToolsGrid(p.tools || '');
 }
 
 function portfolioFormHTML(p) {
@@ -1533,7 +1535,7 @@ function portfolioFormHTML(p) {
     + '<div class="form-group"><label>Havola</label><input class="form-input" id="m-pf-link" value="' + sanitize(d.link) + '" placeholder="https://..."></div></div>'
     + '<div class="form-row"><div class="form-group"><label>Mijoz</label><input class="form-input" id="m-pf-client" value="' + sanitize(d.client || '') + '" placeholder="Mijoz yoki kompaniya nomi"></div>'
     + '<div class="form-group"><label>Sana</label><input class="form-input" id="m-pf-date" value="' + sanitize(d.date || '') + '" placeholder="Masalan: 2024"></div></div>'
-    + '<div class="form-group"><label>Asboblar <span style="font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0">(vergul bilan)</span></label><input class="form-input" id="m-pf-tools" value="' + sanitize(d.tools || '') + '" placeholder="Photoshop, Illustrator, Figma"></div>'
+    + '<div class="form-group"><label>Asboblar</label><div id="m-pf-tools-grid" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px"></div><input type="hidden" id="m-pf-tools" value="' + sanitize(d.tools || '') + '"></div>'
     + '<div class="form-group"><label>Qisqa tavsif</label><textarea class="form-input" id="m-pf-desc" rows="2" placeholder="Qisqa tavsif (kartada ko\'rinadi)">' + sanitize(d.desc) + '</textarea></div>'
     + '<div class="form-group"><label>Ranglar</label><div class="color-pair">'
     + '<div class="color-input-wrap"><input type="color" id="m-pf-color1" value="' + d.color1 + '"><span>Rang 1</span></div>'
@@ -1563,6 +1565,71 @@ function portfolioFormHTML(p) {
     + '</div>'
     + '</div>'
     + '</div>';
+}
+
+/* --- Tool Logos Map --- */
+var TOOL_LOGOS = {
+  'Adobe Illustrator': 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/illustrator/illustrator-plain.svg',
+  'Photoshop': 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/photoshop/photoshop-plain.svg',
+  'Figma': 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/figma/figma-original.svg',
+  'InDesign': 'https://upload.wikimedia.org/wikipedia/commons/4/48/Adobe_InDesign_CC_icon.svg',
+  'After Effects': 'https://upload.wikimedia.org/wikipedia/commons/c/cb/Adobe_After_Effects_CC_icon.svg',
+  'Canva Pro': 'https://upload.wikimedia.org/wikipedia/commons/0/08/Canva_icon_2021.svg',
+  'Premiere Pro': 'https://upload.wikimedia.org/wikipedia/commons/4/40/Adobe_Premiere_Pro_CC_icon.svg',
+  'XD': 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/xd/xd-plain.svg',
+  'Sketch': 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/sketch/sketch-original.svg',
+  'Blender': 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/blender/blender-original.svg',
+  'CorelDRAW': 'https://upload.wikimedia.org/wikipedia/en/d/d2/CorelDRAW_2020.svg',
+  'Lightroom': 'https://upload.wikimedia.org/wikipedia/commons/b/b6/Adobe_Photoshop_Lightroom_CC_logo.svg'
+};
+
+function getToolLogo(name) {
+  if (TOOL_LOGOS[name]) return TOOL_LOGOS[name];
+  // fallback: try to find partial match
+  var key = Object.keys(TOOL_LOGOS).find(function(k) {
+    return name.toLowerCase().indexOf(k.toLowerCase()) !== -1 || k.toLowerCase().indexOf(name.toLowerCase()) !== -1;
+  });
+  return key ? TOOL_LOGOS[key] : '';
+}
+
+function initToolsGrid(selectedTools) {
+  var grid = document.getElementById('m-pf-tools-grid');
+  var hidden = document.getElementById('m-pf-tools');
+  if (!grid) return;
+  var skills = data.about && data.about.skills ? data.about.skills : [];
+  var selected = selectedTools ? selectedTools.split(',').map(function(s){ return s.trim(); }).filter(function(s){ return s; }) : [];
+
+  grid.innerHTML = skills.map(function(skill) {
+    var isSelected = selected.indexOf(skill) !== -1;
+    var logo = getToolLogo(skill);
+    var logoHTML = logo ? '<img src="' + logo + '" style="width:18px;height:18px;object-fit:contain;flex-shrink:0" onerror="this.style.display=\'none\'">' : '<i class="fas fa-tools" style="font-size:0.7rem;color:var(--muted);flex-shrink:0"></i>';
+    return '<div class="tool-select-item' + (isSelected ? ' selected' : '') + '" onclick="toggleToolSelect(this,\'' + sanitize(skill).replace(/'/g, "\\'") + '\')" style="display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:8px;border:1px solid ' + (isSelected ? 'var(--accent)' : 'var(--border)') + ';background:' + (isSelected ? 'rgba(181,245,66,0.1)' : 'var(--card)') + ';cursor:pointer;font-size:0.8rem;color:' + (isSelected ? 'var(--accent)' : 'var(--sub)') + ';transition:all 0.15s;user-select:none">'
+      + logoHTML + skill + '</div>';
+  }).join('');
+
+  // Update hidden input
+  hidden.value = selected.join(', ');
+}
+
+function toggleToolSelect(el, skill) {
+  var hidden = document.getElementById('m-pf-tools');
+  var current = hidden.value ? hidden.value.split(',').map(function(s){ return s.trim(); }).filter(function(s){ return s; }) : [];
+  var idx = current.indexOf(skill);
+  if (idx !== -1) {
+    current.splice(idx, 1);
+    el.classList.remove('selected');
+    el.style.borderColor = 'var(--border)';
+    el.style.background = 'var(--card)';
+    el.style.color = 'var(--sub)';
+  } else {
+    current.push(skill);
+    el.classList.add('selected');
+    el.style.borderColor = 'var(--accent)';
+    el.style.background = 'rgba(181,245,66,0.1)';
+    el.style.color = 'var(--accent)';
+  }
+  hidden.value = current.join(', ');
+  markDirty();
 }
 
 /* --- Blocks Builder --- */

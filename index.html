@@ -649,11 +649,15 @@
       display: flex; flex-wrap: wrap; gap: 8px;
     }
     .pd-tool-tag {
-      padding: 6px 14px; border-radius: 6px;
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 8px 14px; border-radius: 8px;
       background: var(--card); border: 1px solid var(--border);
       font-size: 12px; color: var(--sub);
       font-family: 'JetBrains Mono', monospace;
+      transition: all 0.2s;
     }
+    .pd-tool-tag:hover { border-color: rgba(181,245,66,0.3); }
+    .pd-tool-tag img { flex-shrink: 0; }
     /* Block content styles */
     .pd-block-title {
       font-size: 32px; font-weight: 800; margin: 48px 0 16px;
@@ -673,6 +677,22 @@
       width: 100%; display: block; cursor: pointer; transition: transform 0.3s;
     }
     .pd-block-image img:hover { transform: scale(1.02); }
+    /* Multiple images grid */
+    .pd-block-images-grid {
+      display: grid; gap: 12px; margin: 32px 0;
+    }
+    .pd-block-images-grid.cols-2 { grid-template-columns: 1fr 1fr; }
+    .pd-block-images-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+    .pd-block-images-grid .pd-grid-img {
+      border-radius: 12px; overflow: hidden; border: 1px solid var(--border);
+      cursor: pointer; transition: all 0.25s;
+    }
+    .pd-block-images-grid .pd-grid-img:hover {
+      border-color: rgba(181,245,66,0.25); transform: translateY(-3px);
+    }
+    .pd-block-images-grid .pd-grid-img img {
+      width: 100%; display: block; aspect-ratio: 16/10; object-fit: cover;
+    }
     .pd-block-video { margin: 32px 0; border-radius: 12px; overflow: hidden; }
     .pd-block-video video { width: 100%; display: block; border-radius: 12px; }
 
@@ -1500,7 +1520,32 @@ function openProjectDetail(idx) {
     infoGridHTML += `<div class="pd-info-item"><div class="pd-info-label">Sana</div><div class="pd-info-value">${p.date}</div></div>`;
   }
   if (p.tools) {
-    infoGridHTML += `<div class="pd-info-item"><div class="pd-info-label">Asboblar</div><div class="pd-tools-list">${p.tools.split(',').map(t => `<span class="pd-tool-tag">${t.trim()}</span>`).join('')}</div></div>`;
+    var toolLogos = {
+      'Adobe Illustrator': 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/illustrator/illustrator-plain.svg',
+      'Photoshop': 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/photoshop/photoshop-plain.svg',
+      'Figma': 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/figma/figma-original.svg',
+      'InDesign': 'https://upload.wikimedia.org/wikipedia/commons/4/48/Adobe_InDesign_CC_icon.svg',
+      'After Effects': 'https://upload.wikimedia.org/wikipedia/commons/c/cb/Adobe_After_Effects_CC_icon.svg',
+      'Canva Pro': 'https://upload.wikimedia.org/wikipedia/commons/0/08/Canva_icon_2021.svg',
+      'Premiere Pro': 'https://upload.wikimedia.org/wikipedia/commons/4/40/Adobe_Premiere_Pro_CC_icon.svg',
+      'XD': 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/xd/xd-plain.svg',
+      'Sketch': 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/sketch/sketch-original.svg',
+      'Blender': 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/blender/blender-original.svg',
+      'Lightroom': 'https://upload.wikimedia.org/wikipedia/commons/b/b6/Adobe_Photoshop_Lightroom_CC_logo.svg'
+    };
+    function getToolLogoUrl(name) {
+      if (toolLogos[name]) return toolLogos[name];
+      var key = Object.keys(toolLogos).find(function(k) {
+        return name.toLowerCase().indexOf(k.toLowerCase()) !== -1 || k.toLowerCase().indexOf(name.toLowerCase()) !== -1;
+      });
+      return key ? toolLogos[key] : '';
+    }
+    infoGridHTML += `<div class="pd-info-item"><div class="pd-info-label">Asboblar</div><div class="pd-tools-list">${p.tools.split(',').map(t => {
+      var name = t.trim();
+      var logo = getToolLogoUrl(name);
+      var logoHTML = logo ? '<img src="' + logo + '" style="width:16px;height:16px;object-fit:contain" onerror="this.style.display=\'none\'">' : '';
+      return '<span class="pd-tool-tag">' + logoHTML + name + '</span>';
+    }).join('')}</div></div>`;
   }
 
   // Build blocks content or fallback to description
@@ -1518,9 +1563,19 @@ function openProjectDetail(idx) {
       } else if (block.type === 'image') {
         // Support single image (string) or multiple images (array)
         var images = Array.isArray(block.content) ? block.content : [block.content];
-        return images.filter(function(s){return s;}).map(function(src) {
-          return '<div class="pd-block-image"><img src="' + src + '" onclick="openPdLightbox(this.src)" alt=""></div>';
-        }).join('');
+        images = images.filter(function(s){return s;});
+        if (images.length === 0) return '';
+        if (images.length === 1) {
+          return '<div class="pd-block-image"><img src="' + images[0] + '" onclick="openPdLightbox(this.src)" alt=""></div>';
+        }
+        // Multiple images — grid layout
+        // 4 ta rasm = 2 ustun, qolganlar = 3 ustun
+        var colClass = images.length === 4 ? 'cols-2' : 'cols-3';
+        return '<div class="pd-block-images-grid ' + colClass + '">'
+          + images.map(function(src) {
+            return '<div class="pd-grid-img"><img src="' + src + '" onclick="openPdLightbox(this.src)" alt=""></div>';
+          }).join('')
+          + '</div>';
       } else if (block.type === 'video') {
         // Support single video (string) or multiple videos (array)
         var videos = Array.isArray(block.content) ? block.content : [block.content];
