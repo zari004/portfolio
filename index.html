@@ -703,6 +703,27 @@
     .pd-block-video video { width: 100%; display: block; border-radius: 12px; }
     .pd-block-video iframe { width: 100%; aspect-ratio: 16/9; display: block; border-radius: 12px; }
 
+    /* Video lightbox */
+    .video-lightbox {
+      position: fixed; inset: 0; z-index: 3000;
+      background: rgba(0,0,0,0.95);
+      display: flex; align-items: center; justify-content: center;
+      animation: fadeIn 0.25s ease;
+    }
+    .video-lightbox-close {
+      position: absolute; top: 16px; right: 24px;
+      font-size: 36px; color: #fff; cursor: pointer;
+      width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
+      border-radius: 50%; background: rgba(255,255,255,0.1);
+      transition: background 0.2s; z-index: 10;
+    }
+    .video-lightbox-close:hover { background: rgba(255,255,255,0.2); }
+    .video-lightbox-wrap {
+      width: 90vw; max-width: 960px; aspect-ratio: 16/9;
+      border-radius: 12px; overflow: hidden;
+    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
     /* Gallery lightbox */
     .pd-lightbox {
       position: fixed; inset: 0; z-index: 2000;
@@ -1126,9 +1147,21 @@ function getYouTubeId(url) {
 }
 
 function playYouTube(el, ytId) {
-  var wrapper = el.closest('.yt-lite');
-  if (!wrapper) return;
-  wrapper.innerHTML = '<iframe src="https://www.youtube-nocookie.com/embed/' + ytId + '?autoplay=1&rel=0&modestbranding=1" style="position:absolute;inset:0;width:100%;height:100%;border:none" allow="autoplay;encrypted-media;fullscreen" allowfullscreen></iframe>';
+  // Lightbox modal — Behance uslubida
+  var overlay = document.createElement('div');
+  overlay.className = 'video-lightbox';
+  overlay.innerHTML = '<div class="video-lightbox-close" onclick="this.parentElement.remove()">&times;</div>'
+    + '<div class="video-lightbox-wrap">'
+    + '<iframe src="https://www.youtube-nocookie.com/embed/' + ytId + '?autoplay=1&rel=0&modestbranding=1&iv_load_policy=3&showinfo=0&color=white" style="width:100%;height:100%;border:none" allow="autoplay;encrypted-media;fullscreen" allowfullscreen></iframe>'
+    + '</div>';
+  overlay.addEventListener('click', function(e) {
+    if (e.target === overlay) overlay.remove();
+  });
+  var escHandler = function(e) {
+    if (e.key === 'Escape') { overlay.remove(); document.removeEventListener('keydown', escHandler); }
+  };
+  document.addEventListener('keydown', escHandler);
+  document.body.appendChild(overlay);
 }
 
 function renderVideoTag(src, style, options) {
