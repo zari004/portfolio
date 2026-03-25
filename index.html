@@ -977,6 +977,13 @@
             <div class="value"><a id="contact-email-link" href="mailto:dizayn@gmail.com" style="color:var(--text);text-decoration:none;">dizayn@gmail.com</a></div>
           </div>
         </div>
+        <div class="contact-item" id="contact-phone-item" style="display:none">
+          <div class="contact-item-icon"><i class="fas fa-phone"></i></div>
+          <div class="contact-item-text">
+            <div class="label">Telefon</div>
+            <div class="value"><a id="contact-phone-link" href="tel:" style="color:var(--text);text-decoration:none;"></a></div>
+          </div>
+        </div>
         <div class="contact-item">
           <div class="contact-item-icon"><i class="fab fa-telegram"></i></div>
           <div class="contact-item-text">
@@ -1002,6 +1009,16 @@
         <div class="cf-group">
           <label>Email</label>
           <input type="email" id="cf-email" placeholder="email@example.com"/>
+        </div>
+      </div>
+      <div class="cf-row">
+        <div class="cf-group">
+          <label>Telefon</label>
+          <input type="tel" id="cf-phone" placeholder="+998 90 123 45 67"/>
+        </div>
+        <div class="cf-group">
+          <label>Telegram</label>
+          <input type="text" id="cf-telegram" placeholder="@username"/>
         </div>
       </div>
       <div class="cf-group">
@@ -1172,6 +1189,8 @@ function queueYtPlayer(uid, ytId, controls) {
 function sendContactMessage() {
   var name = document.getElementById('cf-name').value.trim();
   var email = document.getElementById('cf-email').value.trim();
+  var phone = document.getElementById('cf-phone').value.trim();
+  var tgUser = document.getElementById('cf-telegram').value.trim();
   var service = document.getElementById('cf-service').value.trim();
   var message = document.getElementById('cf-message').value.trim();
   if (!name || !message) {
@@ -1186,7 +1205,7 @@ function sendContactMessage() {
   btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Yuborilmoqda...';
 
   if (method === 'telegram' && c.botToken && c.chatId) {
-    var text = '📩 Yangi xabar!\n\n👤 Ism: ' + name + '\n📧 Email: ' + email + '\n🔧 Xizmat: ' + service + '\n\n💬 Xabar:\n' + message;
+    var text = '📩 Yangi xabar!\n\n👤 Ism: ' + name + '\n📧 Email: ' + email + '\n📱 Telefon: ' + (phone || '-') + '\n💬 Telegram: ' + (tgUser || '-') + '\n🔧 Xizmat: ' + service + '\n\n💬 Xabar:\n' + message;
     fetch('https://api.telegram.org/bot' + c.botToken + '/sendMessage', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1197,6 +1216,8 @@ function sendContactMessage() {
         btn.style.background = '#22c55e';
         document.getElementById('cf-name').value = '';
         document.getElementById('cf-email').value = '';
+        document.getElementById('cf-phone').value = '';
+        document.getElementById('cf-telegram').value = '';
         document.getElementById('cf-service').value = '';
         document.getElementById('cf-message').value = '';
         setTimeout(function() { btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane"></i> Xabar yuborish'; btn.style.background = ''; }, 3000);
@@ -1212,7 +1233,7 @@ function sendContactMessage() {
     });
   } else if (method === 'email') {
     var subject = 'Yangi xabar: ' + service;
-    var body = 'Ism: ' + name + '\nEmail: ' + email + '\nXizmat: ' + service + '\n\nXabar:\n' + message;
+    var body = 'Ism: ' + name + '\nEmail: ' + email + '\nTelefon: ' + (phone || '-') + '\nTelegram: ' + (tgUser || '-') + '\nXizmat: ' + service + '\n\nXabar:\n' + message;
     window.location.href = 'mailto:' + (c.email || '') + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
     btn.innerHTML = '<i class="fas fa-check"></i> Email ochildi!';
     setTimeout(function() { btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane"></i> Xabar yuborish'; }, 3000);
@@ -1389,6 +1410,14 @@ function applyData() {
   const c = d.contact;
   const cel = document.getElementById('contact-email-link');
   if (cel) { cel.textContent = c.email; cel.href = 'mailto:' + c.email; }
+  // Telefon
+  var phoneItem = document.getElementById('contact-phone-item');
+  var phoneLink = document.getElementById('contact-phone-link');
+  if (phoneItem && phoneLink && c.phone) {
+    phoneLink.textContent = c.phone;
+    phoneLink.href = 'tel:' + c.phone.replace(/\s/g,'');
+    phoneItem.style.display = '';
+  }
   const ctg = document.getElementById('contact-telegram');
   if (ctg) ctg.textContent = c.telegram;
   const clc = document.getElementById('contact-location');
