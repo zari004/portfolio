@@ -925,6 +925,14 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
           <div id="usersTable"></div>
           <button class="btn btn-secondary btn-sm" onclick="openAddUser()" style="margin-top:12px"><i class="fas fa-user-plus"></i> Foydalanuvchi qo'shish</button>
         </div>
+        <div class="form-card" style="margin-bottom:16px">
+          <div class="form-card-title"><i class="fas fa-exchange-alt"></i> Eksport / Import</div>
+          <p style="font-size:.78rem;color:var(--muted);margin-bottom:12px">Ma'lumotlarni boshqa domenga ko'chirish yoki zaxira nusxa olish uchun</p>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-primary btn-sm" onclick="exportAllData()"><i class="fas fa-download"></i> Eksport (yuklab olish)</button>
+            <button class="btn btn-secondary btn-sm" onclick="importAllData()"><i class="fas fa-upload"></i> Import (yuklash)</button>
+          </div>
+        </div>
         <div class="danger-zone">
           <h4><i class="fas fa-exclamation-triangle"></i> Xavfli zona</h4>
           <p>Bu amal barcha ma'lumotlarni o'chirib, boshlang'ich holatga qaytaradi. Qaytarib bo'lmaydi.</p>
@@ -3050,6 +3058,57 @@ function resetAll() {
   fillAllForms();
   clearDirty();
   showToast('Barcha ma\'lumotlar tozalandi', 'success');
+}
+
+/* ============================================================
+   EXPORT / IMPORT
+   ============================================================ */
+function exportAllData() {
+  collectFormData();
+  var exportData = {
+    portfolio_admin_data: data,
+    admin_users: users,
+    github_config: null
+  };
+  try { exportData.github_config = JSON.parse(localStorage.getItem('github_config')); } catch(e) {}
+  var json = JSON.stringify(exportData, null, 2);
+  var blob = new Blob([json], { type: 'application/json' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'portfolio_backup_' + new Date().toISOString().split('T')[0] + '.json';
+  a.click();
+  showToast('Ma\'lumotlar eksport qilindi', 'success');
+}
+
+function importAllData() {
+  var input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json';
+  input.onchange = function(e) {
+    var file = e.target.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(ev) {
+      try {
+        var imported = JSON.parse(ev.target.result);
+        if (!imported.portfolio_admin_data) { showToast('Noto\'g\'ri fayl formati', 'error'); return; }
+        if (!confirm('Barcha mavjud ma\'lumotlar yangilanadi. Davom etasizmi?')) return;
+        data = Object.assign({}, DEFAULT_DATA, imported.portfolio_admin_data);
+        users = imported.admin_users || deepClone(DEFAULT_USERS);
+        saveToStorage();
+        if (imported.github_config) {
+          localStorage.setItem('github_config', JSON.stringify(imported.github_config));
+        }
+        fillAllForms();
+        clearDirty();
+        showToast('Ma\'lumotlar muvaffaqiyatli import qilindi!', 'success');
+      } catch(err) {
+        showToast('Import xatosi: ' + err.message, 'error');
+      }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
 }
 
 /* ============================================================
