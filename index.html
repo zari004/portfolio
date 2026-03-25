@@ -1101,15 +1101,25 @@ const DEFAULT_DATA = {
 // ============ LOAD DATA ============
 function getData() {
   try {
-    if (window.__PORTFOLIO_DATA__) return Object.assign({}, DEFAULT_DATA, window.__PORTFOLIO_DATA__);
+    if (window.__PORTFOLIO_DATA__) {
+      console.log('[SITE] __PORTFOLIO_DATA__ mavjud, localStorage o\'rniga uni ishlatmoqda');
+      return Object.assign({}, DEFAULT_DATA, window.__PORTFOLIO_DATA__);
+    }
     const saved = localStorage.getItem('portfolio_admin_data');
     if (saved) {
       const d = JSON.parse(saved);
       d.settings = Object.assign({}, DEFAULT_DATA.settings, d.settings || {});
       d.companies = Object.assign({}, DEFAULT_DATA.companies, d.companies || {});
+      console.log('[SITE] localStorage dan yuklandi. Portfolio:', (d.portfolio ? d.portfolio.length : 0), 'ta loyiha');
+      if (d.portfolio && d.portfolio.length) {
+        d.portfolio.forEach(function(p, i) {
+          console.log('[SITE] Loyiha ' + i + ':', p.title, '| img:', (p.img ? p.img.substring(0,30)+'...' : 'YO\'Q'), '| blocks:', (p.blocks ? p.blocks.length : 0));
+        });
+      }
       return d;
     }
-  } catch(e) {}
+    console.log('[SITE] localStorage bo\'sh, DEFAULT_DATA ishlatilmoqda');
+  } catch(e) { console.error('[SITE] getData xatolik:', e); }
   return DEFAULT_DATA;
 }
 

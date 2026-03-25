@@ -1089,8 +1089,17 @@ function loadFromStorage() {
 }
 
 function saveToStorage() {
-  localStorage.setItem('portfolio_admin_data', JSON.stringify(data));
-  localStorage.setItem('admin_users', JSON.stringify(users));
+  try {
+    var json = JSON.stringify(data);
+    localStorage.setItem('portfolio_admin_data', json);
+    localStorage.setItem('admin_users', JSON.stringify(users));
+    // Debug: hajmni ko'rsatish
+    var sizeMB = (json.length / (1024 * 1024)).toFixed(2);
+    console.log('[SAVE] localStorage ga saqlandi: ' + sizeMB + ' MB, portfolio: ' + (data.portfolio ? data.portfolio.length : 0) + ' ta');
+  } catch(e) {
+    console.error('[SAVE ERROR]', e);
+    showToast('Saqlashda xatolik: ' + (e.name === 'QuotaExceededError' ? 'Xotira to\'ldi! Rasmlarni kichikroq qiling' : e.message), 'error');
+  }
 }
 
 function collectFormData() {
@@ -2126,14 +2135,17 @@ function savePortfolioItem(id) {
   }
   renderPortfolioList();
   closeModal();
+  saveToStorage();
   markDirty();
   showToast('Loyiha saqlandi', 'success');
+  console.log('[PORTFOLIO] Saqlandi:', item.title, 'blocks:', (item.blocks ? item.blocks.length : 0), 'img:', (item.img ? 'bor' : 'yo\'q'));
 }
 
 function deletePortfolio(id) {
   if (!confirm('Bu loyihani o\'chirmoqchimisiz?')) return;
   data.portfolio = data.portfolio.filter(x => x.id !== id);
   renderPortfolioList();
+  saveToStorage();
   markDirty();
   showToast('Loyiha o\'chirildi', 'success');
 }
