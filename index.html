@@ -371,9 +371,10 @@
     .portfolio-thumb {
       aspect-ratio: 5/4; position: relative; overflow: hidden;
     }
-    .portfolio-thumb iframe {
+    .portfolio-thumb iframe, .portfolio-thumb .yt-lite {
       pointer-events: none;
     }
+    .yt-lite:hover > div:last-child { transform: scale(1.1); }
     .portfolio-thumb .thumb-overlay {
       position: absolute; inset: 0;
       background: rgba(181,245,66,0.06);
@@ -1124,14 +1125,29 @@ function getYouTubeId(url) {
   return '';
 }
 
+function playYouTube(el, ytId) {
+  var wrapper = el.closest('.yt-lite');
+  if (!wrapper) return;
+  wrapper.innerHTML = '<iframe src="https://www.youtube-nocookie.com/embed/' + ytId + '?autoplay=1&rel=0&modestbranding=1" style="position:absolute;inset:0;width:100%;height:100%;border:none" allow="autoplay;encrypted-media;fullscreen" allowfullscreen></iframe>';
+}
+
 function renderVideoTag(src, style, options) {
   if (!src) return '';
   options = options || {};
   var ytId = getYouTubeId(src);
   if (ytId) {
-    var autoplay = options.autoplay ? '&autoplay=1&mute=1' : '';
-    var loop = options.loop ? '&loop=1&playlist=' + ytId : '';
-    return '<iframe src="https://www.youtube.com/embed/' + ytId + '?controls=' + (options.controls ? '1' : '0') + autoplay + loop + '&rel=0&modestbranding=1" style="' + style + ';border:none" allow="autoplay;encrypted-media" allowfullscreen></iframe>';
+    // Karta uchun (autoplay) — thumbnail + overlay, interaktiv emas
+    if (options.autoplay && !options.controls) {
+      return '<div class="yt-lite" style="' + style + ';position:relative;overflow:hidden;background:#000">'
+        + '<img src="https://img.youtube.com/vi/' + ytId + '/hqdefault.jpg" style="width:100%;height:100%;object-fit:cover" onerror="this.src=\'https://img.youtube.com/vi/' + ytId + '/mqdefault.jpg\'">'
+        + '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><div style="width:48px;height:34px;background:rgba(255,0,0,0.85);border-radius:8px;display:flex;align-items:center;justify-content:center"><div style="width:0;height:0;border-left:14px solid #fff;border-top:8px solid transparent;border-bottom:8px solid transparent;margin-left:3px"></div></div></div>'
+        + '</div>';
+    }
+    // Batafsil sahifa uchun — thumbnail + bosganda iframe
+    return '<div class="yt-lite" style="' + style + ';position:relative;overflow:hidden;background:#000;cursor:pointer;aspect-ratio:16/9" onclick="playYouTube(this.querySelector(\'img\'),\'' + ytId + '\')">'
+      + '<img src="https://img.youtube.com/vi/' + ytId + '/hqdefault.jpg" style="width:100%;height:100%;object-fit:cover" onerror="this.src=\'https://img.youtube.com/vi/' + ytId + '/mqdefault.jpg\'">'
+      + '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;transition:transform 0.2s"><div style="width:68px;height:48px;background:rgba(255,0,0,0.9);border-radius:12px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,0,0,0.4)"><div style="width:0;height:0;border-left:20px solid #fff;border-top:12px solid transparent;border-bottom:12px solid transparent;margin-left:4px"></div></div></div>'
+      + '</div>';
   }
   // Oddiy video (.mp4, .webm va h.k.)
   var attrs = 'playsinline';
