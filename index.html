@@ -1176,13 +1176,25 @@ function applyData() {
     // Store portfolio data globally for detail view
     window.__portfolioItems = d.portfolio;
     pg.innerHTML = d.portfolio.map((p, idx) => {
-      const isVideo = p.video || (p.img && /\.(mp4|webm|mov|ogg)(\?|$)/i.test(p.img));
-      const mediaSrc = p.video || p.img;
+      // Asosiy rasm yoki bloklardagi birinchi rasmni olish
+      var coverImg = p.img || '';
+      if (!coverImg && p.blocks && p.blocks.length) {
+        var imgBlock = p.blocks.find(function(b){ return b.type === 'image' && b.content; });
+        if (imgBlock) coverImg = Array.isArray(imgBlock.content) ? imgBlock.content[0] : imgBlock.content;
+      }
+      // Video: asosiy video yoki bloklardagi birinchi video
+      var coverVideo = p.video || '';
+      if (!coverVideo && p.blocks && p.blocks.length) {
+        var vidBlock = p.blocks.find(function(b){ return b.type === 'video' && b.content; });
+        if (vidBlock) coverVideo = Array.isArray(vidBlock.content) ? vidBlock.content[0] : vidBlock.content;
+      }
+      const isVideo = coverVideo || (coverImg && /\.(mp4|webm|mov|ogg)(\?|$)/i.test(coverImg));
+      const mediaSrc = coverVideo || coverImg;
       let mediaHTML = '';
       if (isVideo && mediaSrc) {
         mediaHTML = `<video src="${mediaSrc}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0" autoplay loop muted playsinline></video>`;
-      } else if (p.img) {
-        mediaHTML = `<img src="${p.img}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0"/>`;
+      } else if (coverImg) {
+        mediaHTML = `<img src="${coverImg}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0"/>`;
       } else {
         mediaHTML = `<div class="thumb-placeholder"><i class="fas fa-image"></i><span>Loyiha rasmi</span></div>`;
       }
@@ -1510,14 +1522,24 @@ function openProjectDetail(idx) {
   // Push state for browser back button
   history.pushState({ projectDetail: true, idx: idx }, '', '#project-' + idx);
 
-  // Build hero media
-  const isVideo = p.video || (p.img && /\.(mp4|webm|mov|ogg)(\?|$)/i.test(p.img));
-  const mediaSrc = p.video || p.img;
+  // Build hero media — asosiy rasm yoki bloklardagi birinchi rasm
+  var heroImg = p.img || '';
+  if (!heroImg && p.blocks && p.blocks.length) {
+    var firstImgBlock = p.blocks.find(function(b){ return b.type === 'image' && b.content; });
+    if (firstImgBlock) heroImg = Array.isArray(firstImgBlock.content) ? firstImgBlock.content[0] : firstImgBlock.content;
+  }
+  var heroVideo = p.video || '';
+  if (!heroVideo && p.blocks && p.blocks.length) {
+    var firstVidBlock = p.blocks.find(function(b){ return b.type === 'video' && b.content; });
+    if (firstVidBlock) heroVideo = Array.isArray(firstVidBlock.content) ? firstVidBlock.content[0] : firstVidBlock.content;
+  }
+  const isVideo = heroVideo || (heroImg && /\.(mp4|webm|mov|ogg)(\?|$)/i.test(heroImg));
+  const mediaSrc = heroVideo || heroImg;
   let heroMediaHTML = '';
   if (isVideo && mediaSrc) {
     heroMediaHTML = `<video class="pd-hero-media" src="${mediaSrc}" autoplay loop muted playsinline></video>`;
-  } else if (p.img) {
-    heroMediaHTML = `<img class="pd-hero-media" src="${p.img}" alt="${p.title}"/>`;
+  } else if (heroImg) {
+    heroMediaHTML = `<img class="pd-hero-media" src="${heroImg}" alt="${p.title}"/>`;
   } else {
     heroMediaHTML = `<div class="pd-hero-placeholder" style="background:linear-gradient(135deg,${p.color1},${p.color2})"><i class="fas fa-image"></i></div>`;
   }
@@ -1582,7 +1604,7 @@ function openProjectDetail(idx) {
         // Support single video (string) or multiple videos (array)
         var videos = Array.isArray(block.content) ? block.content : [block.content];
         return videos.filter(function(s){return s;}).map(function(src) {
-          return '<div class="pd-block-video"><video src="' + src + '" controls playsinline preload="metadata"></video></div>';
+          return '<div class="pd-block-video"><video src="' + src + '" controls playsinline preload="auto" autoplay muted loop></video></div>';
         }).join('');
       }
       return '';
