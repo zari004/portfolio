@@ -1552,14 +1552,21 @@ function portfolioFormHTML(p) {
     + '<div class="color-input-wrap"><input type="color" id="m-pf-color1" value="' + d.color1 + '"><span>Rang 1</span></div>'
     + '<div class="color-input-wrap"><input type="color" id="m-pf-color2" value="' + d.color2 + '"><span>Rang 2</span></div>'
     + '</div></div>'
-    + '<div class="form-group"><label>Asosiy rasm</label>'
+    + '<div class="form-group"><label>Oblojka turi</label>'
+    + '<div style="display:flex;gap:8px;margin-bottom:10px">'
+    + '<button type="button" class="btn btn-sm ' + (!d.video ? 'btn-primary' : 'btn-secondary') + '" id="m-pf-cover-img-btn" onclick="switchCoverType(\'image\')"><i class="fas fa-image"></i> Rasm</button>'
+    + '<button type="button" class="btn btn-sm ' + (d.video ? 'btn-primary' : 'btn-secondary') + '" id="m-pf-cover-vid-btn" onclick="switchCoverType(\'video\')"><i class="fas fa-video"></i> Video</button>'
+    + '</div>'
+    + '<div id="m-pf-cover-img-zone" style="' + (d.video ? 'display:none' : '') + '">'
     + '<div class="img-upload-zone"><i class="fas fa-cloud-upload-alt"></i><p>Rasm yuklash</p><div class="size-note">Avtomatik siqiladi (maks. 1200px)</div>'
     + '<input type="file" accept="image/*" onchange="previewImg(event,\'m-pf-img-preview\',\'m-pf-img-data\')"></div>'
-    + '<div class="img-preview" id="m-pf-img-preview">' + (d.img ? '<img src="' + sanitize(d.img) + '"><button class="remove-img" onclick="document.getElementById(\'m-pf-img-data\').value=\'\';this.parentElement.innerHTML=\'\'"><i class="fas fa-times"></i></button>' : '') + '</div>'
-    + '<input type="hidden" id="m-pf-img-data" value="' + sanitize(d.img) + '"></div>'
-    + '<div class="form-group"><label><i class="fas fa-video" style="margin-right:6px;color:var(--accent)"></i>Video (ixtiyoriy)</label>'
+    + '<div class="img-preview" id="m-pf-img-preview">' + (d.img ? '<img src="' + sanitize(d.img) + '"><button class="remove-img" onclick="clearCoverImg()"><i class="fas fa-times"></i></button>' : '') + '</div>'
+    + '<input type="hidden" id="m-pf-img-data" value="' + sanitize(d.img) + '">'
+    + '</div>'
+    + '<div id="m-pf-cover-vid-zone" style="' + (!d.video ? 'display:none' : '') + '">'
     + '<input class="form-input" id="m-pf-video" value="' + sanitize(d.video || '') + '" placeholder="Video URL (.mp4, .webm) yoki Google Drive havola">'
-    + '<div style="font-size:0.7rem;color:var(--muted);margin-top:4px">Video joylansa rasm o\'rniga animatsiya ko\'rsatiladi (autoplay, loop, muted)</div>'
+    + '<div style="font-size:0.7rem;color:var(--muted);margin-top:4px">Video kartada avtomatik play bo\'ladi (autoplay, loop, muted)</div>'
+    + '</div>'
     + '</div>'
     + '<div class="form-group">'
     + '<label><i class="fas fa-layer-group" style="margin-right:6px;color:var(--accent)"></i>Kontent bloklari <span style="font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0">(batafsil sahifa uchun)</span></label>'
@@ -2094,6 +2101,36 @@ function getBlocksData() {
   return _blocksData.slice();
 }
 
+function switchCoverType(type) {
+  var imgZone = document.getElementById('m-pf-cover-img-zone');
+  var vidZone = document.getElementById('m-pf-cover-vid-zone');
+  var imgBtn = document.getElementById('m-pf-cover-img-btn');
+  var vidBtn = document.getElementById('m-pf-cover-vid-btn');
+  if (type === 'image') {
+    imgZone.style.display = '';
+    vidZone.style.display = 'none';
+    imgBtn.className = 'btn btn-sm btn-primary';
+    vidBtn.className = 'btn btn-sm btn-secondary';
+    // Video ni tozalash
+    document.getElementById('m-pf-video').value = '';
+  } else {
+    imgZone.style.display = 'none';
+    vidZone.style.display = '';
+    imgBtn.className = 'btn btn-sm btn-secondary';
+    vidBtn.className = 'btn btn-sm btn-primary';
+    // Rasmni tozalash
+    document.getElementById('m-pf-img-data').value = '';
+    document.getElementById('m-pf-img-preview').innerHTML = '';
+  }
+  markDirty();
+}
+
+function clearCoverImg() {
+  document.getElementById('m-pf-img-data').value = '';
+  document.getElementById('m-pf-img-preview').innerHTML = '';
+  markDirty();
+}
+
 function savePortfolioItem(id) {
   const title = document.getElementById('m-pf-title').value.trim();
   if (!title) { showToast('Sarlavha kiriting', 'warning'); return; }
@@ -2104,8 +2141,8 @@ function savePortfolioItem(id) {
     desc: document.getElementById('m-pf-desc').value.trim(),
     color1: document.getElementById('m-pf-color1').value,
     color2: document.getElementById('m-pf-color2').value,
-    img: document.getElementById('m-pf-img-data').value || '',
-    video: document.getElementById('m-pf-video').value.trim() || '',
+    img: (document.getElementById('m-pf-cover-vid-zone').style.display !== 'none') ? '' : (document.getElementById('m-pf-img-data').value || ''),
+    video: (document.getElementById('m-pf-cover-vid-zone').style.display !== 'none') ? (document.getElementById('m-pf-video').value.trim() || '') : '',
     link: document.getElementById('m-pf-link').value.trim(),
     client: document.getElementById('m-pf-client').value.trim(),
     date: document.getElementById('m-pf-date').value.trim(),
