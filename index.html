@@ -925,14 +925,21 @@ function applyData() {
         });
       });
     }
-    pg.innerHTML = d.portfolio.map(p => `
+    pg.innerHTML = d.portfolio.map(p => {
+      const isVideo = p.video || (p.img && /\.(mp4|webm|mov|ogg)(\?|$)/i.test(p.img));
+      const mediaSrc = p.video || p.img;
+      let mediaHTML = '';
+      if (isVideo && mediaSrc) {
+        mediaHTML = `<video src="${mediaSrc}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0" autoplay loop muted playsinline></video>`;
+      } else if (p.img) {
+        mediaHTML = `<img src="${p.img}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0"/>`;
+      } else {
+        mediaHTML = `<div class="thumb-placeholder"><i class="fas fa-image"></i><span>Loyiha rasmi</span></div>`;
+      }
+      return `
       <div class="portfolio-card reveal" data-tag="${p.tag}" ${p.link ? `onclick="window.open('${p.link}','_blank')"` : ''}>
         <div class="portfolio-thumb" style="background:linear-gradient(135deg,${p.color1},${p.color2})">
-          ${p.img ? `<img src="${p.img}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0"/>` : `
-          <div class="thumb-placeholder">
-            <i class="fas fa-image"></i>
-            <span>Loyiha rasmi</span>
-          </div>`}
+          ${mediaHTML}
           <div class="thumb-overlay"><i class="fas fa-external-link-alt"></i></div>
         </div>
         <div class="portfolio-info">
@@ -940,8 +947,8 @@ function applyData() {
           <h3>${p.title}</h3>
           <p>${p.desc}</p>
         </div>
-      </div>
-    `).join('');
+      </div>`;
+    }).join('');
   }
 
   // ABOUT

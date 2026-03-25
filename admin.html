@@ -1451,13 +1451,15 @@ function renderPortfolioList() {
     const tag = sanitize(p.tag);
     const desc = sanitize(p.desc);
     const hasImg = !!p.img;
+    const hasVideo = !!p.video;
+    const mediaType = hasVideo ? '<i class="fas fa-video" style="color:var(--accent);font-size:0.65rem;margin-left:4px" title="Video"></i>' : (hasImg ? '<i class="fas fa-image" style="color:#42c8f5;font-size:0.65rem;margin-left:4px" title="Faqat rasm"></i>' : '');
     return '<div class="list-item" draggable="true" data-idx="' + idx + '" ondragstart="dragStart(event,' + idx + ')" ondragover="dragOver(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)" ondrop="dragDrop(event,' + idx + ')" ondragend="dragEnd(event)" style="display:flex;align-items:center;gap:12px;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:10px;margin-bottom:8px;padding:12px 16px;box-sizing:border-box">'
         + '<span class="drag-handle" style="color:#666;cursor:grab;font-size:0.9rem;padding:4px;flex-shrink:0"><i class="fas fa-grip-vertical"></i></span>'
         + (hasImg
           ? '<img src="' + sanitize(p.img) + '" style="width:44px;height:44px;border-radius:8px;object-fit:cover;background:#2a2a2a;flex-shrink:0">'
-          : '<div style="width:44px;height:44px;border-radius:8px;background:linear-gradient(135deg,' + sanitize(p.color1) + ',' + sanitize(p.color2) + ');flex-shrink:0"></div>')
+          : '<div style="width:44px;height:44px;border-radius:8px;background:linear-gradient(135deg,' + sanitize(p.color1) + ',' + sanitize(p.color2) + ');flex-shrink:0;display:flex;align-items:center;justify-content:center">' + (hasVideo ? '<i class="fas fa-play" style="color:rgba(255,255,255,0.4);font-size:0.7rem"></i>' : '') + '</div>')
         + '<div style="flex:1;min-width:0">'
-          + '<div style="font-size:0.9rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + title + '</div>'
+          + '<div style="font-size:0.9rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + title + mediaType + '</div>'
           + '<div style="font-size:0.73rem;color:#999;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + tag + ' — ' + desc + '</div>'
         + '</div>'
         + '<div style="display:flex;gap:6px;flex-shrink:0">'
@@ -1517,7 +1519,7 @@ function editPortfolio(id) {
 }
 
 function portfolioFormHTML(p) {
-  const d = p || { title:'', tag:'', desc:'', color1:'#1a1a2e', color2:'#16213e', img:'', link:'' };
+  const d = p || { title:'', tag:'', desc:'', color1:'#1a1a2e', color2:'#16213e', img:'', video:'', link:'' };
   return '<div class="form-group"><label>Sarlavha</label><input class="form-input" id="m-pf-title" value="' + sanitize(d.title) + '" placeholder="Loyiha nomi"></div>'
     + '<div class="form-row"><div class="form-group"><label>Tag</label><input class="form-input" id="m-pf-tag" value="' + sanitize(d.tag) + '" placeholder="Masalan: Brending"></div>'
     + '<div class="form-group"><label>Havola</label><input class="form-input" id="m-pf-link" value="' + sanitize(d.link) + '" placeholder="https://..."></div></div>'
@@ -1530,7 +1532,11 @@ function portfolioFormHTML(p) {
     + '<div class="img-upload-zone"><i class="fas fa-cloud-upload-alt"></i><p>Rasm yuklash</p><div class="size-note">Avtomatik siqiladi (maks. 1200px)</div>'
     + '<input type="file" accept="image/*" onchange="previewImg(event,\'m-pf-img-preview\',\'m-pf-img-data\')"></div>'
     + '<div class="img-preview" id="m-pf-img-preview">' + (d.img ? '<img src="' + sanitize(d.img) + '"><button class="remove-img" onclick="document.getElementById(\'m-pf-img-data\').value=\'\';this.parentElement.innerHTML=\'\'"><i class="fas fa-times"></i></button>' : '') + '</div>'
-    + '<input type="hidden" id="m-pf-img-data" value="' + sanitize(d.img) + '"></div>';
+    + '<input type="hidden" id="m-pf-img-data" value="' + sanitize(d.img) + '"></div>'
+    + '<div class="form-group"><label><i class="fas fa-video" style="margin-right:6px;color:var(--accent)"></i>Video (ixtiyoriy)</label>'
+    + '<input class="form-input" id="m-pf-video" value="' + sanitize(d.video || '') + '" placeholder="Video URL (.mp4, .webm) yoki Google Drive havola">'
+    + '<div style="font-size:0.7rem;color:var(--muted);margin-top:4px">Video joylansa rasm o\'rniga animatsiya ko\'rsatiladi (autoplay, loop, muted)</div>'
+    + '</div>';
 }
 
 function savePortfolioItem(id) {
@@ -1544,6 +1550,7 @@ function savePortfolioItem(id) {
     color1: document.getElementById('m-pf-color1').value,
     color2: document.getElementById('m-pf-color2').value,
     img: document.getElementById('m-pf-img-data').value || '',
+    video: document.getElementById('m-pf-video').value.trim() || '',
     link: document.getElementById('m-pf-link').value.trim()
   };
   if (id) {
