@@ -371,6 +371,9 @@
     .portfolio-thumb {
       aspect-ratio: 5/4; position: relative; overflow: hidden;
     }
+    .portfolio-thumb iframe {
+      pointer-events: none;
+    }
     .portfolio-thumb .thumb-overlay {
       position: absolute; inset: 0;
       background: rgba(181,245,66,0.06);
@@ -697,6 +700,7 @@
     }
     .pd-block-video { margin: 32px 0; border-radius: 12px; overflow: hidden; }
     .pd-block-video video { width: 100%; display: block; border-radius: 12px; }
+    .pd-block-video iframe { width: 100%; aspect-ratio: 16/9; display: block; border-radius: 12px; }
 
     /* Gallery lightbox */
     .pd-lightbox {
@@ -1098,6 +1102,34 @@ const DEFAULT_DATA = {
   }
 };
 
+// ============ VIDEO HELPERS ============
+function getYouTubeId(url) {
+  if (!url) return '';
+  var m = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+  return m ? m[1] : '';
+}
+
+function isYouTubeUrl(url) {
+  return /(?:youtube\.com|youtu\.be)/.test(url || '');
+}
+
+function renderVideoTag(src, style, options) {
+  if (!src) return '';
+  options = options || {};
+  var ytId = getYouTubeId(src);
+  if (ytId) {
+    var autoplay = options.autoplay ? '&autoplay=1&mute=1' : '';
+    var loop = options.loop ? '&loop=1&playlist=' + ytId : '';
+    return '<iframe src="https://www.youtube.com/embed/' + ytId + '?controls=' + (options.controls ? '1' : '0') + autoplay + loop + '&rel=0&modestbranding=1" style="' + style + ';border:none" allow="autoplay;encrypted-media" allowfullscreen></iframe>';
+  }
+  // Oddiy video (.mp4, .webm va h.k.)
+  var attrs = 'playsinline';
+  if (options.autoplay) attrs += ' autoplay muted';
+  if (options.loop) attrs += ' loop';
+  if (options.controls) attrs += ' controls';
+  return '<video src="' + src + '" style="' + style + '" ' + attrs + '></video>';
+}
+
 // ============ LOAD DATA ============
 function getData() {
   try {
@@ -1196,7 +1228,7 @@ function applyData() {
       }
       let mediaHTML = '';
       if (coverVideo) {
-        mediaHTML = `<video src="${coverVideo}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0" autoplay loop muted playsinline></video>`;
+        mediaHTML = renderVideoTag(coverVideo, 'width:100%;height:100%;object-fit:cover;position:absolute;inset:0', {autoplay:true, loop:true});
       } else if (coverImg) {
         mediaHTML = `<img src="${coverImg}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0"/>`;
       } else {
@@ -1535,7 +1567,7 @@ function openProjectDetail(idx) {
   }
   let heroMediaHTML = '';
   if (heroVideo) {
-    heroMediaHTML = `<video class="pd-hero-media" src="${heroVideo}" autoplay loop muted playsinline></video>`;
+    heroMediaHTML = renderVideoTag(heroVideo, '', {autoplay:true, loop:true, controls:false}).replace('<video ', '<video class="pd-hero-media" ').replace('<iframe ', '<iframe class="pd-hero-media" ');
   } else if (heroImg) {
     heroMediaHTML = `<img class="pd-hero-media" src="${heroImg}" alt="${p.title}"/>`;
   } else {
@@ -1599,10 +1631,10 @@ function openProjectDetail(idx) {
           }).join('')
           + '</div>';
       } else if (block.type === 'video') {
-        // Support single video (string) or multiple videos (array)
+        // Support single video (string) or multiple videos (array) + YouTube
         var videos = Array.isArray(block.content) ? block.content : [block.content];
         return videos.filter(function(s){return s;}).map(function(src) {
-          return '<div class="pd-block-video"><video src="' + src + '" controls playsinline preload="auto" autoplay muted loop></video></div>';
+          return '<div class="pd-block-video">' + renderVideoTag(src, 'width:100%;border-radius:12px', {controls:true, autoplay:false}) + '</div>';
         }).join('');
       }
       return '';
