@@ -759,25 +759,35 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
         </div>
         <div class="form-card">
           <div class="form-card-title"><i class="fas fa-share-alt"></i> Ijtimoiy tarmoqlar</div>
-          <div class="form-row">
+          <div id="socials-list" style="margin-bottom:12px"></div>
+          <div style="position:relative;display:inline-block">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="toggleSocialsMenu()" style="display:inline-flex;align-items:center;gap:6px"><i class="fas fa-plus"></i> Tarmoq qo'shish</button>
+            <div id="socials-add-menu" style="display:none;position:absolute;bottom:100%;left:0;margin-bottom:6px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:6px;z-index:100;min-width:200px;box-shadow:0 8px 24px rgba(0,0,0,0.3)"></div>
+          </div>
+        </div>
+        <div class="form-card">
+          <div class="form-card-title"><i class="fas fa-paper-plane"></i> Xabar yuborish sozlamalari</div>
+          <div class="form-group">
+            <label>Xabar yuborish usuli</label>
+            <select class="form-input" id="contact-msgMethod" onchange="toggleMsgSettings();markDirty()">
+              <option value="telegram">Telegram Bot</option>
+              <option value="email">Email (mailto)</option>
+            </select>
+          </div>
+          <div id="msg-telegram-settings">
             <div class="form-group">
-              <label>Instagram URL</label>
-              <input class="form-input" id="contact-instagram" placeholder="https://instagram.com/..." oninput="markDirty()">
+              <label>Telegram Bot Token</label>
+              <input class="form-input mono" id="contact-botToken" placeholder="123456:ABC-DEF..." oninput="markDirty()">
+              <div class="form-hint">@BotFather dan olingan token</div>
             </div>
             <div class="form-group">
-              <label>Telegram URL</label>
-              <input class="form-input" id="contact-telegramUrl" placeholder="https://t.me/..." oninput="markDirty()">
+              <label>Chat ID</label>
+              <input class="form-input mono" id="contact-chatId" placeholder="123456789" oninput="markDirty()">
+              <div class="form-hint">Xabar yuboriladigan chat yoki guruh ID si</div>
             </div>
           </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label>Behance URL</label>
-              <input class="form-input" id="contact-behance" placeholder="https://behance.net/..." oninput="markDirty()">
-            </div>
-            <div class="form-group">
-              <label>Dribbble URL</label>
-              <input class="form-input" id="contact-dribbble" placeholder="https://dribbble.com/..." oninput="markDirty()">
-            </div>
+          <div id="msg-email-settings" style="display:none">
+            <div class="form-hint">Email maydonida kiritilgan manzilga mailto: orqali yuboriladi</div>
           </div>
         </div>
       </div>
@@ -1148,10 +1158,12 @@ function collectFormData() {
   data.contact.email = document.getElementById('contact-email').value;
   data.contact.telegram = document.getElementById('contact-telegram').value;
   data.contact.location = document.getElementById('contact-location').value;
-  data.contact.instagram = document.getElementById('contact-instagram').value;
-  data.contact.telegramUrl = document.getElementById('contact-telegramUrl').value;
-  data.contact.behance = document.getElementById('contact-behance').value;
-  data.contact.dribbble = document.getElementById('contact-dribbble').value;
+  // socials
+  collectSocials();
+  // Xabar yuborish sozlamalari
+  data.contact.msgMethod = document.getElementById('contact-msgMethod').value;
+  data.contact.botToken = document.getElementById('contact-botToken').value.trim();
+  data.contact.chatId = document.getElementById('contact-chatId').value.trim();
   // Settings
   data.settings.logoText = document.getElementById('set-logoText').value;
   data.settings.logoAccent = document.getElementById('set-logoAccent').value;
@@ -1168,6 +1180,109 @@ function saveAll() {
   saveToStorage();
   clearDirty();
   showToast('Barcha ma\'lumotlar saqlandi', 'success');
+}
+
+function toggleMsgSettings() {
+  var method = document.getElementById('contact-msgMethod').value;
+  document.getElementById('msg-telegram-settings').style.display = method === 'telegram' ? '' : 'none';
+  document.getElementById('msg-email-settings').style.display = method === 'email' ? '' : 'none';
+}
+
+/* ============================================================
+   SOCIALS (dinamik ijtimoiy tarmoqlar)
+   ============================================================ */
+var SOCIAL_OPTIONS = [
+  { key:'instagram', label:'Instagram', icon:'fab fa-instagram', placeholder:'https://instagram.com/...' },
+  { key:'telegram', label:'Telegram', icon:'fab fa-telegram', placeholder:'https://t.me/...' },
+  { key:'behance', label:'Behance', icon:'fab fa-behance', placeholder:'https://behance.net/...' },
+  { key:'dribbble', label:'Dribbble', icon:'fab fa-dribbble', placeholder:'https://dribbble.com/...' },
+  { key:'facebook', label:'Facebook', icon:'fab fa-facebook', placeholder:'https://facebook.com/...' },
+  { key:'twitter', label:'X (Twitter)', icon:'fab fa-twitter', placeholder:'https://x.com/...' },
+  { key:'linkedin', label:'LinkedIn', icon:'fab fa-linkedin', placeholder:'https://linkedin.com/in/...' },
+  { key:'youtube', label:'YouTube', icon:'fab fa-youtube', placeholder:'https://youtube.com/@...' },
+  { key:'tiktok', label:'TikTok', icon:'fab fa-tiktok', placeholder:'https://tiktok.com/@...' },
+  { key:'pinterest', label:'Pinterest', icon:'fab fa-pinterest', placeholder:'https://pinterest.com/...' },
+  { key:'github', label:'GitHub', icon:'fab fa-github', placeholder:'https://github.com/...' },
+  { key:'whatsapp', label:'WhatsApp', icon:'fab fa-whatsapp', placeholder:'https://wa.me/...' },
+  { key:'vk', label:'VK', icon:'fab fa-vk', placeholder:'https://vk.com/...' },
+  { key:'website', label:'Vebsayt', icon:'fas fa-globe', placeholder:'https://...' }
+];
+
+function initSocials() {
+  if (!data.contact.socials) {
+    // Eski formatdan migratsiya
+    data.contact.socials = [];
+    if (data.contact.instagram) data.contact.socials.push({ key:'instagram', url: data.contact.instagram });
+    if (data.contact.telegramUrl) data.contact.socials.push({ key:'telegram', url: data.contact.telegramUrl });
+    if (data.contact.behance) data.contact.socials.push({ key:'behance', url: data.contact.behance });
+    if (data.contact.dribbble) data.contact.socials.push({ key:'dribbble', url: data.contact.dribbble });
+  }
+}
+
+function renderSocialsList() {
+  initSocials();
+  var container = document.getElementById('socials-list');
+  if (!container) return;
+  if (!data.contact.socials.length) {
+    container.innerHTML = '<div style="text-align:center;padding:16px;color:var(--muted);font-size:0.82rem;border:1px dashed var(--border);border-radius:10px"><i class="fas fa-share-alt" style="font-size:1rem;margin-bottom:4px;display:block;opacity:0.4"></i>Tarmoq qo\'shilmagan</div>';
+    return;
+  }
+  container.innerHTML = data.contact.socials.map(function(s, i) {
+    var opt = SOCIAL_OPTIONS.find(function(o){ return o.key === s.key; }) || { label: s.key, icon:'fas fa-link', placeholder:'URL' };
+    return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">'
+      + '<div style="width:34px;height:34px;border-radius:8px;background:rgba(255,255,255,0.04);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="' + opt.icon + '" style="font-size:0.85rem;color:var(--accent)"></i></div>'
+      + '<input class="form-input social-url-input" data-idx="' + i + '" value="' + sanitize(s.url || '') + '" placeholder="' + opt.placeholder + '" oninput="markDirty()" style="flex:1">'
+      + '<button class="btn-icon" onclick="removeSocial(' + i + ')" title="O\'chirish"><i class="fas fa-trash" style="color:var(--red);font-size:0.7rem"></i></button>'
+      + '</div>';
+  }).join('');
+}
+
+function toggleSocialsMenu() {
+  initSocials();
+  var menu = document.getElementById('socials-add-menu');
+  if (menu.style.display !== 'none') { menu.style.display = 'none'; return; }
+  var existing = data.contact.socials.map(function(s){ return s.key; });
+  var available = SOCIAL_OPTIONS.filter(function(o){ return existing.indexOf(o.key) === -1; });
+  if (!available.length) { showToast('Barcha tarmoqlar qo\'shilgan', 'warning'); return; }
+  menu.innerHTML = available.map(function(o) {
+    return '<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:6px;cursor:pointer;transition:background 0.15s" onmouseover="this.style.background=\'rgba(181,245,66,0.1)\'" onmouseout="this.style.background=\'\'" onclick="addSocial(\'' + o.key + '\')">'
+      + '<i class="' + o.icon + '" style="width:18px;text-align:center;color:var(--accent)"></i>'
+      + '<span style="font-size:0.82rem">' + o.label + '</span></div>';
+  }).join('');
+  menu.style.display = 'block';
+}
+
+function addSocial(key) {
+  initSocials();
+  data.contact.socials.push({ key: key, url: '' });
+  renderSocialsList();
+  markDirty();
+  document.getElementById('socials-add-menu').style.display = 'none';
+}
+
+function removeSocial(idx) {
+  data.contact.socials.splice(idx, 1);
+  renderSocialsList();
+  markDirty();
+}
+
+function collectSocials() {
+  initSocials();
+  document.querySelectorAll('.social-url-input').forEach(function(inp) {
+    var idx = parseInt(inp.dataset.idx);
+    if (data.contact.socials[idx]) data.contact.socials[idx].url = inp.value.trim();
+  });
+  // Eski formatga ham saqlash (orqaga moslik)
+  data.contact.instagram = '';
+  data.contact.telegramUrl = '';
+  data.contact.behance = '';
+  data.contact.dribbble = '';
+  data.contact.socials.forEach(function(s) {
+    if (s.key === 'instagram') data.contact.instagram = s.url;
+    if (s.key === 'telegram') data.contact.telegramUrl = s.url;
+    if (s.key === 'behance') data.contact.behance = s.url;
+    if (s.key === 'dribbble') data.contact.dribbble = s.url;
+  });
 }
 
 /* ============================================================
@@ -1305,10 +1420,12 @@ function fillAllForms() {
   document.getElementById('contact-email').value = data.contact.email || '';
   document.getElementById('contact-telegram').value = data.contact.telegram || '';
   document.getElementById('contact-location').value = data.contact.location || '';
-  document.getElementById('contact-instagram').value = data.contact.instagram || '';
-  document.getElementById('contact-telegramUrl').value = data.contact.telegramUrl || '';
-  document.getElementById('contact-behance').value = data.contact.behance || '';
-  document.getElementById('contact-dribbble').value = data.contact.dribbble || '';
+  renderSocialsList();
+  // Xabar yuborish sozlamalari
+  document.getElementById('contact-msgMethod').value = data.contact.msgMethod || 'telegram';
+  document.getElementById('contact-botToken').value = data.contact.botToken || '';
+  document.getElementById('contact-chatId').value = data.contact.chatId || '';
+  toggleMsgSettings();
   // Settings
   document.getElementById('set-logoText').value = data.settings.logoText || '';
   document.getElementById('set-logoAccent').value = data.settings.logoAccent || '';

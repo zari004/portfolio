@@ -993,26 +993,26 @@
         </div>
       </div>
     </div>
-    <div class="contact-form">
+    <div class="contact-form" id="contact-form">
       <div class="cf-row">
         <div class="cf-group">
           <label>Ismingiz</label>
-          <input type="text" placeholder="Ism Familiya"/>
+          <input type="text" id="cf-name" placeholder="Ism Familiya"/>
         </div>
         <div class="cf-group">
           <label>Email</label>
-          <input type="email" placeholder="email@example.com"/>
+          <input type="email" id="cf-email" placeholder="email@example.com"/>
         </div>
       </div>
       <div class="cf-group">
         <label>Xizmat turi</label>
-        <input type="text" placeholder="Logo, Brending, UI/UX..."/>
+        <input type="text" id="cf-service" placeholder="Logo, Brending, UI/UX..."/>
       </div>
       <div class="cf-group">
         <label>Xabar</label>
-        <textarea placeholder="Loyihangiz haqida qisqacha ma'lumot bering..."></textarea>
+        <textarea id="cf-message" placeholder="Loyihangiz haqida qisqacha ma'lumot bering..."></textarea>
       </div>
-      <button class="btn-submit">
+      <button class="btn-submit" onclick="sendContactMessage()" id="cf-submit">
         <i class="fas fa-paper-plane"></i> Xabar yuborish
       </button>
     </div>
@@ -1022,12 +1022,7 @@
 <!-- FOOTER -->
 <footer>
   <p id="footer-text">© 2025 dizayn. Barcha huquqlar himoyalangan.</p>
-  <div class="social-links" id="social-links">
-    <a href="#" class="social-link" id="sl-instagram"><i class="fab fa-instagram"></i></a>
-    <a href="#" class="social-link" id="sl-telegram"><i class="fab fa-telegram"></i></a>
-    <a href="#" class="social-link" id="sl-behance"><i class="fab fa-behance"></i></a>
-    <a href="#" class="social-link" id="sl-dribbble"><i class="fab fa-dribbble"></i></a>
-  </div>
+  <div class="social-links" id="social-links"></div>
 </footer>
 
 <!-- PROJECT DETAIL OVERLAY -->
@@ -1170,6 +1165,61 @@ function queueYtPlayer(uid, ytId, controls) {
   } else {
     _ytPendingPlayers.push(info);
     loadYouTubeAPI();
+  }
+}
+
+// ============ CONTACT FORM ============
+function sendContactMessage() {
+  var name = document.getElementById('cf-name').value.trim();
+  var email = document.getElementById('cf-email').value.trim();
+  var service = document.getElementById('cf-service').value.trim();
+  var message = document.getElementById('cf-message').value.trim();
+  if (!name || !message) {
+    alert('Ism va xabar maydonlarini to\'ldiring');
+    return;
+  }
+  var d = getData();
+  var c = d.contact || {};
+  var method = c.msgMethod || 'telegram';
+  var btn = document.getElementById('cf-submit');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Yuborilmoqda...';
+
+  if (method === 'telegram' && c.botToken && c.chatId) {
+    var text = '📩 Yangi xabar!\n\n👤 Ism: ' + name + '\n📧 Email: ' + email + '\n🔧 Xizmat: ' + service + '\n\n💬 Xabar:\n' + message;
+    fetch('https://api.telegram.org/bot' + c.botToken + '/sendMessage', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: c.chatId, text: text, parse_mode: 'HTML' })
+    }).then(function(r) { return r.json(); }).then(function(res) {
+      if (res.ok) {
+        btn.innerHTML = '<i class="fas fa-check"></i> Yuborildi!';
+        btn.style.background = '#22c55e';
+        document.getElementById('cf-name').value = '';
+        document.getElementById('cf-email').value = '';
+        document.getElementById('cf-service').value = '';
+        document.getElementById('cf-message').value = '';
+        setTimeout(function() { btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane"></i> Xabar yuborish'; btn.style.background = ''; }, 3000);
+      } else {
+        btn.innerHTML = '<i class="fas fa-times"></i> Xatolik!';
+        btn.style.background = '#ef4444';
+        setTimeout(function() { btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane"></i> Xabar yuborish'; btn.style.background = ''; }, 3000);
+      }
+    }).catch(function() {
+      btn.innerHTML = '<i class="fas fa-times"></i> Tarmoq xatosi!';
+      btn.style.background = '#ef4444';
+      setTimeout(function() { btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane"></i> Xabar yuborish'; btn.style.background = ''; }, 3000);
+    });
+  } else if (method === 'email') {
+    var subject = 'Yangi xabar: ' + service;
+    var body = 'Ism: ' + name + '\nEmail: ' + email + '\nXizmat: ' + service + '\n\nXabar:\n' + message;
+    window.location.href = 'mailto:' + (c.email || '') + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+    btn.innerHTML = '<i class="fas fa-check"></i> Email ochildi!';
+    setTimeout(function() { btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane"></i> Xabar yuborish'; }, 3000);
+  } else {
+    alert('Xabar yuborish sozlanmagan. Admin paneldan Telegram bot yoki Email sozlang.');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-paper-plane"></i> Xabar yuborish';
   }
 }
 
@@ -1343,10 +1393,23 @@ function applyData() {
   if (ctg) ctg.textContent = c.telegram;
   const clc = document.getElementById('contact-location');
   if (clc) clc.textContent = c.location;
-  document.getElementById('sl-instagram').href = c.instagram || '#';
-  document.getElementById('sl-telegram').href = c.telegramUrl || '#';
-  document.getElementById('sl-behance').href = c.behance || '#';
-  document.getElementById('sl-dribbble').href = c.dribbble || '#';
+  // Dinamik ijtimoiy tarmoqlar
+  var socialIcons = {instagram:'fab fa-instagram',telegram:'fab fa-telegram',behance:'fab fa-behance',dribbble:'fab fa-dribbble',facebook:'fab fa-facebook',twitter:'fab fa-twitter',linkedin:'fab fa-linkedin',youtube:'fab fa-youtube',tiktok:'fab fa-tiktok',pinterest:'fab fa-pinterest',github:'fab fa-github',whatsapp:'fab fa-whatsapp',vk:'fab fa-vk',website:'fas fa-globe'};
+  var slEl = document.getElementById('social-links');
+  if (slEl) {
+    var socials = c.socials || [];
+    // Eski formatdan fallback
+    if (!socials.length) {
+      if (c.instagram) socials.push({key:'instagram',url:c.instagram});
+      if (c.telegramUrl) socials.push({key:'telegram',url:c.telegramUrl});
+      if (c.behance) socials.push({key:'behance',url:c.behance});
+      if (c.dribbble) socials.push({key:'dribbble',url:c.dribbble});
+    }
+    slEl.innerHTML = socials.filter(function(s){return s.url;}).map(function(s) {
+      var icon = socialIcons[s.key] || 'fas fa-link';
+      return '<a href="' + s.url + '" class="social-link" target="_blank" rel="noopener"><i class="' + icon + '"></i></a>';
+    }).join('');
+  }
 
   // SETTINGS
   const s = d.settings;
