@@ -1607,11 +1607,35 @@ function renderBlocksList() {
     var iconColor = typeColors[block.type] || 'var(--sub)';
     var preview = '';
     if (block.type === 'image') {
-      preview = '<img src="' + sanitize(block.content) + '" style="width:48px;height:36px;object-fit:cover;border-radius:6px;border:1px solid var(--border)">';
+      var imgs = Array.isArray(block.content) ? block.content : [block.content];
+      preview = imgs.slice(0, 3).map(function(src) {
+        return '<img src="' + sanitize(src) + '" style="width:36px;height:28px;object-fit:cover;border-radius:4px;border:1px solid var(--border)">';
+      }).join('') + (imgs.length > 3 ? '<span style="font-size:0.7rem;color:var(--muted);margin-left:4px">+' + (imgs.length - 3) + '</span>' : '');
+      label += ' (' + imgs.length + ')';
     } else if (block.type === 'video') {
-      preview = '<span style="font-size:0.75rem;color:var(--sub);font-family:\'JetBrains Mono\',monospace;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block">' + sanitize(block.content).substring(0, 40) + '</span>';
+      var vids = Array.isArray(block.content) ? block.content : [block.content];
+      preview = '<span style="font-size:0.75rem;color:var(--sub);font-family:\'JetBrains Mono\',monospace;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block">' + sanitize(vids[0] || '').substring(0, 40) + '</span>';
+      if (vids.length > 1) label += ' (' + vids.length + ')';
     } else {
-      preview = '<span style="font-size:0.8rem;color:var(--sub);max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block">' + sanitize(block.content).substring(0, 60) + '</span>';
+      preview = '<span style="font-size:0.8rem;color:var(--sub);max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block">' + sanitize(typeof block.content === 'string' ? block.content : '').substring(0, 60) + '</span>';
+    }
+
+    // Type switcher for text blocks
+    var typeSwitcher = '';
+    if (block.type === 'title' || block.type === 'subtitle' || block.type === 'text') {
+      typeSwitcher = '<div style="display:flex;gap:2px;margin-top:2px">'
+        + '<button type="button" onclick="changeBlockType(' + idx + ',\'title\')" style="font-size:0.55rem;padding:1px 5px;border-radius:3px;border:1px solid ' + (block.type === 'title' ? 'var(--accent)' : 'var(--border)') + ';background:' + (block.type === 'title' ? 'rgba(181,245,66,0.15)' : 'transparent') + ';color:' + (block.type === 'title' ? 'var(--accent)' : 'var(--muted)') + ';cursor:pointer">H1</button>'
+        + '<button type="button" onclick="changeBlockType(' + idx + ',\'subtitle\')" style="font-size:0.55rem;padding:1px 5px;border-radius:3px;border:1px solid ' + (block.type === 'subtitle' ? 'var(--accent2)' : 'var(--border)') + ';background:' + (block.type === 'subtitle' ? 'rgba(66,200,245,0.15)' : 'transparent') + ';color:' + (block.type === 'subtitle' ? 'var(--accent2)' : 'var(--muted)') + ';cursor:pointer">H2</button>'
+        + '<button type="button" onclick="changeBlockType(' + idx + ',\'text\')" style="font-size:0.55rem;padding:1px 5px;border-radius:3px;border:1px solid ' + (block.type === 'text' ? 'var(--sub)' : 'var(--border)') + ';background:' + (block.type === 'text' ? 'rgba(153,153,153,0.15)' : 'transparent') + ';color:' + (block.type === 'text' ? 'var(--text)' : 'var(--muted)') + ';cursor:pointer">P</button>'
+        + '</div>';
+    }
+
+    // Add more button for image/video blocks
+    var addMoreBtn = '';
+    if (block.type === 'image') {
+      addMoreBtn = '<button type="button" onclick="addMoreImages(' + idx + ')" style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;border:1px solid var(--border);background:var(--card);color:#f5a623;cursor:pointer;font-size:0.7rem" title="Rasm qo\'shish"><i class="fas fa-plus"></i></button>';
+    } else if (block.type === 'video') {
+      addMoreBtn = '<button type="button" onclick="addMoreVideos(' + idx + ')" style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;border:1px solid var(--border);background:var(--card);color:#e74c3c;cursor:pointer;font-size:0.7rem" title="Video qo\'shish"><i class="fas fa-plus"></i></button>';
     }
 
     return '<div style="display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:6px">'
@@ -1622,9 +1646,11 @@ function renderBlocksList() {
       + '<div style="width:28px;height:28px;border-radius:6px;background:rgba(255,255,255,0.04);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fas ' + icon + '" style="font-size:0.7rem;color:' + iconColor + '"></i></div>'
       + '<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">'
         + '<span style="font-size:0.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;font-weight:600">' + label + '</span>'
-        + '<div>' + preview + '</div>'
+        + '<div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">' + preview + '</div>'
+        + typeSwitcher
       + '</div>'
       + '<div style="display:flex;gap:4px;flex-shrink:0">'
+        + addMoreBtn
         + '<button type="button" onclick="editBlock(' + idx + ')" style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;border:1px solid var(--border);background:var(--card);color:var(--accent);cursor:pointer;font-size:0.7rem" title="Tahrirlash"><i class="fas fa-edit"></i></button>'
         + '<button type="button" onclick="removeBlock(' + idx + ')" style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;border:1px solid rgba(245,66,66,0.3);background:rgba(245,66,66,0.06);color:var(--red);cursor:pointer;font-size:0.7rem" title="O\'chirish"><i class="fas fa-trash"></i></button>'
       + '</div>'
@@ -1637,20 +1663,26 @@ function addBlock(type) {
   if (menu) menu.style.display = 'none';
 
   if (type === 'image') {
-    // Open file picker for image
+    // Open file picker for image (supports multiple)
     var fileInput = document.createElement('input');
     fileInput.type = 'file';
     fileInput.accept = 'image/*';
+    fileInput.multiple = true;
     fileInput.onchange = async function(e) {
-      var file = e.target.files[0];
-      if (!file) return;
-      showToast('Rasm siqilmoqda...', 'warning');
+      var files = Array.from(e.target.files);
+      if (!files.length) return;
+      showToast('Rasmlar siqilmoqda...', 'warning');
       try {
-        var compressed = await compressImage(file, 1200, 0.8);
-        _blocksData.push({ type: 'image', content: compressed });
+        var images = [];
+        for (var i = 0; i < files.length; i++) {
+          var compressed = await compressImage(files[i], 1200, 0.8);
+          images.push(compressed);
+        }
+        // Single image = string, multiple = array
+        _blocksData.push({ type: 'image', content: images.length === 1 ? images[0] : images });
         renderBlocksList();
         markDirty();
-        showToast('Rasm bloki qo\'shildi', 'success');
+        showToast(images.length + ' ta rasm qo\'shildi', 'success');
       } catch(err) {
         showToast('Rasm yuklashda xatolik', 'error');
       }
@@ -1659,35 +1691,184 @@ function addBlock(type) {
     return;
   }
 
-  // For text-based types, show inline input
-  var placeholder = '';
-  var inputType = 'input';
-  if (type === 'title') placeholder = 'Sarlavha matnini kiriting...';
-  else if (type === 'subtitle') placeholder = 'Kichik sarlavha matnini kiriting...';
-  else if (type === 'text') { placeholder = 'Matn yozing...'; inputType = 'textarea'; }
-  else if (type === 'video') placeholder = 'Video URL kiriting (https://...)';
+  if (type === 'video') {
+    // Show inline input for video URL(s)
+    var blocksContainer = document.getElementById('m-pf-blocks');
+    var existing = document.getElementById('block-add-input-wrap');
+    if (existing) existing.remove();
 
+    var wrapDiv = document.createElement('div');
+    wrapDiv.id = 'block-add-input-wrap';
+    wrapDiv.style.cssText = 'background:var(--card);border:1px solid var(--accent);border-radius:8px;padding:12px;margin-bottom:8px';
+    wrapDiv.innerHTML = '<div style="font-size:0.72rem;color:var(--accent);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Video qo\'shish</div>'
+      + '<div id="video-url-inputs"><div style="display:flex;gap:6px;margin-bottom:6px"><input class="form-input" placeholder="Video URL (https://...)" style="flex:1"><button type="button" onclick="this.parentElement.remove()" style="background:none;border:1px solid rgba(245,66,66,0.3);color:var(--red);border-radius:6px;width:28px;cursor:pointer"><i class="fas fa-times"></i></button></div></div>'
+      + '<div style="display:flex;gap:6px;margin-top:8px">'
+      + '<button type="button" class="btn btn-secondary btn-sm" onclick="addVideoUrlInput()" style="font-size:0.72rem"><i class="fas fa-plus"></i> Yana URL</button>'
+      + '<button type="button" class="btn btn-primary btn-sm" onclick="confirmAddVideoBlock()"><i class="fas fa-check"></i> Qo\'shish</button>'
+      + '<button type="button" class="btn btn-secondary btn-sm" onclick="cancelAddBlock()">Bekor</button>'
+      + '</div>';
+    blocksContainer.appendChild(wrapDiv);
+    wrapDiv.querySelector('input').focus();
+    return;
+  }
+
+  // For text-based types, show inline input with type selector
   var blocksContainer = document.getElementById('m-pf-blocks');
-  // Remove any existing add-block-input
   var existing = document.getElementById('block-add-input-wrap');
   if (existing) existing.remove();
+
+  var inputType = type === 'text' ? 'textarea' : 'input';
+  var placeholder = type === 'title' ? 'Sarlavha matnini kiriting...' : type === 'subtitle' ? 'Kichik sarlavha matnini kiriting...' : 'Matn yozing...';
 
   var wrapDiv = document.createElement('div');
   wrapDiv.id = 'block-add-input-wrap';
   wrapDiv.style.cssText = 'background:var(--card);border:1px solid var(--accent);border-radius:8px;padding:12px;margin-bottom:8px';
-  var typeLabels = { title:'Sarlavha', subtitle:'Kichik sarlavha', text:'Matn', video:'Video' };
-  wrapDiv.innerHTML = '<div style="font-size:0.72rem;color:var(--accent);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">' + (typeLabels[type] || type) + ' qo\'shish</div>'
+  wrapDiv.innerHTML = '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">'
+    + '<span style="font-size:0.72rem;color:var(--accent);font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Matn qo\'shish</span>'
+    + '<div style="display:flex;gap:3px;margin-left:auto" id="block-add-type-btns">'
+    + '<button type="button" onclick="switchAddBlockType(\'title\')" class="block-type-btn' + (type === 'title' ? ' active' : '') + '" data-type="title" style="font-size:0.65rem;padding:2px 8px;border-radius:4px;border:1px solid ' + (type === 'title' ? 'var(--accent)' : 'var(--border)') + ';background:' + (type === 'title' ? 'rgba(181,245,66,0.15)' : 'transparent') + ';color:' + (type === 'title' ? 'var(--accent)' : 'var(--muted)') + ';cursor:pointer">Sarlavha</button>'
+    + '<button type="button" onclick="switchAddBlockType(\'subtitle\')" class="block-type-btn' + (type === 'subtitle' ? ' active' : '') + '" data-type="subtitle" style="font-size:0.65rem;padding:2px 8px;border-radius:4px;border:1px solid ' + (type === 'subtitle' ? 'var(--accent2)' : 'var(--border)') + ';background:' + (type === 'subtitle' ? 'rgba(66,200,245,0.15)' : 'transparent') + ';color:' + (type === 'subtitle' ? 'var(--accent2)' : 'var(--muted)') + ';cursor:pointer">Kichik</button>'
+    + '<button type="button" onclick="switchAddBlockType(\'text\')" class="block-type-btn' + (type === 'text' ? ' active' : '') + '" data-type="text" style="font-size:0.65rem;padding:2px 8px;border-radius:4px;border:1px solid ' + (type === 'text' ? 'var(--sub)' : 'var(--border)') + ';background:' + (type === 'text' ? 'rgba(153,153,153,0.15)' : 'transparent') + ';color:' + (type === 'text' ? 'var(--text)' : 'var(--muted)') + ';cursor:pointer">Matn</button>'
+    + '</div></div>'
+    + '<input type="hidden" id="block-add-type" value="' + type + '">'
     + (inputType === 'textarea'
       ? '<textarea class="form-input" id="block-add-value" rows="4" placeholder="' + placeholder + '" style="margin-bottom:8px"></textarea>'
       : '<input class="form-input" id="block-add-value" placeholder="' + placeholder + '" style="margin-bottom:8px">')
     + '<div style="display:flex;gap:6px">'
-    + '<button type="button" class="btn btn-primary btn-sm" onclick="confirmAddBlock(\'' + type + '\')"><i class="fas fa-plus"></i> Qo\'shish</button>'
+    + '<button type="button" class="btn btn-primary btn-sm" onclick="confirmAddTextBlock()"><i class="fas fa-plus"></i> Qo\'shish</button>'
     + '<button type="button" class="btn btn-secondary btn-sm" onclick="cancelAddBlock()">Bekor</button>'
     + '</div>';
   blocksContainer.appendChild(wrapDiv);
   document.getElementById('block-add-value').focus();
 }
 
+function switchAddBlockType(newType) {
+  var typeInput = document.getElementById('block-add-type');
+  if (typeInput) typeInput.value = newType;
+  var btns = document.querySelectorAll('#block-add-type-btns button');
+  var colors = { title: 'var(--accent)', subtitle: 'var(--accent2)', text: 'var(--sub)' };
+  var bgs = { title: 'rgba(181,245,66,0.15)', subtitle: 'rgba(66,200,245,0.15)', text: 'rgba(153,153,153,0.15)' };
+  btns.forEach(function(btn) {
+    var t = btn.getAttribute('data-type');
+    var isActive = t === newType;
+    btn.style.borderColor = isActive ? colors[t] : 'var(--border)';
+    btn.style.background = isActive ? bgs[t] : 'transparent';
+    btn.style.color = isActive ? (t === 'text' ? 'var(--text)' : colors[t]) : 'var(--muted)';
+  });
+}
+
+function confirmAddTextBlock() {
+  var type = document.getElementById('block-add-type').value;
+  var val = document.getElementById('block-add-value').value.trim();
+  if (!val) { showToast('Maydon bo\'sh bo\'lmasligi kerak', 'warning'); return; }
+  _blocksData.push({ type: type, content: val });
+  cancelAddBlock();
+  renderBlocksList();
+  markDirty();
+  showToast('Blok qo\'shildi', 'success');
+}
+
+function addVideoUrlInput() {
+  var container = document.getElementById('video-url-inputs');
+  if (!container) return;
+  var div = document.createElement('div');
+  div.style.cssText = 'display:flex;gap:6px;margin-bottom:6px';
+  div.innerHTML = '<input class="form-input" placeholder="Video URL (https://...)" style="flex:1"><button type="button" onclick="this.parentElement.remove()" style="background:none;border:1px solid rgba(245,66,66,0.3);color:var(--red);border-radius:6px;width:28px;cursor:pointer"><i class="fas fa-times"></i></button>';
+  container.appendChild(div);
+  div.querySelector('input').focus();
+}
+
+function confirmAddVideoBlock() {
+  var inputs = document.querySelectorAll('#video-url-inputs input');
+  var urls = [];
+  inputs.forEach(function(inp) {
+    var v = inp.value.trim();
+    if (v) urls.push(v);
+  });
+  if (!urls.length) { showToast('Kamida bitta URL kiriting', 'warning'); return; }
+  _blocksData.push({ type: 'video', content: urls.length === 1 ? urls[0] : urls });
+  cancelAddBlock();
+  renderBlocksList();
+  markDirty();
+  showToast('Video blok qo\'shildi', 'success');
+}
+
+function changeBlockType(idx, newType) {
+  if (!_blocksData[idx]) return;
+  if (_blocksData[idx].type === newType) return;
+  _blocksData[idx].type = newType;
+  renderBlocksList();
+  markDirty();
+}
+
+function addMoreImages(idx) {
+  var block = _blocksData[idx];
+  if (!block || block.type !== 'image') return;
+  var fileInput = document.createElement('input');
+  fileInput.type = 'file';
+  fileInput.accept = 'image/*';
+  fileInput.multiple = true;
+  fileInput.onchange = async function(e) {
+    var files = Array.from(e.target.files);
+    if (!files.length) return;
+    showToast('Rasmlar siqilmoqda...', 'warning');
+    try {
+      var existing = Array.isArray(block.content) ? block.content : [block.content];
+      for (var i = 0; i < files.length; i++) {
+        var compressed = await compressImage(files[i], 1200, 0.8);
+        existing.push(compressed);
+      }
+      _blocksData[idx].content = existing.length === 1 ? existing[0] : existing;
+      renderBlocksList();
+      markDirty();
+      showToast(files.length + ' ta rasm qo\'shildi', 'success');
+    } catch(err) {
+      showToast('Rasm yuklashda xatolik', 'error');
+    }
+  };
+  fileInput.click();
+}
+
+function addMoreVideos(idx) {
+  var block = _blocksData[idx];
+  if (!block || block.type !== 'video') return;
+  var blocksContainer = document.getElementById('m-pf-blocks');
+  var existingWrap = document.getElementById('block-add-input-wrap');
+  if (existingWrap) existingWrap.remove();
+
+  var wrapDiv = document.createElement('div');
+  wrapDiv.id = 'block-add-input-wrap';
+  wrapDiv.style.cssText = 'background:var(--card);border:1px solid #e74c3c;border-radius:8px;padding:12px;margin-bottom:8px';
+  wrapDiv.innerHTML = '<div style="font-size:0.72rem;color:#e74c3c;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Video qo\'shish</div>'
+    + '<div id="video-url-inputs"><div style="display:flex;gap:6px;margin-bottom:6px"><input class="form-input" placeholder="Video URL (https://...)" style="flex:1"><button type="button" onclick="this.parentElement.remove()" style="background:none;border:1px solid rgba(245,66,66,0.3);color:var(--red);border-radius:6px;width:28px;cursor:pointer"><i class="fas fa-times"></i></button></div></div>'
+    + '<div style="display:flex;gap:6px;margin-top:8px">'
+    + '<button type="button" class="btn btn-secondary btn-sm" onclick="addVideoUrlInput()" style="font-size:0.72rem"><i class="fas fa-plus"></i> Yana URL</button>'
+    + '<button type="button" class="btn btn-primary btn-sm" onclick="confirmAddMoreVideos(' + idx + ')"><i class="fas fa-check"></i> Qo\'shish</button>'
+    + '<button type="button" class="btn btn-secondary btn-sm" onclick="cancelAddBlock()">Bekor</button>'
+    + '</div>';
+  blocksContainer.appendChild(wrapDiv);
+  wrapDiv.querySelector('input').focus();
+}
+
+function confirmAddMoreVideos(idx) {
+  var inputs = document.querySelectorAll('#video-url-inputs input');
+  var urls = [];
+  inputs.forEach(function(inp) {
+    var v = inp.value.trim();
+    if (v) urls.push(v);
+  });
+  if (!urls.length) { showToast('Kamida bitta URL kiriting', 'warning'); return; }
+  var block = _blocksData[idx];
+  var existing = Array.isArray(block.content) ? block.content : [block.content];
+  urls.forEach(function(u) { existing.push(u); });
+  _blocksData[idx].content = existing.length === 1 ? existing[0] : existing;
+  cancelAddBlock();
+  renderBlocksList();
+  markDirty();
+  showToast(urls.length + ' ta video qo\'shildi', 'success');
+}
+
+// confirmAddBlock kept for backward compat
 function confirmAddBlock(type) {
   var val = document.getElementById('block-add-value').value.trim();
   if (!val) { showToast('Maydon bo\'sh bo\'lmasligi kerak', 'warning'); return; }
@@ -1732,20 +1913,25 @@ function editBlock(idx) {
   if (!block) return;
 
   if (block.type === 'image') {
-    // Replace image
+    // Replace all images
     var fileInput = document.createElement('input');
     fileInput.type = 'file';
     fileInput.accept = 'image/*';
+    fileInput.multiple = true;
     fileInput.onchange = async function(e) {
-      var file = e.target.files[0];
-      if (!file) return;
-      showToast('Rasm siqilmoqda...', 'warning');
+      var files = Array.from(e.target.files);
+      if (!files.length) return;
+      showToast('Rasmlar siqilmoqda...', 'warning');
       try {
-        var compressed = await compressImage(file, 1200, 0.8);
-        _blocksData[idx].content = compressed;
+        var images = [];
+        for (var i = 0; i < files.length; i++) {
+          var compressed = await compressImage(files[i], 1200, 0.8);
+          images.push(compressed);
+        }
+        _blocksData[idx].content = images.length === 1 ? images[0] : images;
         renderBlocksList();
         markDirty();
-        showToast('Rasm yangilandi', 'success');
+        showToast('Rasmlar yangilandi', 'success');
       } catch(err) {
         showToast('Rasm yuklashda xatolik', 'error');
       }
@@ -1754,19 +1940,47 @@ function editBlock(idx) {
     return;
   }
 
-  // For text-based types, show inline edit
+  if (block.type === 'video') {
+    // Show edit form with existing URLs
+    var vids = Array.isArray(block.content) ? block.content : [block.content];
+    var blocksContainer = document.getElementById('m-pf-blocks');
+    var blockCards = blocksContainer.children;
+    if (!blockCards[idx]) return;
+    var card = blockCards[idx];
+    card.innerHTML = '<div style="width:100%">'
+      + '<div style="font-size:0.72rem;color:#e74c3c;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Video tahrirlash</div>'
+      + '<div id="video-edit-inputs">' + vids.map(function(url) {
+        return '<div style="display:flex;gap:6px;margin-bottom:6px"><input class="form-input" value="' + sanitize(url) + '" style="flex:1"><button type="button" onclick="this.parentElement.remove()" style="background:none;border:1px solid rgba(245,66,66,0.3);color:var(--red);border-radius:6px;width:28px;cursor:pointer"><i class="fas fa-times"></i></button></div>';
+      }).join('') + '</div>'
+      + '<div style="display:flex;gap:6px">'
+      + '<button type="button" class="btn btn-secondary btn-sm" onclick="addVideoEditInput()" style="font-size:0.72rem"><i class="fas fa-plus"></i> URL</button>'
+      + '<button type="button" class="btn btn-primary btn-sm" onclick="confirmEditVideoBlock(' + idx + ')"><i class="fas fa-check"></i> Saqlash</button>'
+      + '<button type="button" class="btn btn-secondary btn-sm" onclick="renderBlocksList()">Bekor</button>'
+      + '</div></div>';
+    card.style.borderColor = '#e74c3c';
+    return;
+  }
+
+  // For text-based types, show inline edit with type switcher
   var blocksContainer = document.getElementById('m-pf-blocks');
   var blockCards = blocksContainer.children;
   if (!blockCards[idx]) return;
   var card = blockCards[idx];
   var inputType = block.type === 'text' ? 'textarea' : 'input';
-  var typeLabels = { title:'Sarlavha', subtitle:'Kichik sarlavha', text:'Matn', video:'Video' };
+  var content = typeof block.content === 'string' ? block.content : '';
 
   card.innerHTML = '<div style="width:100%">'
-    + '<div style="font-size:0.72rem;color:var(--accent);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">' + (typeLabels[block.type] || block.type) + ' tahrirlash</div>'
+    + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">'
+    + '<span style="font-size:0.72rem;color:var(--accent);font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Matn tahrirlash</span>'
+    + '<div style="display:flex;gap:3px;margin-left:auto">'
+    + '<button type="button" onclick="switchEditBlockType(' + idx + ',\'title\')" data-type="title" style="font-size:0.65rem;padding:2px 8px;border-radius:4px;border:1px solid ' + (block.type === 'title' ? 'var(--accent)' : 'var(--border)') + ';background:' + (block.type === 'title' ? 'rgba(181,245,66,0.15)' : 'transparent') + ';color:' + (block.type === 'title' ? 'var(--accent)' : 'var(--muted)') + ';cursor:pointer">H1</button>'
+    + '<button type="button" onclick="switchEditBlockType(' + idx + ',\'subtitle\')" data-type="subtitle" style="font-size:0.65rem;padding:2px 8px;border-radius:4px;border:1px solid ' + (block.type === 'subtitle' ? 'var(--accent2)' : 'var(--border)') + ';background:' + (block.type === 'subtitle' ? 'rgba(66,200,245,0.15)' : 'transparent') + ';color:' + (block.type === 'subtitle' ? 'var(--accent2)' : 'var(--muted)') + ';cursor:pointer">H2</button>'
+    + '<button type="button" onclick="switchEditBlockType(' + idx + ',\'text\')" data-type="text" style="font-size:0.65rem;padding:2px 8px;border-radius:4px;border:1px solid ' + (block.type === 'text' ? 'var(--sub)' : 'var(--border)') + ';background:' + (block.type === 'text' ? 'rgba(153,153,153,0.15)' : 'transparent') + ';color:' + (block.type === 'text' ? 'var(--text)' : 'var(--muted)') + ';cursor:pointer">P</button>'
+    + '</div></div>'
+    + '<input type="hidden" id="block-edit-type" value="' + block.type + '">'
     + (inputType === 'textarea'
-      ? '<textarea class="form-input" id="block-edit-value" rows="4" style="margin-bottom:8px">' + sanitize(block.content) + '</textarea>'
-      : '<input class="form-input" id="block-edit-value" value="' + sanitize(block.content) + '" style="margin-bottom:8px">')
+      ? '<textarea class="form-input" id="block-edit-value" rows="4" style="margin-bottom:8px">' + sanitize(content) + '</textarea>'
+      : '<input class="form-input" id="block-edit-value" value="' + sanitize(content) + '" style="margin-bottom:8px">')
     + '<div style="display:flex;gap:6px">'
     + '<button type="button" class="btn btn-primary btn-sm" onclick="confirmEditBlock(' + idx + ')"><i class="fas fa-check"></i> Saqlash</button>'
     + '<button type="button" class="btn btn-secondary btn-sm" onclick="renderBlocksList()">Bekor</button>'
@@ -1775,12 +1989,56 @@ function editBlock(idx) {
   document.getElementById('block-edit-value').focus();
 }
 
+function switchEditBlockType(idx, newType) {
+  var typeInput = document.getElementById('block-edit-type');
+  if (typeInput) typeInput.value = newType;
+  // Update button styles
+  var card = document.getElementById('m-pf-blocks').children[idx];
+  if (!card) return;
+  var btns = card.querySelectorAll('[data-type]');
+  var colors = { title: 'var(--accent)', subtitle: 'var(--accent2)', text: 'var(--sub)' };
+  var bgs = { title: 'rgba(181,245,66,0.15)', subtitle: 'rgba(66,200,245,0.15)', text: 'rgba(153,153,153,0.15)' };
+  btns.forEach(function(btn) {
+    var t = btn.getAttribute('data-type');
+    var isActive = t === newType;
+    btn.style.borderColor = isActive ? colors[t] : 'var(--border)';
+    btn.style.background = isActive ? bgs[t] : 'transparent';
+    btn.style.color = isActive ? (t === 'text' ? 'var(--text)' : colors[t]) : 'var(--muted)';
+  });
+}
+
 function confirmEditBlock(idx) {
   var val = document.getElementById('block-edit-value').value.trim();
   if (!val) { showToast('Maydon bo\'sh bo\'lmasligi kerak', 'warning'); return; }
+  var typeInput = document.getElementById('block-edit-type');
+  if (typeInput) _blocksData[idx].type = typeInput.value;
   _blocksData[idx].content = val;
   renderBlocksList();
   markDirty();
+}
+
+function confirmEditVideoBlock(idx) {
+  var inputs = document.querySelectorAll('#video-edit-inputs input');
+  var urls = [];
+  inputs.forEach(function(inp) {
+    var v = inp.value.trim();
+    if (v) urls.push(v);
+  });
+  if (!urls.length) { showToast('Kamida bitta URL kiriting', 'warning'); return; }
+  _blocksData[idx].content = urls.length === 1 ? urls[0] : urls;
+  renderBlocksList();
+  markDirty();
+  showToast('Video yangilandi', 'success');
+}
+
+function addVideoEditInput() {
+  var container = document.getElementById('video-edit-inputs');
+  if (!container) return;
+  var div = document.createElement('div');
+  div.style.cssText = 'display:flex;gap:6px;margin-bottom:6px';
+  div.innerHTML = '<input class="form-input" placeholder="Video URL (https://...)" style="flex:1"><button type="button" onclick="this.parentElement.remove()" style="background:none;border:1px solid rgba(245,66,66,0.3);color:var(--red);border-radius:6px;width:28px;cursor:pointer"><i class="fas fa-times"></i></button>';
+  container.appendChild(div);
+  div.querySelector('input').focus();
 }
 
 function getBlocksData() {

@@ -1475,6 +1475,9 @@ function openProjectDetail(idx) {
   const detail = document.getElementById('projectDetail');
   const backBtn = document.getElementById('projectDetailBack');
 
+  // Push state for browser back button
+  history.pushState({ projectDetail: true, idx: idx }, '', '#project-' + idx);
+
   // Build hero media
   const isVideo = p.video || (p.img && /\.(mp4|webm|mov|ogg)(\?|$)/i.test(p.img));
   const mediaSrc = p.video || p.img;
@@ -1505,16 +1508,25 @@ function openProjectDetail(idx) {
   const blocks = p.blocks || [];
   if (blocks.length) {
     blocksHTML = blocks.map(function(block) {
+      if (!block || !block.type) return '';
       if (block.type === 'title') {
-        return '<h2 class="pd-block-title">' + block.content + '</h2>';
+        return '<h2 class="pd-block-title">' + (block.content || '') + '</h2>';
       } else if (block.type === 'subtitle') {
-        return '<h3 class="pd-block-subtitle">' + block.content + '</h3>';
+        return '<h3 class="pd-block-subtitle">' + (block.content || '') + '</h3>';
       } else if (block.type === 'text') {
-        return '<p class="pd-block-text">' + block.content + '</p>';
+        return '<p class="pd-block-text">' + (block.content || '') + '</p>';
       } else if (block.type === 'image') {
-        return '<div class="pd-block-image"><img src="' + block.content + '" onclick="openPdLightbox(this.src)" alt=""></div>';
+        // Support single image (string) or multiple images (array)
+        var images = Array.isArray(block.content) ? block.content : [block.content];
+        return images.filter(function(s){return s;}).map(function(src) {
+          return '<div class="pd-block-image"><img src="' + src + '" onclick="openPdLightbox(this.src)" alt=""></div>';
+        }).join('');
       } else if (block.type === 'video') {
-        return '<div class="pd-block-video"><video src="' + block.content + '" controls playsinline></video></div>';
+        // Support single video (string) or multiple videos (array)
+        var videos = Array.isArray(block.content) ? block.content : [block.content];
+        return videos.filter(function(s){return s;}).map(function(src) {
+          return '<div class="pd-block-video"><video src="' + src + '" controls playsinline preload="metadata"></video></div>';
+        }).join('');
       }
       return '';
     }).join('');
@@ -1572,13 +1584,26 @@ function openProjectDetail(idx) {
   document.body.style.overflow = 'hidden';
 }
 
-function closeProjectDetail() {
+function closeProjectDetail(skipHistory) {
   const detail = document.getElementById('projectDetail');
   const backBtn = document.getElementById('projectDetailBack');
+  if (!detail.classList.contains('active')) return;
   detail.classList.remove('active');
   backBtn.classList.remove('active');
   document.body.style.overflow = '';
+  // Go back in history if not triggered by popstate
+  if (!skipHistory && window.location.hash.startsWith('#project-')) {
+    history.back();
+  }
 }
+
+// Browser back button closes project detail instead of navigating away
+window.addEventListener('popstate', function(e) {
+  const detail = document.getElementById('projectDetail');
+  if (detail && detail.classList.contains('active')) {
+    closeProjectDetail(true);
+  }
+});
 
 function openLightbox(src) {
   const lb = document.getElementById('pdLightbox');
