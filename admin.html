@@ -1052,6 +1052,8 @@ function markDirty() {
   isDirty = true;
   const badge = document.getElementById('unsavedBadge');
   if (badge) badge.classList.add('active');
+  // Har bir o'zgarishda avtomatik localStorage ga saqlash
+  saveToStorage();
 }
 
 function clearDirty() {
