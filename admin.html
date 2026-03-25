@@ -1386,12 +1386,12 @@ function renderAnalytics() {
 
   // Summary cards
   document.getElementById('an-summary').innerHTML =
-    statCard(todayVisits.length, 'Bugun tashriflar', 'fa-eye') +
-    statCard(uniqueToday, 'Bugun noyob', 'fa-user') +
-    statCard(monthVisits.length, 'Bu oy tashriflar', 'fa-calendar') +
-    statCard(uniqueMonth, 'Bu oy noyob', 'fa-users') +
-    statCard(visits.length, 'Jami tashriflar', 'fa-chart-line') +
-    statCard(uniqueByIP(visits), 'Jami noyob', 'fa-fingerprint');
+    statCard(todayVisits.length, 'Bugun ko\'rishlar', 'fa-eye') +
+    statCard(uniqueToday, 'Bugun odamlar', 'fa-user') +
+    statCard(monthVisits.length, 'Bu oy ko\'rishlar', 'fa-calendar') +
+    statCard(uniqueMonth, 'Bu oy odamlar', 'fa-users') +
+    statCard(visits.length, 'Jami ko\'rishlar', 'fa-chart-line') +
+    statCard(uniqueByIP(visits), 'Jami odamlar', 'fa-fingerprint');
 
   // 30 kunlik grafik
   renderChart(visits);
