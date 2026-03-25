@@ -1927,5 +1927,27 @@ window.addEventListener('storage', function(e) {
   }
 });
 </script>
+<!-- Visitor Analytics Tracker -->
+<script>
+(function(){
+  var KEY='portfolio_visitor_analytics';
+  function load(){try{return JSON.parse(localStorage.getItem(KEY))||{visits:[],lastCleanup:''};}catch(e){return{visits:[],lastCleanup:''};}}
+  function save(d){try{localStorage.setItem(KEY,JSON.stringify(d));}catch(e){}}
+  function dateStr(){return new Date().toISOString().split('T')[0];}
+  var today=dateStr();
+  var v={id:Math.random().toString(36).substr(2,9),ts:Date.now(),date:today,page:location.pathname+location.hash,referrer:document.referrer||'direct',ua:navigator.userAgent,lang:navigator.language||'',screen:screen.width+'x'+screen.height,newSession:!sessionStorage.getItem('_vt'),ip:null,country:null,city:null,region:null};
+  if(!sessionStorage.getItem('_vt'))sessionStorage.setItem('_vt','1');
+  var d=load();
+  // 90 kundan eski ma'lumotlarni tozalash
+  if(d.lastCleanup!==today){var cutoff=Date.now()-90*86400000;d.visits=d.visits.filter(function(x){return x.ts>=cutoff;});d.lastCleanup=today;}
+  d.visits.push(v);
+  save(d);
+  // Geo ma'lumotlarini olish
+  fetch('https://ipapi.co/json/').then(function(r){return r.json();}).then(function(g){
+    v.ip=g.ip||null;v.country=g.country_name||null;v.city=g.city||null;v.region=g.region||null;
+    save(d);
+  }).catch(function(){});
+})();
+</script>
 </body>
 </html>

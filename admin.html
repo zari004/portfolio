@@ -432,6 +432,21 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
 .github-status .dot.ok { background: var(--toast-success); }
 .github-status .dot.no { background: var(--red); }
 
+/* ============ ANALYTICS ============ */
+.an-bar{flex:1;min-width:6px;background:var(--accent);border-radius:3px 3px 0 0;position:relative;cursor:pointer;transition:opacity .2s}
+.an-bar:hover{opacity:.8}
+.an-bar::after{content:attr(data-tip);position:absolute;bottom:100%;left:50%;transform:translateX(-50%);background:#222;color:#fff;font-size:10px;padding:2px 6px;border-radius:4px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .2s}
+.an-bar:hover::after{opacity:1}
+.an-progress{height:22px;border-radius:6px;background:rgba(255,255,255,.04);overflow:hidden;margin-bottom:6px;display:flex;align-items:center}
+.an-progress-fill{height:100%;background:var(--accent);border-radius:6px;min-width:2px;transition:width .4s}
+.an-table{width:100%;border-collapse:collapse;font-size:.78rem}
+.an-table th{text-align:left;color:var(--muted);font-size:.65rem;text-transform:uppercase;letter-spacing:1px;padding:6px 8px;border-bottom:1px solid var(--border)}
+.an-table td{padding:6px 8px;border-bottom:1px solid rgba(255,255,255,.03);color:var(--sub)}
+.an-table tr:hover td{background:rgba(255,255,255,.02)}
+.an-stat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center}
+.an-stat-num{font-size:1.8rem;font-weight:700;color:var(--text);font-family:'JetBrains Mono',monospace}
+.an-stat-label{font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:4px}
+@media(max-width:700px){.an-two-col{grid-template-columns:1fr!important}}
 /* ============ RESPONSIVE ============ */
 @media (max-width: 900px) {
   .sidebar { transform: translateX(-100%); }
@@ -544,6 +559,9 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
         <i class="fas fa-envelope"></i> Kontakt
       </div>
       <div class="nav-section">Tizim</div>
+      <div class="nav-item" data-panel="analytics" onclick="showPanel('analytics', this)">
+        <i class="fas fa-chart-line"></i> Statistika
+      </div>
       <div class="nav-item" data-panel="settings" onclick="showPanel('settings', this)">
         <i class="fas fa-cog"></i> Sozlamalar
       </div>
@@ -793,6 +811,60 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
           <div id="msg-email-settings" style="display:none">
             <div class="form-hint">Email maydonida kiritilgan manzilga mailto: orqali yuboriladi</div>
           </div>
+        </div>
+      </div>
+
+      <!-- ANALYTICS PANEL -->
+      <div class="panel" id="panel-analytics">
+        <div class="panel-header">
+          <div>
+            <h2>Statistika</h2>
+            <p>Sayt tashriflari va foydalanuvchilar haqida ma'lumotlar</p>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-secondary btn-sm" onclick="renderAnalytics()" style="display:inline-flex;align-items:center;gap:4px"><i class="fas fa-sync-alt"></i> Yangilash</button>
+            <button class="btn btn-secondary btn-sm" onclick="exportAnalyticsCSV()" style="display:inline-flex;align-items:center;gap:4px"><i class="fas fa-download"></i> CSV</button>
+            <button class="btn btn-secondary btn-sm" onclick="clearAnalytics()" style="display:inline-flex;align-items:center;gap:4px;color:var(--red)"><i class="fas fa-trash"></i></button>
+          </div>
+        </div>
+        <!-- Umumiy statistika -->
+        <div class="stats-grid" id="an-summary" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr))"></div>
+        <!-- Grafik -->
+        <div class="form-card" style="margin-top:20px">
+          <div class="form-card-title"><i class="fas fa-chart-bar"></i> Tashriflar (oxirgi 30 kun)</div>
+          <div id="an-chart" style="display:flex;align-items:flex-end;gap:3px;height:180px;padding:10px 0;border-bottom:1px solid var(--border)"></div>
+        </div>
+        <!-- Manbalar va Geografiya -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px" class="an-two-col">
+          <div class="form-card">
+            <div class="form-card-title"><i class="fas fa-link"></i> Manba (Referrer)</div>
+            <div id="an-referrers"></div>
+          </div>
+          <div class="form-card">
+            <div class="form-card-title"><i class="fas fa-globe"></i> Geografiya</div>
+            <div id="an-geo"></div>
+          </div>
+        </div>
+        <!-- Qurilmalar va Brauzerlar -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px" class="an-two-col">
+          <div class="form-card">
+            <div class="form-card-title"><i class="fas fa-laptop"></i> Qurilmalar</div>
+            <div id="an-devices"></div>
+          </div>
+          <div class="form-card">
+            <div class="form-card-title"><i class="fab fa-chrome"></i> Brauzerlar</div>
+            <div id="an-browsers"></div>
+          </div>
+        </div>
+        <!-- Oxirgi tashriflar -->
+        <div class="form-card" style="margin-top:16px">
+          <div class="form-card-title"><i class="fas fa-list"></i> Oxirgi tashriflar</div>
+          <div id="an-recent" style="max-height:400px;overflow-y:auto"></div>
+        </div>
+        <!-- Sayt holati -->
+        <div class="form-card" style="margin-top:16px">
+          <div class="form-card-title"><i class="fas fa-heartbeat"></i> Sayt holati</div>
+          <div id="an-status"></div>
         </div>
       </div>
 
@@ -1293,6 +1365,197 @@ function collectSocials() {
 }
 
 /* ============================================================
+   ANALYTICS
+   ============================================================ */
+function loadAnalytics() {
+  try { return JSON.parse(localStorage.getItem('portfolio_visitor_analytics')) || { visits: [] }; }
+  catch(e) { return { visits: [] }; }
+}
+
+function renderAnalytics() {
+  var data = loadAnalytics();
+  var visits = data.visits || [];
+  var today = new Date().toISOString().split('T')[0];
+  var now = new Date();
+  var monthStart = today.substring(0, 7); // "2026-03"
+
+  var todayVisits = visits.filter(function(v){ return v.date === today; });
+  var monthVisits = visits.filter(function(v){ return v.date && v.date.startsWith(monthStart); });
+  var uniqueToday = uniqueByIP(todayVisits);
+  var uniqueMonth = uniqueByIP(monthVisits);
+
+  // Summary cards
+  document.getElementById('an-summary').innerHTML =
+    statCard(todayVisits.length, 'Bugun tashriflar', 'fa-eye') +
+    statCard(uniqueToday, 'Bugun noyob', 'fa-user') +
+    statCard(monthVisits.length, 'Bu oy tashriflar', 'fa-calendar') +
+    statCard(uniqueMonth, 'Bu oy noyob', 'fa-users') +
+    statCard(visits.length, 'Jami tashriflar', 'fa-chart-line') +
+    statCard(uniqueByIP(visits), 'Jami noyob', 'fa-fingerprint');
+
+  // 30 kunlik grafik
+  renderChart(visits);
+  // Referrerlar
+  renderReferrers(visits);
+  // Geografiya
+  renderGeo(visits);
+  // Qurilmalar
+  renderDevices(visits);
+  // Brauzerlar
+  renderBrowsers(visits);
+  // Oxirgi tashriflar
+  renderRecent(visits);
+  // Sayt holati
+  renderSiteStatus(visits);
+}
+
+function statCard(num, label, icon) {
+  return '<div class="an-stat"><div class="an-stat-num">' + num + '</div><div class="an-stat-label"><i class="fas ' + icon + '" style="margin-right:3px"></i>' + label + '</div></div>';
+}
+
+function uniqueByIP(visits) {
+  var seen = {};
+  visits.forEach(function(v) { if (v.ip) seen[v.ip + '_' + v.date] = 1; else seen[v.id] = 1; });
+  return Object.keys(seen).length;
+}
+
+function renderChart(visits) {
+  var el = document.getElementById('an-chart');
+  var days = {};
+  for (var i = 29; i >= 0; i--) {
+    var d = new Date(); d.setDate(d.getDate() - i);
+    days[d.toISOString().split('T')[0]] = 0;
+  }
+  visits.forEach(function(v) { if (v.date in days) days[v.date]++; });
+  var max = Math.max.apply(null, Object.values(days)) || 1;
+  var keys = Object.keys(days);
+  el.innerHTML = keys.map(function(day) {
+    var count = days[day];
+    var h = Math.max(count / max * 160, count > 0 ? 4 : 1);
+    var label = day.substring(5) + ': ' + count;
+    return '<div class="an-bar" style="height:' + h + 'px" data-tip="' + label + '"></div>';
+  }).join('');
+}
+
+function renderReferrers(visits) {
+  var counts = {};
+  visits.forEach(function(v) {
+    var ref = v.referrer || 'direct';
+    if (ref === 'direct' || ref === '') { ref = 'To\'g\'ridan-to\'g\'ri'; }
+    else { try { ref = new URL(ref).hostname; } catch(e) {} }
+    counts[ref] = (counts[ref] || 0) + 1;
+  });
+  renderBarList('an-referrers', counts, visits.length);
+}
+
+function renderGeo(visits) {
+  var counts = {};
+  visits.forEach(function(v) {
+    var loc = v.country ? (v.country + (v.city ? ', ' + v.city : '')) : 'Noma\'lum';
+    counts[loc] = (counts[loc] || 0) + 1;
+  });
+  renderBarList('an-geo', counts, visits.length);
+}
+
+function renderBarList(elId, counts, total) {
+  var el = document.getElementById(elId);
+  var sorted = Object.entries(counts).sort(function(a,b){ return b[1]-a[1]; }).slice(0, 10);
+  if (!sorted.length) { el.innerHTML = '<div style="color:var(--muted);padding:12px;text-align:center;font-size:.8rem">Ma\'lumot yo\'q</div>'; return; }
+  var max = sorted[0][1];
+  el.innerHTML = sorted.map(function(item) {
+    var pct = total > 0 ? Math.round(item[1]/total*100) : 0;
+    var w = Math.round(item[1]/max*100);
+    return '<div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;font-size:.75rem;margin-bottom:2px"><span style="color:var(--sub)">' + item[0] + '</span><span style="color:var(--muted)">' + item[1] + ' (' + pct + '%)</span></div><div class="an-progress"><div class="an-progress-fill" style="width:' + w + '%"></div></div></div>';
+  }).join('');
+}
+
+function parseBrowser(ua) {
+  if (!ua) return 'Noma\'lum';
+  if (/Edg/i.test(ua)) return 'Edge';
+  if (/OPR|Opera/i.test(ua)) return 'Opera';
+  if (/Chrome/i.test(ua)) return 'Chrome';
+  if (/Safari/i.test(ua)) return 'Safari';
+  if (/Firefox/i.test(ua)) return 'Firefox';
+  return 'Boshqa';
+}
+
+function parseDevice(ua) {
+  if (!ua) return 'Noma\'lum';
+  if (/Mobile|Android.*Mobile|iPhone|iPod/i.test(ua)) return 'Telefon';
+  if (/iPad|Android(?!.*Mobile)|Tablet/i.test(ua)) return 'Planshet';
+  return 'Kompyuter';
+}
+
+function renderDevices(visits) {
+  var counts = {};
+  visits.forEach(function(v) { var d = parseDevice(v.ua); counts[d] = (counts[d]||0)+1; });
+  renderBarList('an-devices', counts, visits.length);
+}
+
+function renderBrowsers(visits) {
+  var counts = {};
+  visits.forEach(function(v) { var b = parseBrowser(v.ua); counts[b] = (counts[b]||0)+1; });
+  renderBarList('an-browsers', counts, visits.length);
+}
+
+function renderRecent(visits) {
+  var el = document.getElementById('an-recent');
+  var recent = visits.slice(-30).reverse();
+  if (!recent.length) { el.innerHTML = '<div style="color:var(--muted);padding:12px;text-align:center;font-size:.8rem">Tashriflar yo\'q</div>'; return; }
+  el.innerHTML = '<table class="an-table"><thead><tr><th>Vaqt</th><th>IP</th><th>Joylashuv</th><th>Brauzer</th><th>Qurilma</th><th>Manba</th></tr></thead><tbody>'
+    + recent.map(function(v) {
+      var time = new Date(v.ts);
+      var timeStr = v.date + ' ' + time.getHours().toString().padStart(2,'0') + ':' + time.getMinutes().toString().padStart(2,'0');
+      var loc = v.city ? (v.city + ', ' + (v.country||'')) : (v.country || '-');
+      var ref = v.referrer || 'direct';
+      if (ref !== 'direct') { try { ref = new URL(ref).hostname; } catch(e) {} }
+      return '<tr><td>' + timeStr + '</td><td style="font-family:JetBrains Mono,monospace;font-size:.7rem">' + (v.ip||'-') + '</td><td>' + loc + '</td><td>' + parseBrowser(v.ua) + '</td><td>' + parseDevice(v.ua) + '</td><td>' + ref + '</td></tr>';
+    }).join('') + '</tbody></table>';
+}
+
+function renderSiteStatus(visits) {
+  var el = document.getElementById('an-status');
+  var storageUsed = 0;
+  try {
+    for (var k in localStorage) { if (localStorage.hasOwnProperty(k)) storageUsed += localStorage[k].length; }
+  } catch(e) {}
+  var storageMB = (storageUsed / (1024*1024)).toFixed(2);
+  var storagePct = (storageUsed / (5*1024*1024) * 100).toFixed(1);
+  var oldest = visits.length ? visits[0].date : '-';
+  var newest = visits.length ? visits[visits.length-1].date : '-';
+  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
+    + '<div><div style="font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">localStorage ishlatilishi</div><div class="an-progress"><div class="an-progress-fill" style="width:' + Math.min(storagePct,100) + '%"></div></div><div style="font-size:.75rem;color:var(--sub)">' + storageMB + ' MB / 5 MB (' + storagePct + '%)</div></div>'
+    + '<div><div style="font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Ma\'lumotlar davri</div><div style="font-size:.85rem;color:var(--sub);margin-top:8px">' + oldest + ' — ' + newest + '</div><div style="font-size:.75rem;color:var(--muted);margin-top:4px">' + visits.length + ' ta tashrif saqlangan</div></div>'
+    + '</div>';
+}
+
+function clearAnalytics() {
+  if (!confirm('Barcha statistika ma\'lumotlari o\'chiriladi. Davom etasizmi?')) return;
+  localStorage.removeItem('portfolio_visitor_analytics');
+  renderAnalytics();
+  showToast('Statistika tozalandi', 'success');
+}
+
+function exportAnalyticsCSV() {
+  var data = loadAnalytics();
+  var visits = data.visits || [];
+  if (!visits.length) { showToast('Ma\'lumot yo\'q', 'warning'); return; }
+  var csv = 'Sana,Vaqt,IP,Davlat,Shahar,Brauzer,Qurilma,Manba,Til,Ekran\n';
+  visits.forEach(function(v) {
+    var time = new Date(v.ts);
+    var timeStr = time.getHours().toString().padStart(2,'0') + ':' + time.getMinutes().toString().padStart(2,'0');
+    var ref = v.referrer || 'direct';
+    if (ref !== 'direct') { try { ref = new URL(ref).hostname; } catch(e) {} }
+    csv += [v.date, timeStr, v.ip||'-', v.country||'-', v.city||'-', parseBrowser(v.ua), parseDevice(v.ua), ref, v.lang||'-', v.screen||'-'].join(',') + '\n';
+  });
+  var blob = new Blob([csv], {type:'text/csv'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'analytics_' + new Date().toISOString().split('T')[0] + '.csv';
+  a.click();
+}
+
+/* ============================================================
    AUTH
    ============================================================ */
 function togglePwd() {
@@ -1363,7 +1626,8 @@ function showPanel(id, clickedEl) {
   const target = document.getElementById('panel-' + id);
   if (target) target.classList.add('active');
   // Update topbar title
-  const titles = { hero:'Hero', companies:'Kompaniyalar', portfolio:'Portfolio', services:'Xizmatlar', about:'Haqida', contact:'Kontakt', settings:'Sozlamalar', github:'GitHub Push' };
+  const titles = { hero:'Hero', companies:'Kompaniyalar', portfolio:'Portfolio', services:'Xizmatlar', about:'Haqida', contact:'Kontakt', analytics:'Statistika', settings:'Sozlamalar', github:'GitHub Push' };
+  if (id === 'analytics') renderAnalytics();
   document.getElementById('topbarTitle').textContent = titles[id] || id;
   // Close mobile sidebar
   closeSidebar();
