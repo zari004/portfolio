@@ -1307,6 +1307,11 @@ function applyData() {
 
   // ABOUT
   const ab = d.about;
+  // Profil rasmi
+  const aboutImgBox = document.querySelector('.about-img-box');
+  if (aboutImgBox && ab.img) {
+    aboutImgBox.innerHTML = '<img src="' + ab.img + '" alt="Profil" style="width:100%;height:100%;object-fit:cover">';
+  }
   const atEl = document.getElementById('about-title');
   if (atEl) atEl.innerHTML = ab.title1 + '<br>' + ab.title2;
   const ad1 = document.getElementById('about-desc1');
