@@ -1222,9 +1222,7 @@ function applyData() {
       if (isVideo && mediaSrc) {
         var _ytId = getYouTubeId(mediaSrc);
         if (_ytId) {
-          // Kartada YouTube thumbnail rasm + play icon
-          mediaHTML = `<img src="https://img.youtube.com/vi/${_ytId}/hqdefault.jpg" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0" onerror="this.src='https://img.youtube.com/vi/${_ytId}/mqdefault.jpg'"/>
-          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:1"><div style="width:52px;height:36px;background:rgba(255,0,0,0.85);border-radius:8px;display:flex;align-items:center;justify-content:center"><div style="width:0;height:0;border-left:16px solid #fff;border-top:9px solid transparent;border-bottom:9px solid transparent;margin-left:3px"></div></div></div>`;
+          mediaHTML = `<iframe src="https://www.youtube.com/embed/${_ytId}?autoplay=1&mute=1&loop=1&playlist=${_ytId}&controls=0&showinfo=0&rel=0&modestbranding=1&iv_load_policy=3&disablekb=1&fs=0" style="position:absolute;top:-60px;left:0;width:100%;height:calc(100% + 120px);border:none;pointer-events:none" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope" loading="lazy"></iframe>`;
         } else {
           mediaHTML = `<video src="${mediaSrc}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0" autoplay loop muted playsinline></video>`;
         }
@@ -1574,7 +1572,7 @@ function openProjectDetail(idx) {
   if (isVideo && mediaSrc) {
     var _ytHeroId = getYouTubeId(mediaSrc);
     if (_ytHeroId) {
-      heroMediaHTML = `<iframe class="pd-hero-media" src="https://www.youtube-nocookie.com/embed/${_ytHeroId}?autoplay=1&mute=1&loop=1&playlist=${_ytHeroId}&controls=0&showinfo=0&rel=0&modestbranding=1&iv_load_policy=3" style="border:none" allow="autoplay;encrypted-media"></iframe>`;
+      heroMediaHTML = `<iframe class="pd-hero-media" src="https://www.youtube.com/embed/${_ytHeroId}?autoplay=1&mute=1&loop=1&playlist=${_ytHeroId}&controls=0&showinfo=0&rel=0&modestbranding=1&iv_load_policy=3&disablekb=1&fs=0" style="border:none" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope"></iframe>`;
     } else {
       heroMediaHTML = `<video class="pd-hero-media" src="${mediaSrc}" autoplay loop muted playsinline></video>`;
     }
@@ -1646,7 +1644,7 @@ function openProjectDetail(idx) {
         return videos.filter(function(s){return s;}).map(function(src) {
           var _ytBlockId = getYouTubeId(src);
           if (_ytBlockId) {
-            return '<div class="pd-block-video" style="aspect-ratio:16/9"><iframe src="https://www.youtube-nocookie.com/embed/' + _ytBlockId + '?autoplay=1&mute=1&loop=1&playlist=' + _ytBlockId + '&controls=0&rel=0&modestbranding=1&iv_load_policy=3&showinfo=0" style="position:absolute;top:-60px;left:0;width:100%;height:calc(100% + 120px);border:none;pointer-events:none" allow="autoplay;encrypted-media"></iframe></div>';
+            return '<div class="pd-block-video" style="aspect-ratio:16/9"><iframe src="https://www.youtube.com/embed/' + _ytBlockId + '?autoplay=1&mute=1&loop=1&playlist=' + _ytBlockId + '&controls=0&rel=0&modestbranding=1&iv_load_policy=3&showinfo=0&disablekb=1&fs=0" style="position:absolute;top:-60px;left:0;width:100%;height:calc(100% + 120px);border:none;pointer-events:none" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope"></iframe></div>';
           }
           return '<div class="pd-block-video"><video src="' + src + '" controls playsinline preload="auto" autoplay muted loop></video></div>';
         }).join('');
