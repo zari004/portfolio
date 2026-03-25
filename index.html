@@ -654,6 +654,28 @@
       font-size: 12px; color: var(--sub);
       font-family: 'JetBrains Mono', monospace;
     }
+    /* Block content styles */
+    .pd-block-title {
+      font-size: 32px; font-weight: 800; margin: 48px 0 16px;
+      letter-spacing: -1px; line-height: 1.2;
+      font-family: 'Space Grotesk', sans-serif;
+    }
+    .pd-block-subtitle {
+      font-size: 22px; font-weight: 700; color: var(--sub); margin: 36px 0 12px;
+      line-height: 1.3; font-family: 'Space Grotesk', sans-serif;
+    }
+    .pd-block-text {
+      font-size: 15px; color: var(--sub); line-height: 1.8; margin: 16px 0;
+      white-space: pre-line;
+    }
+    .pd-block-image { margin: 32px 0; border-radius: 12px; overflow: hidden; }
+    .pd-block-image img {
+      width: 100%; display: block; cursor: pointer; transition: transform 0.3s;
+    }
+    .pd-block-image img:hover { transform: scale(1.02); }
+    .pd-block-video { margin: 32px 0; border-radius: 12px; overflow: hidden; }
+    .pd-block-video video { width: 100%; display: block; border-radius: 12px; }
+
     /* Gallery lightbox */
     .pd-lightbox {
       position: fixed; inset: 0; z-index: 2000;
@@ -687,10 +709,16 @@
       .pd-info-grid { grid-template-columns: 1fr 1fr; }
       .pd-gallery { grid-template-columns: 1fr; }
       .project-detail-back { top: 12px; left: 12px; padding: 8px 14px; font-size: 12px; }
+      .pd-block-title { font-size: 24px; margin: 32px 0 12px; }
+      .pd-block-subtitle { font-size: 18px; margin: 24px 0 10px; }
+      .pd-block-image { margin: 20px 0; }
+      .pd-block-video { margin: 20px 0; }
     }
     @media (max-width: 500px) {
       .pd-info-grid { grid-template-columns: 1fr; }
       .pd-hero-title { font-size: 28px !important; letter-spacing: -1px; }
+      .pd-block-title { font-size: 22px; }
+      .pd-block-subtitle { font-size: 16px; }
     }
 
     /* ===== SCROLL REVEAL ===== */
@@ -1472,23 +1500,47 @@ function openProjectDetail(idx) {
     infoGridHTML += `<div class="pd-info-item"><div class="pd-info-label">Asboblar</div><div class="pd-tools-list">${p.tools.split(',').map(t => `<span class="pd-tool-tag">${t.trim()}</span>`).join('')}</div></div>`;
   }
 
-  // Build description
-  const description = p.fullDesc || p.desc || '';
+  // Build blocks content or fallback to description
+  let blocksHTML = '';
+  const blocks = p.blocks || [];
+  if (blocks.length) {
+    blocksHTML = blocks.map(function(block) {
+      if (block.type === 'title') {
+        return '<h2 class="pd-block-title">' + block.content + '</h2>';
+      } else if (block.type === 'subtitle') {
+        return '<h3 class="pd-block-subtitle">' + block.content + '</h3>';
+      } else if (block.type === 'text') {
+        return '<p class="pd-block-text">' + block.content + '</p>';
+      } else if (block.type === 'image') {
+        return '<div class="pd-block-image"><img src="' + block.content + '" onclick="openPdLightbox(this.src)" alt=""></div>';
+      } else if (block.type === 'video') {
+        return '<div class="pd-block-video"><video src="' + block.content + '" controls playsinline></video></div>';
+      }
+      return '';
+    }).join('');
+  } else {
+    // Fallback: show description if no blocks
+    const description = p.fullDesc || p.desc || '';
+    if (description) {
+      blocksHTML = '<div class="pd-description">' + description + '</div>';
+    }
+  }
 
-  // Build gallery
+  // Build gallery for backward compatibility (old data with gallery/galleryVideos)
   let galleryHTML = '';
-  const galleryImages = p.gallery || [];
-  const galleryVideoUrls = p.galleryVideos ? p.galleryVideos.split(',').map(v => v.trim()).filter(v => v) : [];
-
-  if (galleryImages.length || galleryVideoUrls.length) {
-    galleryHTML += `<div class="pd-section-title">Galereya</div><div class="pd-gallery">`;
-    galleryImages.forEach((img, i) => {
-      galleryHTML += `<div class="pd-gallery-item" onclick="openLightbox('${img.replace(/'/g, "\\'")}')"><img src="${img}" alt="Gallery ${i+1}"/></div>`;
-    });
-    galleryVideoUrls.forEach(vid => {
-      galleryHTML += `<div class="pd-gallery-item"><video src="${vid}" controls playsinline muted></video></div>`;
-    });
-    galleryHTML += `</div>`;
+  if (!blocks.length) {
+    const galleryImages = p.gallery || [];
+    const galleryVideoUrls = p.galleryVideos ? p.galleryVideos.split(',').map(v => v.trim()).filter(v => v) : [];
+    if (galleryImages.length || galleryVideoUrls.length) {
+      galleryHTML += '<div class="pd-section-title">Galereya</div><div class="pd-gallery">';
+      galleryImages.forEach(function(img, i) {
+        galleryHTML += '<div class="pd-gallery-item" onclick="openLightbox(\'' + img.replace(/'/g, "\\'") + '\')"><img src="' + img + '" alt="Gallery ' + (i+1) + '"/></div>';
+      });
+      galleryVideoUrls.forEach(function(vid) {
+        galleryHTML += '<div class="pd-gallery-item"><video src="' + vid + '" controls playsinline muted></video></div>';
+      });
+      galleryHTML += '</div>';
+    }
   }
 
   // Build link button
@@ -1509,7 +1561,7 @@ function openProjectDetail(idx) {
     <div class="pd-body">
       <div class="pd-info-grid">${infoGridHTML}</div>
       ${linkHTML}
-      <div class="pd-description">${description}</div>
+      ${blocksHTML}
       ${galleryHTML}
     </div>
   `;
@@ -1534,6 +1586,8 @@ function openLightbox(src) {
   img.src = src;
   lb.classList.add('active');
 }
+
+function openPdLightbox(src) { openLightbox(src); }
 
 function closeLightbox() {
   document.getElementById('pdLightbox').classList.remove('active');

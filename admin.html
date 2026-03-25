@@ -458,6 +458,13 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
   .topbar .save-hint { display: none; }
   .btn-sm { padding: 6px 10px; font-size: 0.7rem; }
 }
+/* Block menu items */
+.block-menu-item {
+  display: flex; align-items: center; gap: 10px; padding: 9px 14px;
+  border-radius: 7px; cursor: pointer; font-size: 0.82rem; font-weight: 500;
+  color: var(--text); transition: background 0.15s;
+}
+.block-menu-item:hover { background: var(--card); }
 </style>
 </head>
 <body>
@@ -1504,6 +1511,7 @@ function openAddPortfolio() {
     '<button class="btn btn-secondary" onclick="closeModal()">Bekor qilish</button><button class="btn btn-primary" onclick="savePortfolioItem()">Saqlash</button>',
     null
   );
+  initBlocksBuilder([]);
 }
 
 function editPortfolio(id) {
@@ -1514,20 +1522,12 @@ function editPortfolio(id) {
     '<button class="btn btn-secondary" onclick="closeModal()">Bekor qilish</button><button class="btn btn-primary" onclick="savePortfolioItem(' + id + ')">Saqlash</button>',
     null
   );
+  initBlocksBuilder(p.blocks || []);
 }
 
 function portfolioFormHTML(p) {
-  const d = p || { title:'', tag:'', desc:'', color1:'#1a1a2e', color2:'#16213e', img:'', video:'', link:'', client:'', date:'', tools:'', fullDesc:'', gallery:[], galleryVideos:'' };
-  // Build gallery preview grid
-  let galleryPreviewHTML = '';
-  if (d.gallery && d.gallery.length) {
-    galleryPreviewHTML = d.gallery.map((img, i) =>
-      '<div style="position:relative;display:inline-block;margin:4px">'
-      + '<img src="' + sanitize(img) + '" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid var(--border)">'
-      + '<button type="button" onclick="removeGalleryImg(' + i + ')" style="position:absolute;top:-6px;right:-6px;width:22px;height:22px;background:rgba(0,0,0,0.8);border:1px solid var(--border);border-radius:50%;color:var(--red);cursor:pointer;font-size:0.6rem;display:flex;align-items:center;justify-content:center"><i class="fas fa-times"></i></button>'
-      + '</div>'
-    ).join('');
-  }
+  const d = p || { title:'', tag:'', desc:'', color1:'#1a1a2e', color2:'#16213e', img:'', video:'', link:'', client:'', date:'', tools:'', blocks:[] };
+  const blocksJSON = sanitize(JSON.stringify(d.blocks || []));
   return '<div class="form-group"><label>Sarlavha</label><input class="form-input" id="m-pf-title" value="' + sanitize(d.title) + '" placeholder="Loyiha nomi"></div>'
     + '<div class="form-row"><div class="form-group"><label>Tag</label><input class="form-input" id="m-pf-tag" value="' + sanitize(d.tag) + '" placeholder="Masalan: Brending"></div>'
     + '<div class="form-group"><label>Havola</label><input class="form-input" id="m-pf-link" value="' + sanitize(d.link) + '" placeholder="https://..."></div></div>'
@@ -1535,7 +1535,6 @@ function portfolioFormHTML(p) {
     + '<div class="form-group"><label>Sana</label><input class="form-input" id="m-pf-date" value="' + sanitize(d.date || '') + '" placeholder="Masalan: 2024"></div></div>'
     + '<div class="form-group"><label>Asboblar <span style="font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0">(vergul bilan)</span></label><input class="form-input" id="m-pf-tools" value="' + sanitize(d.tools || '') + '" placeholder="Photoshop, Illustrator, Figma"></div>'
     + '<div class="form-group"><label>Qisqa tavsif</label><textarea class="form-input" id="m-pf-desc" rows="2" placeholder="Qisqa tavsif (kartada ko\'rinadi)">' + sanitize(d.desc) + '</textarea></div>'
-    + '<div class="form-group"><label>To\'liq tavsif <span style="font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0">(batafsil sahifa uchun)</span></label><textarea class="form-input" id="m-pf-fullDesc" rows="5" placeholder="Loyiha haqida batafsil ma\'lumot, jarayon, natijalar...">' + sanitize(d.fullDesc || '') + '</textarea></div>'
     + '<div class="form-group"><label>Ranglar</label><div class="color-pair">'
     + '<div class="color-input-wrap"><input type="color" id="m-pf-color1" value="' + d.color1 + '"><span>Rang 1</span></div>'
     + '<div class="color-input-wrap"><input type="color" id="m-pf-color2" value="' + d.color2 + '"><span>Rang 2</span></div>'
@@ -1549,21 +1548,248 @@ function portfolioFormHTML(p) {
     + '<input class="form-input" id="m-pf-video" value="' + sanitize(d.video || '') + '" placeholder="Video URL (.mp4, .webm) yoki Google Drive havola">'
     + '<div style="font-size:0.7rem;color:var(--muted);margin-top:4px">Video joylansa rasm o\'rniga animatsiya ko\'rsatiladi (autoplay, loop, muted)</div>'
     + '</div>'
-    + '<div class="form-group"><label><i class="fas fa-images" style="margin-right:6px;color:var(--accent)"></i>Galereya rasmlari</label>'
-    + '<div class="img-upload-zone"><i class="fas fa-cloud-upload-alt"></i><p>Bir nechta rasm yuklash</p><div class="size-note">Avtomatik siqiladi (maks. 800px). Bir nechta tanlash mumkin.</div>'
-    + '<input type="file" accept="image/*" multiple onchange="previewGalleryImg(event)"></div>'
-    + '<div id="m-pf-gallery-preview" style="margin-top:10px;display:flex;flex-wrap:wrap;gap:4px">' + galleryPreviewHTML + '</div>'
-    + '<input type="hidden" id="m-pf-gallery-data" value="' + sanitize(JSON.stringify(d.gallery || [])) + '"></div>'
-    + '<div class="form-group"><label><i class="fas fa-video" style="margin-right:6px;color:var(--accent)"></i>Galereya videolari <span style="font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0">(vergul bilan)</span></label>'
-    + '<input class="form-input" id="m-pf-galleryVideos" value="' + sanitize(d.galleryVideos || '') + '" placeholder="https://video1.mp4, https://video2.mp4">'
-    + '<div style="font-size:0.7rem;color:var(--muted);margin-top:4px">Video URL larini vergul bilan ajrating</div></div>';
+    + '<div class="form-group">'
+    + '<label><i class="fas fa-layer-group" style="margin-right:6px;color:var(--accent)"></i>Kontent bloklari <span style="font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0">(batafsil sahifa uchun)</span></label>'
+    + '<div id="m-pf-blocks" style="margin-bottom:12px"></div>'
+    + '<input type="hidden" id="m-pf-blocks-data" value="' + blocksJSON + '">'
+    + '<div style="position:relative;display:inline-block" id="m-pf-blocks-add-wrap">'
+    + '<button type="button" class="btn btn-secondary btn-sm" onclick="toggleBlockMenu()" style="display:inline-flex;align-items:center;gap:6px"><i class="fas fa-plus"></i> Blok qo\'shish</button>'
+    + '<div id="m-pf-block-menu" style="display:none;position:absolute;top:100%;left:0;margin-top:6px;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:6px;z-index:100;min-width:200px;box-shadow:0 8px 24px rgba(0,0,0,0.4)">'
+    + '<div class="block-menu-item" onclick="addBlock(\'title\')"><i class="fas fa-heading" style="color:var(--accent);width:20px;text-align:center"></i> Sarlavha</div>'
+    + '<div class="block-menu-item" onclick="addBlock(\'subtitle\')"><i class="fas fa-font" style="color:var(--accent2);width:20px;text-align:center"></i> Kichik sarlavha</div>'
+    + '<div class="block-menu-item" onclick="addBlock(\'text\')"><i class="fas fa-align-left" style="color:var(--sub);width:20px;text-align:center"></i> Matn</div>'
+    + '<div class="block-menu-item" onclick="addBlock(\'image\')"><i class="fas fa-image" style="color:#f5a623;width:20px;text-align:center"></i> Rasm</div>'
+    + '<div class="block-menu-item" onclick="addBlock(\'video\')"><i class="fas fa-play-circle" style="color:#e74c3c;width:20px;text-align:center"></i> Video</div>'
+    + '</div>'
+    + '</div>'
+    + '</div>';
+}
+
+/* --- Blocks Builder --- */
+let _blocksData = [];
+
+function toggleBlockMenu() {
+  const menu = document.getElementById('m-pf-block-menu');
+  if (!menu) return;
+  menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+}
+
+document.addEventListener('click', function(e) {
+  var menu = document.getElementById('m-pf-block-menu');
+  var wrap = document.getElementById('m-pf-blocks-add-wrap');
+  if (menu && wrap && !wrap.contains(e.target)) {
+    menu.style.display = 'none';
+  }
+});
+
+function initBlocksBuilder(existingBlocks) {
+  _blocksData = existingBlocks && Array.isArray(existingBlocks) ? JSON.parse(JSON.stringify(existingBlocks)) : [];
+  renderBlocksList();
+}
+
+function renderBlocksList() {
+  const container = document.getElementById('m-pf-blocks');
+  const hiddenInput = document.getElementById('m-pf-blocks-data');
+  if (!container) return;
+  if (hiddenInput) hiddenInput.value = JSON.stringify(_blocksData);
+
+  if (!_blocksData.length) {
+    container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:0.82rem;border:1px dashed var(--border);border-radius:10px"><i class="fas fa-layer-group" style="font-size:1.2rem;margin-bottom:6px;display:block;opacity:0.4"></i>Bloklar yo\'q. Qo\'shish tugmasini bosing.</div>';
+    return;
+  }
+
+  container.innerHTML = _blocksData.map(function(block, idx) {
+    var typeIcons = { title:'fa-heading', subtitle:'fa-font', text:'fa-align-left', image:'fa-image', video:'fa-play-circle' };
+    var typeLabels = { title:'Sarlavha', subtitle:'Kichik sarlavha', text:'Matn', image:'Rasm', video:'Video' };
+    var typeColors = { title:'var(--accent)', subtitle:'var(--accent2)', text:'var(--sub)', image:'#f5a623', video:'#e74c3c' };
+    var icon = typeIcons[block.type] || 'fa-cube';
+    var label = typeLabels[block.type] || block.type;
+    var iconColor = typeColors[block.type] || 'var(--sub)';
+    var preview = '';
+    if (block.type === 'image') {
+      preview = '<img src="' + sanitize(block.content) + '" style="width:48px;height:36px;object-fit:cover;border-radius:6px;border:1px solid var(--border)">';
+    } else if (block.type === 'video') {
+      preview = '<span style="font-size:0.75rem;color:var(--sub);font-family:\'JetBrains Mono\',monospace;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block">' + sanitize(block.content).substring(0, 40) + '</span>';
+    } else {
+      preview = '<span style="font-size:0.8rem;color:var(--sub);max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block">' + sanitize(block.content).substring(0, 60) + '</span>';
+    }
+
+    return '<div style="display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:6px">'
+      + '<div style="display:flex;flex-direction:column;gap:2px;flex-shrink:0">'
+        + '<button type="button" onclick="moveBlockUp(' + idx + ')" style="background:none;border:none;color:' + (idx === 0 ? 'var(--border)' : 'var(--sub)') + ';cursor:pointer;font-size:0.6rem;padding:1px 4px" ' + (idx === 0 ? 'disabled' : '') + '><i class="fas fa-chevron-up"></i></button>'
+        + '<button type="button" onclick="moveBlockDown(' + idx + ')" style="background:none;border:none;color:' + (idx === _blocksData.length - 1 ? 'var(--border)' : 'var(--sub)') + ';cursor:pointer;font-size:0.6rem;padding:1px 4px" ' + (idx === _blocksData.length - 1 ? 'disabled' : '') + '><i class="fas fa-chevron-down"></i></button>'
+      + '</div>'
+      + '<div style="width:28px;height:28px;border-radius:6px;background:rgba(255,255,255,0.04);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fas ' + icon + '" style="font-size:0.7rem;color:' + iconColor + '"></i></div>'
+      + '<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">'
+        + '<span style="font-size:0.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;font-weight:600">' + label + '</span>'
+        + '<div>' + preview + '</div>'
+      + '</div>'
+      + '<div style="display:flex;gap:4px;flex-shrink:0">'
+        + '<button type="button" onclick="editBlock(' + idx + ')" style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;border:1px solid var(--border);background:var(--card);color:var(--accent);cursor:pointer;font-size:0.7rem" title="Tahrirlash"><i class="fas fa-edit"></i></button>'
+        + '<button type="button" onclick="removeBlock(' + idx + ')" style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;border:1px solid rgba(245,66,66,0.3);background:rgba(245,66,66,0.06);color:var(--red);cursor:pointer;font-size:0.7rem" title="O\'chirish"><i class="fas fa-trash"></i></button>'
+      + '</div>'
+    + '</div>';
+  }).join('');
+}
+
+function addBlock(type) {
+  var menu = document.getElementById('m-pf-block-menu');
+  if (menu) menu.style.display = 'none';
+
+  if (type === 'image') {
+    // Open file picker for image
+    var fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = 'image/*';
+    fileInput.onchange = async function(e) {
+      var file = e.target.files[0];
+      if (!file) return;
+      showToast('Rasm siqilmoqda...', 'warning');
+      try {
+        var compressed = await compressImage(file, 1200, 0.8);
+        _blocksData.push({ type: 'image', content: compressed });
+        renderBlocksList();
+        markDirty();
+        showToast('Rasm bloki qo\'shildi', 'success');
+      } catch(err) {
+        showToast('Rasm yuklashda xatolik', 'error');
+      }
+    };
+    fileInput.click();
+    return;
+  }
+
+  // For text-based types, show inline input
+  var placeholder = '';
+  var inputType = 'input';
+  if (type === 'title') placeholder = 'Sarlavha matnini kiriting...';
+  else if (type === 'subtitle') placeholder = 'Kichik sarlavha matnini kiriting...';
+  else if (type === 'text') { placeholder = 'Matn yozing...'; inputType = 'textarea'; }
+  else if (type === 'video') placeholder = 'Video URL kiriting (https://...)';
+
+  var blocksContainer = document.getElementById('m-pf-blocks');
+  // Remove any existing add-block-input
+  var existing = document.getElementById('block-add-input-wrap');
+  if (existing) existing.remove();
+
+  var wrapDiv = document.createElement('div');
+  wrapDiv.id = 'block-add-input-wrap';
+  wrapDiv.style.cssText = 'background:var(--card);border:1px solid var(--accent);border-radius:8px;padding:12px;margin-bottom:8px';
+  var typeLabels = { title:'Sarlavha', subtitle:'Kichik sarlavha', text:'Matn', video:'Video' };
+  wrapDiv.innerHTML = '<div style="font-size:0.72rem;color:var(--accent);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">' + (typeLabels[type] || type) + ' qo\'shish</div>'
+    + (inputType === 'textarea'
+      ? '<textarea class="form-input" id="block-add-value" rows="4" placeholder="' + placeholder + '" style="margin-bottom:8px"></textarea>'
+      : '<input class="form-input" id="block-add-value" placeholder="' + placeholder + '" style="margin-bottom:8px">')
+    + '<div style="display:flex;gap:6px">'
+    + '<button type="button" class="btn btn-primary btn-sm" onclick="confirmAddBlock(\'' + type + '\')"><i class="fas fa-plus"></i> Qo\'shish</button>'
+    + '<button type="button" class="btn btn-secondary btn-sm" onclick="cancelAddBlock()">Bekor</button>'
+    + '</div>';
+  blocksContainer.appendChild(wrapDiv);
+  document.getElementById('block-add-value').focus();
+}
+
+function confirmAddBlock(type) {
+  var val = document.getElementById('block-add-value').value.trim();
+  if (!val) { showToast('Maydon bo\'sh bo\'lmasligi kerak', 'warning'); return; }
+  _blocksData.push({ type: type, content: val });
+  cancelAddBlock();
+  renderBlocksList();
+  markDirty();
+  showToast('Blok qo\'shildi', 'success');
+}
+
+function cancelAddBlock() {
+  var wrap = document.getElementById('block-add-input-wrap');
+  if (wrap) wrap.remove();
+}
+
+function removeBlock(idx) {
+  _blocksData.splice(idx, 1);
+  renderBlocksList();
+  markDirty();
+}
+
+function moveBlockUp(idx) {
+  if (idx <= 0) return;
+  var tmp = _blocksData[idx];
+  _blocksData[idx] = _blocksData[idx - 1];
+  _blocksData[idx - 1] = tmp;
+  renderBlocksList();
+  markDirty();
+}
+
+function moveBlockDown(idx) {
+  if (idx >= _blocksData.length - 1) return;
+  var tmp = _blocksData[idx];
+  _blocksData[idx] = _blocksData[idx + 1];
+  _blocksData[idx + 1] = tmp;
+  renderBlocksList();
+  markDirty();
+}
+
+function editBlock(idx) {
+  var block = _blocksData[idx];
+  if (!block) return;
+
+  if (block.type === 'image') {
+    // Replace image
+    var fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = 'image/*';
+    fileInput.onchange = async function(e) {
+      var file = e.target.files[0];
+      if (!file) return;
+      showToast('Rasm siqilmoqda...', 'warning');
+      try {
+        var compressed = await compressImage(file, 1200, 0.8);
+        _blocksData[idx].content = compressed;
+        renderBlocksList();
+        markDirty();
+        showToast('Rasm yangilandi', 'success');
+      } catch(err) {
+        showToast('Rasm yuklashda xatolik', 'error');
+      }
+    };
+    fileInput.click();
+    return;
+  }
+
+  // For text-based types, show inline edit
+  var blocksContainer = document.getElementById('m-pf-blocks');
+  var blockCards = blocksContainer.children;
+  if (!blockCards[idx]) return;
+  var card = blockCards[idx];
+  var inputType = block.type === 'text' ? 'textarea' : 'input';
+  var typeLabels = { title:'Sarlavha', subtitle:'Kichik sarlavha', text:'Matn', video:'Video' };
+
+  card.innerHTML = '<div style="width:100%">'
+    + '<div style="font-size:0.72rem;color:var(--accent);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">' + (typeLabels[block.type] || block.type) + ' tahrirlash</div>'
+    + (inputType === 'textarea'
+      ? '<textarea class="form-input" id="block-edit-value" rows="4" style="margin-bottom:8px">' + sanitize(block.content) + '</textarea>'
+      : '<input class="form-input" id="block-edit-value" value="' + sanitize(block.content) + '" style="margin-bottom:8px">')
+    + '<div style="display:flex;gap:6px">'
+    + '<button type="button" class="btn btn-primary btn-sm" onclick="confirmEditBlock(' + idx + ')"><i class="fas fa-check"></i> Saqlash</button>'
+    + '<button type="button" class="btn btn-secondary btn-sm" onclick="renderBlocksList()">Bekor</button>'
+    + '</div></div>';
+  card.style.borderColor = 'var(--accent)';
+  document.getElementById('block-edit-value').focus();
+}
+
+function confirmEditBlock(idx) {
+  var val = document.getElementById('block-edit-value').value.trim();
+  if (!val) { showToast('Maydon bo\'sh bo\'lmasligi kerak', 'warning'); return; }
+  _blocksData[idx].content = val;
+  renderBlocksList();
+  markDirty();
+}
+
+function getBlocksData() {
+  return _blocksData.slice();
 }
 
 function savePortfolioItem(id) {
   const title = document.getElementById('m-pf-title').value.trim();
   if (!title) { showToast('Sarlavha kiriting', 'warning'); return; }
-  let galleryData = [];
-  try { galleryData = JSON.parse(document.getElementById('m-pf-gallery-data').value || '[]'); } catch(e) { galleryData = []; }
   const item = {
     id: id || nextId(data.portfolio),
     title: title,
@@ -1577,9 +1803,7 @@ function savePortfolioItem(id) {
     client: document.getElementById('m-pf-client').value.trim(),
     date: document.getElementById('m-pf-date').value.trim(),
     tools: document.getElementById('m-pf-tools').value.trim(),
-    fullDesc: document.getElementById('m-pf-fullDesc').value.trim(),
-    gallery: galleryData,
-    galleryVideos: document.getElementById('m-pf-galleryVideos').value.trim()
+    blocks: getBlocksData()
   };
   if (id) {
     const idx = data.portfolio.findIndex(x => x.id === id);
