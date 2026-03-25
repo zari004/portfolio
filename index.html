@@ -1126,6 +1126,24 @@ function initReveal() {
   document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
 }
 
+// ============ VIDEO AUTOPLAY ON SCROLL ============
+function initVideoObserver() {
+  const videoObs = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      const video = e.target;
+      if (e.isIntersecting) {
+        video.play().catch(() => {});
+      } else {
+        video.pause();
+      }
+    });
+  }, { threshold: 0.3 });
+  document.querySelectorAll('.portfolio-thumb video').forEach(v => {
+    v.pause();
+    videoObs.observe(v);
+  });
+}
+
 // ============ CV DOWNLOAD ============
 function downloadCV(e) {
   e.preventDefault();
@@ -1222,7 +1240,16 @@ function initAurora() {
 
 // ============ INIT ============
 applyData();
+initVideoObserver();
 initAurora();
+
+// Admin paneldan o'zgarish bo'lsa saytni yangilash
+window.addEventListener('storage', function(e) {
+  if (e.key === 'portfolio_admin_data') {
+    applyData();
+    setTimeout(initVideoObserver, 100);
+  }
+});
 </script>
 </body>
 </html>
