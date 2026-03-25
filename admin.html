@@ -366,7 +366,7 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
 .modal-overlay.active { display: flex; opacity: 1; }
 .modal {
   background: var(--panel); border: 1px solid var(--border); border-radius: 16px;
-  width: 560px; max-width: 100%; max-height: 85vh; overflow-y: auto;
+  width: 640px; max-width: 100%; max-height: 90vh; overflow-y: auto;
   transform: scale(0.95); transition: transform .2s;
   box-shadow: 0 20px 60px rgba(0,0,0,0.5);
 }
@@ -1517,16 +1517,30 @@ function editPortfolio(id) {
 }
 
 function portfolioFormHTML(p) {
-  const d = p || { title:'', tag:'', desc:'', color1:'#1a1a2e', color2:'#16213e', img:'', video:'', link:'' };
+  const d = p || { title:'', tag:'', desc:'', color1:'#1a1a2e', color2:'#16213e', img:'', video:'', link:'', client:'', date:'', tools:'', fullDesc:'', gallery:[], galleryVideos:'' };
+  // Build gallery preview grid
+  let galleryPreviewHTML = '';
+  if (d.gallery && d.gallery.length) {
+    galleryPreviewHTML = d.gallery.map((img, i) =>
+      '<div style="position:relative;display:inline-block;margin:4px">'
+      + '<img src="' + sanitize(img) + '" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid var(--border)">'
+      + '<button type="button" onclick="removeGalleryImg(' + i + ')" style="position:absolute;top:-6px;right:-6px;width:22px;height:22px;background:rgba(0,0,0,0.8);border:1px solid var(--border);border-radius:50%;color:var(--red);cursor:pointer;font-size:0.6rem;display:flex;align-items:center;justify-content:center"><i class="fas fa-times"></i></button>'
+      + '</div>'
+    ).join('');
+  }
   return '<div class="form-group"><label>Sarlavha</label><input class="form-input" id="m-pf-title" value="' + sanitize(d.title) + '" placeholder="Loyiha nomi"></div>'
     + '<div class="form-row"><div class="form-group"><label>Tag</label><input class="form-input" id="m-pf-tag" value="' + sanitize(d.tag) + '" placeholder="Masalan: Brending"></div>'
     + '<div class="form-group"><label>Havola</label><input class="form-input" id="m-pf-link" value="' + sanitize(d.link) + '" placeholder="https://..."></div></div>'
-    + '<div class="form-group"><label>Tavsif</label><textarea class="form-input" id="m-pf-desc" rows="2" placeholder="Qisqa tavsif">' + sanitize(d.desc) + '</textarea></div>'
+    + '<div class="form-row"><div class="form-group"><label>Mijoz</label><input class="form-input" id="m-pf-client" value="' + sanitize(d.client || '') + '" placeholder="Mijoz yoki kompaniya nomi"></div>'
+    + '<div class="form-group"><label>Sana</label><input class="form-input" id="m-pf-date" value="' + sanitize(d.date || '') + '" placeholder="Masalan: 2024"></div></div>'
+    + '<div class="form-group"><label>Asboblar <span style="font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0">(vergul bilan)</span></label><input class="form-input" id="m-pf-tools" value="' + sanitize(d.tools || '') + '" placeholder="Photoshop, Illustrator, Figma"></div>'
+    + '<div class="form-group"><label>Qisqa tavsif</label><textarea class="form-input" id="m-pf-desc" rows="2" placeholder="Qisqa tavsif (kartada ko\'rinadi)">' + sanitize(d.desc) + '</textarea></div>'
+    + '<div class="form-group"><label>To\'liq tavsif <span style="font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0">(batafsil sahifa uchun)</span></label><textarea class="form-input" id="m-pf-fullDesc" rows="5" placeholder="Loyiha haqida batafsil ma\'lumot, jarayon, natijalar...">' + sanitize(d.fullDesc || '') + '</textarea></div>'
     + '<div class="form-group"><label>Ranglar</label><div class="color-pair">'
     + '<div class="color-input-wrap"><input type="color" id="m-pf-color1" value="' + d.color1 + '"><span>Rang 1</span></div>'
     + '<div class="color-input-wrap"><input type="color" id="m-pf-color2" value="' + d.color2 + '"><span>Rang 2</span></div>'
     + '</div></div>'
-    + '<div class="form-group"><label>Rasm</label>'
+    + '<div class="form-group"><label>Asosiy rasm</label>'
     + '<div class="img-upload-zone"><i class="fas fa-cloud-upload-alt"></i><p>Rasm yuklash</p><div class="size-note">Avtomatik siqiladi (maks. 1200px)</div>'
     + '<input type="file" accept="image/*" onchange="previewImg(event,\'m-pf-img-preview\',\'m-pf-img-data\')"></div>'
     + '<div class="img-preview" id="m-pf-img-preview">' + (d.img ? '<img src="' + sanitize(d.img) + '"><button class="remove-img" onclick="document.getElementById(\'m-pf-img-data\').value=\'\';this.parentElement.innerHTML=\'\'"><i class="fas fa-times"></i></button>' : '') + '</div>'
@@ -1534,12 +1548,22 @@ function portfolioFormHTML(p) {
     + '<div class="form-group"><label><i class="fas fa-video" style="margin-right:6px;color:var(--accent)"></i>Video (ixtiyoriy)</label>'
     + '<input class="form-input" id="m-pf-video" value="' + sanitize(d.video || '') + '" placeholder="Video URL (.mp4, .webm) yoki Google Drive havola">'
     + '<div style="font-size:0.7rem;color:var(--muted);margin-top:4px">Video joylansa rasm o\'rniga animatsiya ko\'rsatiladi (autoplay, loop, muted)</div>'
-    + '</div>';
+    + '</div>'
+    + '<div class="form-group"><label><i class="fas fa-images" style="margin-right:6px;color:var(--accent)"></i>Galereya rasmlari</label>'
+    + '<div class="img-upload-zone"><i class="fas fa-cloud-upload-alt"></i><p>Bir nechta rasm yuklash</p><div class="size-note">Avtomatik siqiladi (maks. 800px). Bir nechta tanlash mumkin.</div>'
+    + '<input type="file" accept="image/*" multiple onchange="previewGalleryImg(event)"></div>'
+    + '<div id="m-pf-gallery-preview" style="margin-top:10px;display:flex;flex-wrap:wrap;gap:4px">' + galleryPreviewHTML + '</div>'
+    + '<input type="hidden" id="m-pf-gallery-data" value="' + sanitize(JSON.stringify(d.gallery || [])) + '"></div>'
+    + '<div class="form-group"><label><i class="fas fa-video" style="margin-right:6px;color:var(--accent)"></i>Galereya videolari <span style="font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0">(vergul bilan)</span></label>'
+    + '<input class="form-input" id="m-pf-galleryVideos" value="' + sanitize(d.galleryVideos || '') + '" placeholder="https://video1.mp4, https://video2.mp4">'
+    + '<div style="font-size:0.7rem;color:var(--muted);margin-top:4px">Video URL larini vergul bilan ajrating</div></div>';
 }
 
 function savePortfolioItem(id) {
   const title = document.getElementById('m-pf-title').value.trim();
   if (!title) { showToast('Sarlavha kiriting', 'warning'); return; }
+  let galleryData = [];
+  try { galleryData = JSON.parse(document.getElementById('m-pf-gallery-data').value || '[]'); } catch(e) { galleryData = []; }
   const item = {
     id: id || nextId(data.portfolio),
     title: title,
@@ -1549,7 +1573,13 @@ function savePortfolioItem(id) {
     color2: document.getElementById('m-pf-color2').value,
     img: document.getElementById('m-pf-img-data').value || '',
     video: document.getElementById('m-pf-video').value.trim() || '',
-    link: document.getElementById('m-pf-link').value.trim()
+    link: document.getElementById('m-pf-link').value.trim(),
+    client: document.getElementById('m-pf-client').value.trim(),
+    date: document.getElementById('m-pf-date').value.trim(),
+    tools: document.getElementById('m-pf-tools').value.trim(),
+    fullDesc: document.getElementById('m-pf-fullDesc').value.trim(),
+    gallery: galleryData,
+    galleryVideos: document.getElementById('m-pf-galleryVideos').value.trim()
   };
   if (id) {
     const idx = data.portfolio.findIndex(x => x.id === id);
@@ -1701,6 +1731,58 @@ async function previewImg(event, previewId, hiddenId) {
   } catch (err) {
     showToast('Rasm yuklashda xatolik', 'error');
   }
+}
+
+/* ============================================================
+   GALLERY IMAGE PREVIEW & MANAGEMENT
+   ============================================================ */
+async function previewGalleryImg(event) {
+  const files = event.target.files;
+  if (!files || !files.length) return;
+  let galleryData = [];
+  try { galleryData = JSON.parse(document.getElementById('m-pf-gallery-data').value || '[]'); } catch(e) { galleryData = []; }
+  showToast('Rasmlar siqilmoqda... (' + files.length + ' ta)', 'warning');
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    if (!file.type.startsWith('image/')) continue;
+    try {
+      const compressed = await compressImage(file, 800, 0.75);
+      galleryData.push(compressed);
+    } catch (err) {
+      showToast('Rasm yuklashda xatolik: ' + file.name, 'error');
+    }
+  }
+  document.getElementById('m-pf-gallery-data').value = JSON.stringify(galleryData);
+  renderGalleryPreview(galleryData);
+  markDirty();
+  const totalKB = Math.round(JSON.stringify(galleryData).length * 0.75 / 1024);
+  showToast(galleryData.length + ' ta rasm yuklandi (~' + totalKB + 'KB)', 'success');
+  // Reset file input
+  event.target.value = '';
+}
+
+function removeGalleryImg(idx) {
+  let galleryData = [];
+  try { galleryData = JSON.parse(document.getElementById('m-pf-gallery-data').value || '[]'); } catch(e) { galleryData = []; }
+  galleryData.splice(idx, 1);
+  document.getElementById('m-pf-gallery-data').value = JSON.stringify(galleryData);
+  renderGalleryPreview(galleryData);
+  markDirty();
+}
+
+function renderGalleryPreview(galleryData) {
+  const previewEl = document.getElementById('m-pf-gallery-preview');
+  if (!previewEl) return;
+  if (!galleryData || !galleryData.length) {
+    previewEl.innerHTML = '';
+    return;
+  }
+  previewEl.innerHTML = galleryData.map((img, i) =>
+    '<div style="position:relative;display:inline-block;margin:4px">'
+    + '<img src="' + sanitize(img) + '" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid var(--border)">'
+    + '<button type="button" onclick="removeGalleryImg(' + i + ')" style="position:absolute;top:-6px;right:-6px;width:22px;height:22px;background:rgba(0,0,0,0.8);border:1px solid var(--border);border-radius:50%;color:var(--red);cursor:pointer;font-size:0.6rem;display:flex;align-items:center;justify-content:center"><i class="fas fa-times"></i></button>'
+    + '</div>'
+  ).join('');
 }
 
 /* ============================================================

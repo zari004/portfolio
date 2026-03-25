@@ -515,6 +515,184 @@
     }
     .social-link:hover { background: var(--accent); color: #0a0a0a; border-color: var(--accent); }
 
+    /* ===== PROJECT DETAIL ===== */
+    .project-detail {
+      position: fixed; inset: 0; z-index: 1000;
+      background: var(--bg);
+      overflow-y: auto; overflow-x: hidden;
+      transform: translateX(100%);
+      transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .project-detail.active {
+      transform: translateX(0);
+    }
+    .project-detail-back {
+      position: fixed; top: 20px; left: 20px; z-index: 1001;
+      display: flex; align-items: center; gap: 8px;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 10px; padding: 10px 18px;
+      color: var(--text); font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: all 0.2s;
+      font-family: 'Space Grotesk', sans-serif;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.3s, background 0.2s, border-color 0.2s;
+    }
+    .project-detail-back.active {
+      opacity: 1; pointer-events: auto;
+    }
+    .project-detail-back:hover {
+      border-color: var(--accent); color: var(--accent);
+      background: rgba(181,245,66,0.06);
+    }
+    .pd-hero {
+      position: relative; width: 100%;
+      min-height: 50vh; max-height: 70vh;
+      overflow: hidden; display: flex;
+      align-items: flex-end;
+    }
+    .pd-hero-media {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+    }
+    .pd-hero-placeholder {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 80px; color: var(--muted);
+    }
+    .pd-hero-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(to top, var(--bg) 0%, rgba(13,13,13,0.4) 50%, rgba(13,13,13,0.1) 100%);
+    }
+    .pd-hero-content {
+      position: relative; z-index: 2;
+      padding: 40px 60px 48px; width: 100%;
+    }
+    .pd-hero-tag {
+      display: inline-block;
+      font-size: 11px; font-weight: 700; color: var(--accent);
+      text-transform: uppercase; letter-spacing: 3px;
+      font-family: 'JetBrains Mono', monospace;
+      margin-bottom: 12px;
+    }
+    .pd-hero-title {
+      font-size: clamp(32px, 5vw, 56px);
+      font-weight: 800; line-height: 1.1;
+      letter-spacing: -2px; max-width: 700px;
+    }
+    .pd-body {
+      max-width: 1000px; margin: 0 auto;
+      padding: 48px 60px 80px;
+    }
+    .pd-info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px; margin-bottom: 48px;
+    }
+    .pd-info-item {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 20px;
+    }
+    .pd-info-label {
+      font-size: 10px; font-weight: 700; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 2px;
+      font-family: 'JetBrains Mono', monospace;
+      margin-bottom: 6px;
+    }
+    .pd-info-value {
+      font-size: 15px; font-weight: 600; color: var(--text);
+    }
+    .pd-description {
+      font-size: 16px; color: var(--sub);
+      line-height: 1.9; margin-bottom: 48px;
+      white-space: pre-line;
+    }
+    .pd-section-title {
+      font-size: 20px; font-weight: 700;
+      margin-bottom: 20px; letter-spacing: -0.5px;
+    }
+    .pd-gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 12px; margin-bottom: 48px;
+    }
+    .pd-gallery-item {
+      border-radius: 12px; overflow: hidden;
+      border: 1px solid var(--border);
+      background: var(--card); cursor: pointer;
+      transition: all 0.25s;
+    }
+    .pd-gallery-item:hover {
+      border-color: rgba(181,245,66,0.25);
+      transform: translateY(-3px);
+    }
+    .pd-gallery-item img {
+      width: 100%; display: block;
+      aspect-ratio: 16/10; object-fit: cover;
+    }
+    .pd-gallery-item video {
+      width: 100%; display: block;
+      aspect-ratio: 16/10; object-fit: cover;
+    }
+    .pd-link-btn {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: var(--accent); color: #0a0a0a;
+      padding: 14px 28px; border-radius: 10px;
+      font-weight: 700; font-size: 15px;
+      text-decoration: none; transition: all 0.2s;
+      margin-bottom: 48px;
+    }
+    .pd-link-btn:hover {
+      background: #8fc422; transform: translateY(-2px);
+    }
+    .pd-tools-list {
+      display: flex; flex-wrap: wrap; gap: 8px;
+    }
+    .pd-tool-tag {
+      padding: 6px 14px; border-radius: 6px;
+      background: var(--card); border: 1px solid var(--border);
+      font-size: 12px; color: var(--sub);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    /* Gallery lightbox */
+    .pd-lightbox {
+      position: fixed; inset: 0; z-index: 2000;
+      background: rgba(0,0,0,0.92);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.3s;
+    }
+    .pd-lightbox.active {
+      opacity: 1; pointer-events: auto;
+    }
+    .pd-lightbox img {
+      max-width: 90vw; max-height: 90vh;
+      border-radius: 12px; object-fit: contain;
+    }
+    .pd-lightbox-close {
+      position: absolute; top: 20px; right: 20px;
+      width: 40px; height: 40px; border-radius: 50%;
+      background: var(--card); border: 1px solid var(--border);
+      color: var(--text); font-size: 16px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+    }
+    .pd-lightbox-close:hover {
+      border-color: var(--accent); color: var(--accent);
+    }
+    @media (max-width: 900px) {
+      .pd-hero { min-height: 35vh; }
+      .pd-hero-content { padding: 24px 20px 32px; }
+      .pd-body { padding: 32px 20px 60px; }
+      .pd-info-grid { grid-template-columns: 1fr 1fr; }
+      .pd-gallery { grid-template-columns: 1fr; }
+      .project-detail-back { top: 12px; left: 12px; padding: 8px 14px; font-size: 12px; }
+    }
+    @media (max-width: 500px) {
+      .pd-info-grid { grid-template-columns: 1fr; }
+      .pd-hero-title { font-size: 28px !important; letter-spacing: -1px; }
+    }
+
     /* ===== SCROLL REVEAL ===== */
     .reveal {
       opacity: 0; transform: translateY(20px);
@@ -794,6 +972,18 @@
   </div>
 </footer>
 
+<!-- PROJECT DETAIL OVERLAY -->
+<div class="project-detail" id="projectDetail"></div>
+<button class="project-detail-back" id="projectDetailBack" onclick="closeProjectDetail()">
+  <i class="fas fa-arrow-left"></i> Orqaga
+</button>
+
+<!-- GALLERY LIGHTBOX -->
+<div class="pd-lightbox" id="pdLightbox" onclick="closeLightbox()">
+  <button class="pd-lightbox-close" onclick="closeLightbox()"><i class="fas fa-times"></i></button>
+  <img id="pdLightboxImg" src="" alt="">
+</div>
+
 <script>
 // ============ DEFAULT DATA ============
 const DEFAULT_DATA = {
@@ -933,7 +1123,9 @@ function applyData() {
         });
       });
     }
-    pg.innerHTML = d.portfolio.map(p => {
+    // Store portfolio data globally for detail view
+    window.__portfolioItems = d.portfolio;
+    pg.innerHTML = d.portfolio.map((p, idx) => {
       const isVideo = p.video || (p.img && /\.(mp4|webm|mov|ogg)(\?|$)/i.test(p.img));
       const mediaSrc = p.video || p.img;
       let mediaHTML = '';
@@ -945,10 +1137,10 @@ function applyData() {
         mediaHTML = `<div class="thumb-placeholder"><i class="fas fa-image"></i><span>Loyiha rasmi</span></div>`;
       }
       return `
-      <div class="portfolio-card reveal" data-tag="${p.tag}" ${p.link ? `onclick="window.open('${p.link}','_blank')"` : ''}>
+      <div class="portfolio-card reveal" data-tag="${p.tag}" onclick="openProjectDetail(${idx})">
         <div class="portfolio-thumb" style="background:linear-gradient(135deg,${p.color1},${p.color2})">
           ${mediaHTML}
-          <div class="thumb-overlay"><i class="fas fa-external-link-alt"></i></div>
+          <div class="thumb-overlay"><i class="fas fa-eye"></i></div>
         </div>
         <div class="portfolio-info">
           <div class="portfolio-tag">${p.tag}</div>
@@ -1245,6 +1437,122 @@ function initAurora() {
 
   requestAnimationFrame(animate);
 }
+
+// ============ PROJECT DETAIL ============
+function openProjectDetail(idx) {
+  const items = window.__portfolioItems;
+  if (!items || !items[idx]) return;
+  const p = items[idx];
+
+  const detail = document.getElementById('projectDetail');
+  const backBtn = document.getElementById('projectDetailBack');
+
+  // Build hero media
+  const isVideo = p.video || (p.img && /\.(mp4|webm|mov|ogg)(\?|$)/i.test(p.img));
+  const mediaSrc = p.video || p.img;
+  let heroMediaHTML = '';
+  if (isVideo && mediaSrc) {
+    heroMediaHTML = `<video class="pd-hero-media" src="${mediaSrc}" autoplay loop muted playsinline></video>`;
+  } else if (p.img) {
+    heroMediaHTML = `<img class="pd-hero-media" src="${p.img}" alt="${p.title}"/>`;
+  } else {
+    heroMediaHTML = `<div class="pd-hero-placeholder" style="background:linear-gradient(135deg,${p.color1},${p.color2})"><i class="fas fa-image"></i></div>`;
+  }
+
+  // Build info grid items
+  let infoGridHTML = '';
+  if (p.client) {
+    infoGridHTML += `<div class="pd-info-item"><div class="pd-info-label">Mijoz</div><div class="pd-info-value">${p.client}</div></div>`;
+  }
+  infoGridHTML += `<div class="pd-info-item"><div class="pd-info-label">Kategoriya</div><div class="pd-info-value">${p.tag}</div></div>`;
+  if (p.date) {
+    infoGridHTML += `<div class="pd-info-item"><div class="pd-info-label">Sana</div><div class="pd-info-value">${p.date}</div></div>`;
+  }
+  if (p.tools) {
+    infoGridHTML += `<div class="pd-info-item"><div class="pd-info-label">Asboblar</div><div class="pd-tools-list">${p.tools.split(',').map(t => `<span class="pd-tool-tag">${t.trim()}</span>`).join('')}</div></div>`;
+  }
+
+  // Build description
+  const description = p.fullDesc || p.desc || '';
+
+  // Build gallery
+  let galleryHTML = '';
+  const galleryImages = p.gallery || [];
+  const galleryVideoUrls = p.galleryVideos ? p.galleryVideos.split(',').map(v => v.trim()).filter(v => v) : [];
+
+  if (galleryImages.length || galleryVideoUrls.length) {
+    galleryHTML += `<div class="pd-section-title">Galereya</div><div class="pd-gallery">`;
+    galleryImages.forEach((img, i) => {
+      galleryHTML += `<div class="pd-gallery-item" onclick="openLightbox('${img.replace(/'/g, "\\'")}')"><img src="${img}" alt="Gallery ${i+1}"/></div>`;
+    });
+    galleryVideoUrls.forEach(vid => {
+      galleryHTML += `<div class="pd-gallery-item"><video src="${vid}" controls playsinline muted></video></div>`;
+    });
+    galleryHTML += `</div>`;
+  }
+
+  // Build link button
+  let linkHTML = '';
+  if (p.link) {
+    linkHTML = `<a href="${p.link}" target="_blank" class="pd-link-btn"><i class="fas fa-external-link-alt"></i> Loyihani ko'rish</a>`;
+  }
+
+  detail.innerHTML = `
+    <div class="pd-hero" style="background:linear-gradient(135deg,${p.color1},${p.color2})">
+      ${heroMediaHTML}
+      <div class="pd-hero-overlay"></div>
+      <div class="pd-hero-content">
+        <div class="pd-hero-tag">${p.tag}</div>
+        <h1 class="pd-hero-title">${p.title}</h1>
+      </div>
+    </div>
+    <div class="pd-body">
+      <div class="pd-info-grid">${infoGridHTML}</div>
+      ${linkHTML}
+      <div class="pd-description">${description}</div>
+      ${galleryHTML}
+    </div>
+  `;
+
+  detail.scrollTop = 0;
+  detail.classList.add('active');
+  backBtn.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeProjectDetail() {
+  const detail = document.getElementById('projectDetail');
+  const backBtn = document.getElementById('projectDetailBack');
+  detail.classList.remove('active');
+  backBtn.classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+function openLightbox(src) {
+  const lb = document.getElementById('pdLightbox');
+  const img = document.getElementById('pdLightboxImg');
+  img.src = src;
+  lb.classList.add('active');
+}
+
+function closeLightbox() {
+  document.getElementById('pdLightbox').classList.remove('active');
+}
+
+// Close detail with Escape key
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    const lb = document.getElementById('pdLightbox');
+    if (lb && lb.classList.contains('active')) {
+      closeLightbox();
+    } else {
+      const detail = document.getElementById('projectDetail');
+      if (detail && detail.classList.contains('active')) {
+        closeProjectDetail();
+      }
+    }
+  }
+});
 
 // ============ INIT ============
 applyData();
