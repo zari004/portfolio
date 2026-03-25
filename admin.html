@@ -712,9 +712,9 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
         </div>
         <div class="form-card">
           <div class="form-card-title"><i class="fas fa-tools"></i> Ko'nikmalar</div>
-          <div class="tags-wrap" id="skillTags"></div>
-          <div class="add-tag-row">
-            <input class="form-input" id="newSkill" placeholder="Yangi ko'nikma kiriting" onkeydown="if(event.key==='Enter'){addSkill(); event.preventDefault();}">
+          <div id="skillTags"></div>
+          <div class="add-tag-row" style="gap:6px">
+            <input class="form-input" id="newSkill" placeholder="Ko'nikma nomi" onkeydown="if(event.key==='Enter'){addSkill(); event.preventDefault();}">
             <button class="btn btn-primary btn-sm" onclick="addSkill()"><i class="fas fa-plus"></i></button>
           </div>
         </div>
@@ -1567,47 +1567,33 @@ function portfolioFormHTML(p) {
     + '</div>';
 }
 
-/* --- Tool Logos Map --- */
-var TOOL_LOGOS = {
-  'Adobe Illustrator': 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/illustrator/illustrator-plain.svg',
-  'Photoshop': 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/photoshop/photoshop-plain.svg',
-  'Figma': 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/figma/figma-original.svg',
-  'InDesign': 'https://upload.wikimedia.org/wikipedia/commons/4/48/Adobe_InDesign_CC_icon.svg',
-  'After Effects': 'https://upload.wikimedia.org/wikipedia/commons/c/cb/Adobe_After_Effects_CC_icon.svg',
-  'Canva Pro': 'https://upload.wikimedia.org/wikipedia/commons/0/08/Canva_icon_2021.svg',
-  'Premiere Pro': 'https://upload.wikimedia.org/wikipedia/commons/4/40/Adobe_Premiere_Pro_CC_icon.svg',
-  'XD': 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/xd/xd-plain.svg',
-  'Sketch': 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/sketch/sketch-original.svg',
-  'Blender': 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/blender/blender-original.svg',
-  'CorelDRAW': 'https://upload.wikimedia.org/wikipedia/en/d/d2/CorelDRAW_2020.svg',
-  'Lightroom': 'https://upload.wikimedia.org/wikipedia/commons/b/b6/Adobe_Photoshop_Lightroom_CC_logo.svg'
-};
-
-function getToolLogo(name) {
-  if (TOOL_LOGOS[name]) return TOOL_LOGOS[name];
-  // fallback: try to find partial match
-  var key = Object.keys(TOOL_LOGOS).find(function(k) {
-    return name.toLowerCase().indexOf(k.toLowerCase()) !== -1 || k.toLowerCase().indexOf(name.toLowerCase()) !== -1;
+function getSkillLogo(name) {
+  if (!data.about || !data.about.skills) return '';
+  var skill = data.about.skills.find(function(s) {
+    var n = typeof s === 'string' ? s : s.name;
+    return n === name || n.toLowerCase() === name.toLowerCase();
   });
-  return key ? TOOL_LOGOS[key] : '';
+  if (!skill) return '';
+  return typeof skill === 'string' ? '' : (skill.logo || '');
 }
 
 function initToolsGrid(selectedTools) {
   var grid = document.getElementById('m-pf-tools-grid');
   var hidden = document.getElementById('m-pf-tools');
   if (!grid) return;
-  var skills = data.about && data.about.skills ? data.about.skills : [];
+  normalizeSkills();
+  var skills = data.about.skills || [];
   var selected = selectedTools ? selectedTools.split(',').map(function(s){ return s.trim(); }).filter(function(s){ return s; }) : [];
 
   grid.innerHTML = skills.map(function(skill) {
-    var isSelected = selected.indexOf(skill) !== -1;
-    var logo = getToolLogo(skill);
-    var logoHTML = logo ? '<img src="' + logo + '" style="width:18px;height:18px;object-fit:contain;flex-shrink:0" onerror="this.style.display=\'none\'">' : '<i class="fas fa-tools" style="font-size:0.7rem;color:var(--muted);flex-shrink:0"></i>';
-    return '<div class="tool-select-item' + (isSelected ? ' selected' : '') + '" onclick="toggleToolSelect(this,\'' + sanitize(skill).replace(/'/g, "\\'") + '\')" style="display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:8px;border:1px solid ' + (isSelected ? 'var(--accent)' : 'var(--border)') + ';background:' + (isSelected ? 'rgba(181,245,66,0.1)' : 'var(--card)') + ';cursor:pointer;font-size:0.8rem;color:' + (isSelected ? 'var(--accent)' : 'var(--sub)') + ';transition:all 0.15s;user-select:none">'
-      + logoHTML + skill + '</div>';
+    var name = skill.name;
+    var isSelected = selected.indexOf(name) !== -1;
+    var logo = skill.logo;
+    var logoHTML = logo ? '<img src="' + sanitize(logo) + '" style="width:18px;height:18px;object-fit:contain;flex-shrink:0;border-radius:3px" onerror="this.style.display=\'none\'">' : '';
+    return '<div class="tool-select-item' + (isSelected ? ' selected' : '') + '" onclick="toggleToolSelect(this,\'' + sanitize(name).replace(/'/g, "\\'") + '\')" style="display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:8px;border:1px solid ' + (isSelected ? 'var(--accent)' : 'var(--border)') + ';background:' + (isSelected ? 'rgba(181,245,66,0.1)' : 'var(--card)') + ';cursor:pointer;font-size:0.8rem;color:' + (isSelected ? 'var(--accent)' : 'var(--sub)') + ';transition:all 0.15s;user-select:none">'
+      + logoHTML + sanitize(name) + '</div>';
   }).join('');
 
-  // Update hidden input
   hidden.value = selected.join(', ');
 }
 
@@ -2226,30 +2212,80 @@ function deleteService(id) {
 /* ============================================================
    SKILLS
    ============================================================ */
+function normalizeSkills() {
+  // Eski format ['string'] ni yangi format [{name, logo}] ga o'girish
+  if (!data.about.skills) { data.about.skills = []; return; }
+  data.about.skills = data.about.skills.map(function(s) {
+    if (typeof s === 'string') return { name: s, logo: '' };
+    return s;
+  });
+}
+
 function renderSkillTags() {
+  normalizeSkills();
   const el = document.getElementById('skillTags');
-  if (!data.about.skills || !data.about.skills.length) { el.innerHTML = '<span style="color:var(--muted);font-size:0.82rem">Ko\'nikmalar yo\'q</span>'; return; }
-  el.innerHTML = data.about.skills.map((s, i) =>
-    '<div class="tag">' + sanitize(s) + '<button class="remove-tag" onclick="removeSkill(' + i + ')"><i class="fas fa-times"></i></button></div>'
-  ).join('');
+  if (!data.about.skills.length) { el.innerHTML = '<span style="color:var(--muted);font-size:0.82rem">Ko\'nikmalar yo\'q</span>'; return; }
+  el.innerHTML = data.about.skills.map(function(s, i) {
+    var logoPreview = s.logo
+      ? '<img src="' + sanitize(s.logo) + '" style="width:22px;height:22px;object-fit:contain;border-radius:4px" onerror="this.style.display=\'none\'">'
+      : '<span style="width:22px;height:22px;display:flex;align-items:center;justify-content:center;border-radius:4px;background:var(--border);font-size:0.55rem;color:var(--muted)"><i class="fas fa-image"></i></span>';
+    return '<div style="display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 10px;margin-bottom:6px">'
+      + logoPreview
+      + '<span style="flex:1;font-size:0.85rem;font-weight:500">' + sanitize(s.name) + '</span>'
+      + '<button type="button" onclick="uploadSkillLogo(' + i + ')" style="width:26px;height:26px;display:flex;align-items:center;justify-content:center;border-radius:6px;border:1px solid var(--border);background:var(--card);color:var(--accent);cursor:pointer;font-size:0.65rem" title="Logo yuklash"><i class="fas fa-upload"></i></button>'
+      + '<button type="button" onclick="setSkillLogoUrl(' + i + ')" style="width:26px;height:26px;display:flex;align-items:center;justify-content:center;border-radius:6px;border:1px solid var(--border);background:var(--card);color:var(--accent2);cursor:pointer;font-size:0.65rem" title="Logo URL"><i class="fas fa-link"></i></button>'
+      + '<button type="button" onclick="removeSkill(' + i + ')" style="width:26px;height:26px;display:flex;align-items:center;justify-content:center;border-radius:6px;border:1px solid rgba(245,66,66,0.3);background:rgba(245,66,66,0.06);color:var(--red);cursor:pointer;font-size:0.65rem" title="O\'chirish"><i class="fas fa-trash"></i></button>'
+      + '</div>';
+  }).join('');
 }
 
 function addSkill() {
   const input = document.getElementById('newSkill');
   const val = input.value.trim();
   if (!val) return;
-  if (!data.about.skills) data.about.skills = [];
-  if (data.about.skills.includes(val)) { showToast('Bu ko\'nikma allaqachon mavjud', 'warning'); return; }
-  data.about.skills.push(val);
+  normalizeSkills();
+  if (data.about.skills.find(function(s){ return s.name === val; })) { showToast('Bu ko\'nikma allaqachon mavjud', 'warning'); return; }
+  data.about.skills.push({ name: val, logo: '' });
   renderSkillTags();
   input.value = '';
   markDirty();
 }
 
 function removeSkill(idx) {
+  normalizeSkills();
   data.about.skills.splice(idx, 1);
   renderSkillTags();
   markDirty();
+}
+
+function uploadSkillLogo(idx) {
+  var fileInput = document.createElement('input');
+  fileInput.type = 'file';
+  fileInput.accept = 'image/*';
+  fileInput.onchange = async function(e) {
+    var file = e.target.files[0];
+    if (!file) return;
+    try {
+      var compressed = await compressImage(file, 200, 0.85);
+      data.about.skills[idx].logo = compressed;
+      renderSkillTags();
+      markDirty();
+      showToast('Logo yuklandi', 'success');
+    } catch(err) {
+      showToast('Logo yuklashda xatolik', 'error');
+    }
+  };
+  fileInput.click();
+}
+
+function setSkillLogoUrl(idx) {
+  var current = data.about.skills[idx].logo || '';
+  var url = prompt('Logo URL kiriting:', current);
+  if (url === null) return;
+  data.about.skills[idx].logo = url.trim();
+  renderSkillTags();
+  markDirty();
+  showToast('Logo yangilandi', 'success');
 }
 
 function removeAboutImg() {

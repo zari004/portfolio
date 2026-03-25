@@ -417,12 +417,14 @@
     .about-img-badge .badge-text { font-size: 10px; font-weight: 700; font-family: 'JetBrains Mono', monospace; text-transform: uppercase; letter-spacing: 1px; }
     .skills-list { display: flex; flex-wrap: wrap; gap: 8px; margin: 28px 0; }
     .skill-tag {
-      padding: 6px 14px; border-radius: 6px;
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 8px 14px; border-radius: 8px;
       background: var(--card); border: 1px solid var(--border);
       font-size: 12px; color: var(--sub); font-family: 'JetBrains Mono', monospace;
       transition: all 0.2s;
     }
     .skill-tag:hover { border-color: var(--accent); color: var(--accent); }
+    .skill-tag img { flex-shrink: 0; }
 
     /* ===== PROCESS ===== */
     #process { background: var(--panel); }
@@ -1212,7 +1214,17 @@ function applyData() {
   const aexpl = document.getElementById('about-exp-label');
   if (aexpl) aexpl.textContent = ab.expLabel;
   const sl = document.getElementById('skills-list');
-  if (sl) sl.innerHTML = ab.skills.map(s => `<span class="skill-tag">${s}</span>`).join('');
+  if (sl) {
+    // skills yangi format: [{name, logo}] yoki eski: ['string']
+    sl.innerHTML = ab.skills.map(function(s) {
+      var name = typeof s === 'string' ? s : s.name;
+      var logo = typeof s === 'string' ? '' : (s.logo || '');
+      var logoHTML = logo ? '<img src="' + logo + '" style="width:16px;height:16px;object-fit:contain;flex-shrink:0;border-radius:3px" onerror="this.style.display=\'none\'">' : '';
+      return '<span class="skill-tag">' + logoHTML + name + '</span>';
+    }).join('');
+    // Store skills globally for tool logo lookup
+    window.__skillsData = ab.skills;
+  }
 
   // CONTACT
   const c = d.contact;
@@ -1520,30 +1532,20 @@ function openProjectDetail(idx) {
     infoGridHTML += `<div class="pd-info-item"><div class="pd-info-label">Sana</div><div class="pd-info-value">${p.date}</div></div>`;
   }
   if (p.tools) {
-    var toolLogos = {
-      'Adobe Illustrator': 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/illustrator/illustrator-plain.svg',
-      'Photoshop': 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/photoshop/photoshop-plain.svg',
-      'Figma': 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/figma/figma-original.svg',
-      'InDesign': 'https://upload.wikimedia.org/wikipedia/commons/4/48/Adobe_InDesign_CC_icon.svg',
-      'After Effects': 'https://upload.wikimedia.org/wikipedia/commons/c/cb/Adobe_After_Effects_CC_icon.svg',
-      'Canva Pro': 'https://upload.wikimedia.org/wikipedia/commons/0/08/Canva_icon_2021.svg',
-      'Premiere Pro': 'https://upload.wikimedia.org/wikipedia/commons/4/40/Adobe_Premiere_Pro_CC_icon.svg',
-      'XD': 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/xd/xd-plain.svg',
-      'Sketch': 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/sketch/sketch-original.svg',
-      'Blender': 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/blender/blender-original.svg',
-      'Lightroom': 'https://upload.wikimedia.org/wikipedia/commons/b/b6/Adobe_Photoshop_Lightroom_CC_logo.svg'
-    };
-    function getToolLogoUrl(name) {
-      if (toolLogos[name]) return toolLogos[name];
-      var key = Object.keys(toolLogos).find(function(k) {
-        return name.toLowerCase().indexOf(k.toLowerCase()) !== -1 || k.toLowerCase().indexOf(name.toLowerCase()) !== -1;
+    // about.skills dan logo olish
+    var skillsData = window.__skillsData || [];
+    function findSkillLogo(name) {
+      var skill = skillsData.find(function(s) {
+        var n = typeof s === 'string' ? s : s.name;
+        return n === name || n.toLowerCase() === name.toLowerCase();
       });
-      return key ? toolLogos[key] : '';
+      if (!skill || typeof skill === 'string') return '';
+      return skill.logo || '';
     }
     infoGridHTML += `<div class="pd-info-item"><div class="pd-info-label">Asboblar</div><div class="pd-tools-list">${p.tools.split(',').map(t => {
       var name = t.trim();
-      var logo = getToolLogoUrl(name);
-      var logoHTML = logo ? '<img src="' + logo + '" style="width:16px;height:16px;object-fit:contain" onerror="this.style.display=\'none\'">' : '';
+      var logo = findSkillLogo(name);
+      var logoHTML = logo ? '<img src="' + logo + '" style="width:16px;height:16px;object-fit:contain;border-radius:3px" onerror="this.style.display=\'none\'">' : '';
       return '<span class="pd-tool-tag">' + logoHTML + name + '</span>';
     }).join('')}</div></div>`;
   }
