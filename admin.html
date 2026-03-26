@@ -725,11 +725,11 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
           </div>
           <div class="form-group">
             <label>Tavsif 1 <span class="char-count" id="cc-about-d1"></span></label>
-            <textarea class="form-input" id="about-desc1" rows="2" placeholder="Birinchi tavsif matni" maxlength="200" oninput="charCount(this,'cc-about-d1',200); markDirty()"></textarea>
+            <textarea class="form-input" id="about-desc1" rows="4" placeholder="Birinchi tavsif matni" maxlength="1000" oninput="charCount(this,'cc-about-d1',1000); markDirty()"></textarea>
           </div>
           <div class="form-group">
             <label>Tavsif 2 <span class="char-count" id="cc-about-d2"></span></label>
-            <textarea class="form-input" id="about-desc2" rows="2" placeholder="Ikkinchi tavsif matni" maxlength="200" oninput="charCount(this,'cc-about-d2',200); markDirty()"></textarea>
+            <textarea class="form-input" id="about-desc2" rows="4" placeholder="Ikkinchi tavsif matni" maxlength="1000" oninput="charCount(this,'cc-about-d2',1000); markDirty()"></textarea>
           </div>
           <div class="form-row">
             <div class="form-group">
@@ -1687,8 +1687,8 @@ function fillAllForms() {
   document.getElementById('about-expLabel').value = data.about.expLabel || '';
   initCharCount('about-title1','cc-about-t1',40);
   initCharCount('about-title2','cc-about-t2',40);
-  initCharCount('about-desc1','cc-about-d1',200);
-  initCharCount('about-desc2','cc-about-d2',200);
+  initCharCount('about-desc1','cc-about-d1',1000);
+  initCharCount('about-desc2','cc-about-d2',1000);
   // About image
   if (data.about.img) {
     document.getElementById('about-img-data').value = data.about.img;
