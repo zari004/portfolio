@@ -766,6 +766,10 @@
       .nav-cta { display: none; }
       #cv-btn { display: none !important; }
       .menu-toggle { display: block; }
+      nav.mobile-open { flex-wrap: wrap; padding-bottom: 12px; }
+      nav.mobile-open .nav-links { display: flex; flex-direction: column; width: 100%; gap: 8px; padding-top: 12px; order: 10; }
+      nav.mobile-open .nav-cta { display: inline-block; order: 11; margin-top: 8px; }
+      nav.mobile-open #cv-btn { display: inline-flex !important; order: 11; margin-top: 8px; }
       .hero { padding: 100px 20px 60px; }
       .hero h1 { font-size: clamp(36px, 10vw, 56px) !important; letter-spacing: -2px; }
       .hero p { font-size: 14px !important; }
@@ -825,7 +829,7 @@
     </a>
     <a href="#contact" class="nav-cta">Bog'lanish</a>
   </div>
-  <button class="menu-toggle"><i class="fas fa-bars"></i></button>
+  <button class="menu-toggle" onclick="document.querySelector('nav').classList.toggle('mobile-open')"><i class="fas fa-bars"></i></button>
 </nav>
 
 <!-- HERO -->
@@ -1119,6 +1123,12 @@ const DEFAULT_DATA = {
   }
 };
 
+// ============ XSS SANITIZATION ============
+function escHTML(str) {
+  if (typeof str !== 'string') return '';
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;');
+}
+
 // ============ VIDEO HELPERS ============
 var _ytCounter = 0;
 function getYouTubeId(url) {
@@ -1146,6 +1156,10 @@ function loadYouTubeAPI() {
   var tag = document.createElement('script');
   tag.id = 'yt-api-script';
   tag.src = 'https://www.youtube.com/iframe_api';
+  tag.onerror = function() {
+    console.warn('YouTube IFrame API yuklanmadi. Video pleyerlar ishlamasligi mumkin.');
+    _ytPendingPlayers = [];
+  };
   document.head.appendChild(tag);
 }
 function onYouTubeIframeAPIReady() {
@@ -1210,7 +1224,7 @@ function sendContactMessage() {
     fetch('https://api.telegram.org/bot' + c.botToken + '/sendMessage', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: c.chatId, text: text, parse_mode: 'HTML' })
+      body: JSON.stringify({ chat_id: c.chatId, text: text })
     }).then(function(r) { return r.json(); }).then(function(res) {
       if (res.ok) {
         btn.innerHTML = '<i class="fas fa-check"></i> Yuborildi!';
@@ -1277,7 +1291,7 @@ function applyData() {
   // HERO
   const h = d.hero;
   const h1 = document.querySelector('.hero h1');
-  if (h1) h1.innerHTML = h.line1 + '<br><span class="hl" id="hero-line2">' + h.line2 + '</span><br><span id="hero-line3">' + h.line3 + '</span>';
+  if (h1) h1.innerHTML = escHTML(h.line1) + '<br><span class="hl" id="hero-line2">' + escHTML(h.line2) + '</span><br><span id="hero-line3">' + escHTML(h.line3) + '</span>';
   const heroP = document.getElementById('hero-desc');
   if (heroP) heroP.textContent = h.desc;
   const badgeEl = document.getElementById('hero-badge-text');
@@ -1286,8 +1300,8 @@ function applyData() {
   if (statsEl && h.stats) {
     statsEl.innerHTML = h.stats.map(s => `
       <div class="stat-item">
-        <div class="stat-num">${s.num}<span>${s.suffix}</span></div>
-        <div class="stat-label">${s.label}</div>
+        <div class="stat-num">${escHTML(s.num)}<span>${escHTML(s.suffix)}</span></div>
+        <div class="stat-label">${escHTML(s.label)}</div>
       </div>
     `).join('');
   }
@@ -1305,9 +1319,9 @@ function applyData() {
   if (sg && d.services) {
     sg.innerHTML = d.services.map(s => `
       <div class="service-card reveal">
-        <div class="service-icon"><i class="${s.icon}"></i></div>
-        <h3>${s.title}</h3>
-        <p>${s.desc}</p>
+        <div class="service-icon"><i class="${escHTML(s.icon)}"></i></div>
+        <h3>${escHTML(s.title)}</h3>
+        <p>${escHTML(s.desc)}</p>
       </div>
     `).join('');
   }
@@ -1318,7 +1332,7 @@ function applyData() {
   if (pg && d.portfolio) {
     const cats = ['Barchasi', ...new Set(d.portfolio.map(p => p.tag))];
     if (pf) {
-      pf.innerHTML = cats.map((c,i) => `<button class="filter-btn${i===0?' active':''}" data-cat="${c}">${c}</button>`).join('');
+      pf.innerHTML = cats.map((c,i) => `<button class="filter-btn${i===0?' active':''}" data-cat="${escHTML(c)}">${escHTML(c)}</button>`).join('');
       pf.querySelectorAll('.filter-btn').forEach(btn => {
         btn.addEventListener('click', () => {
           pf.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
@@ -1385,7 +1399,7 @@ function applyData() {
     aboutImgBox.innerHTML = '<img src="' + ab.img + '" alt="Profil" style="width:100%;height:100%;object-fit:cover">';
   }
   const atEl = document.getElementById('about-title');
-  if (atEl) atEl.innerHTML = ab.title1 + '<br>' + ab.title2;
+  if (atEl) atEl.innerHTML = escHTML(ab.title1) + '<br>' + escHTML(ab.title2);
   const ad1 = document.getElementById('about-desc1');
   if (ad1) ad1.textContent = ab.desc1;
   const ad2 = document.getElementById('about-desc2');
@@ -1401,7 +1415,7 @@ function applyData() {
       var name = typeof s === 'string' ? s : s.name;
       var logo = typeof s === 'string' ? '' : (s.logo || '');
       var logoHTML = logo ? '<img src="' + logo + '" style="width:16px;height:16px;object-fit:contain;flex-shrink:0;border-radius:3px" onerror="this.style.display=\'none\'">' : '';
-      return '<span class="skill-tag">' + logoHTML + name + '</span>';
+      return '<span class="skill-tag">' + logoHTML + escHTML(name) + '</span>';
     }).join('');
     // Store skills globally for tool logo lookup
     window.__skillsData = ab.skills;
@@ -1444,7 +1458,7 @@ function applyData() {
   // SETTINGS
   const s = d.settings;
   const logo = document.querySelector('.logo');
-  if (logo) logo.innerHTML = s.logoText + '<span>' + s.logoAccent + '</span>';
+  if (logo) logo.innerHTML = escHTML(s.logoText) + '<span>' + escHTML(s.logoAccent) + '</span>';
   document.title = s.siteTitle;
   const ft = document.getElementById('footer-text');
   if (ft) ft.textContent = s.footerText;
@@ -1508,7 +1522,7 @@ function renderMarquee(items) {
     }
     return `<div class="company-item">
       <div class="company-logo">
-        <span class="company-logo-text">${item.name}</span>
+        <span class="company-logo-text">${escHTML(item.name)}</span>
       </div>
     </div>`;
   };
@@ -1569,10 +1583,13 @@ function initMarqueeEffect() {
       }
     });
 
-    requestAnimationFrame(updateItems);
+    if (!document.hidden) requestAnimationFrame(updateItems);
   }
 
   requestAnimationFrame(updateItems);
+  document.addEventListener('visibilitychange', function() {
+    if (!document.hidden) requestAnimationFrame(updateItems);
+  });
 }
 
 // ============ SCROLL REVEAL ============
@@ -1639,7 +1656,9 @@ function downloadCV(e) {
         var orientation = pdfW > pdfH ? 'landscape' : 'portrait';
         var doc = new jsPDF(orientation, 'mm', [pdfW, pdfH]);
         doc.addImage(img, 'PNG', 0, 0, pdfW, pdfH);
-        doc.save('CV_Zarnigor_Orifova.pdf');
+        var cvName = 'CV';
+        try { var _d = getData(); if (_d.hero && _d.hero.line1) cvName = 'CV_' + _d.hero.line1.replace(/[^a-zA-Z0-9_\-\s]/g, '').trim().replace(/\s+/g, '_'); } catch(e) {}
+        doc.save(cvName + '.pdf');
       } catch(err) {
         // Fallback — oddiy yuklab olish
         window.open('https://drive.google.com/uc?export=download&confirm=t&id=' + driveMatch[1], '_blank');
@@ -1727,14 +1746,29 @@ function initAurora() {
     }
   }
 
+  let auroraRunning = true;
+  let auroraRafId = null;
+
   function animate(timestamp) {
+    if (!auroraRunning) { auroraRafId = null; return; }
     t = timestamp;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     layers.forEach(drawLayer);
-    requestAnimationFrame(animate);
+    auroraRafId = requestAnimationFrame(animate);
   }
 
-  requestAnimationFrame(animate);
+  document.addEventListener('visibilitychange', function() {
+    if (document.hidden) {
+      auroraRunning = false;
+    } else {
+      if (!auroraRunning) {
+        auroraRunning = true;
+        if (!auroraRafId) auroraRafId = requestAnimationFrame(animate);
+      }
+    }
+  });
+
+  auroraRafId = requestAnimationFrame(animate);
 }
 
 // ============ PROJECT DETAIL ============

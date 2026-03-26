@@ -469,13 +469,13 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
   .panel-header p { font-size: 0.75rem; }
   .form-card { padding: 16px; border-radius: 10px; }
   .form-card-title { font-size: 0.82rem; flex-wrap: wrap; gap: 8px; }
-  .modal { width: 95vw; max-height: 90vh; padding: 20px; }
+  .modal { width: 95vw; max-height: 90vh; padding: 0; }
   .toggle-wrap { flex-wrap: wrap; }
 }
 @media (max-width: 500px) {
   .login-card { padding: 32px 24px; }
   .stats-grid { grid-template-columns: 1fr; }
-  .modal { border-radius: 12px; padding: 16px; }
+  .modal { border-radius: 12px; padding: 0; }
   .panels-container { padding: 10px; padding-top: calc(var(--topbar-h) + 10px); }
   .list-item { gap: 8px; padding: 10px; }
   .list-item .item-img { width: 36px; height: 36px; }
@@ -621,7 +621,7 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
           </div>
           <div class="form-group">
             <label>Tavsif <span class="char-count" id="cc-hero-desc"></span></label>
-            <textarea class="form-input" id="hero-desc" rows="3" placeholder="Hero bo'limi tavsifi" maxlength="200" oninput="charCount(this,'cc-hero-desc',200); markDirty()"></textarea>
+            <textarea class="form-input" id="hero-desc" rows="3" placeholder="Hero bo'limi tavsifi" maxlength="1000" oninput="charCount(this,'cc-hero-desc',1000); markDirty()"></textarea>
           </div>
           <div class="form-group">
             <label>Badge matni <span class="char-count" id="cc-hero-badge"></span></label>
@@ -1075,6 +1075,43 @@ let isDirty = false;
 let currentPanel = 'hero';
 
 /* ============================================================
+   PASSWORD HASHING
+   ============================================================ */
+async function hashPassword(password) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// Synchronous simple hash for comparison (fallback)
+function simpleHash(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  return 'sh_' + Math.abs(hash).toString(16);
+}
+
+// Migrate plaintext passwords to hashed on first load
+async function migratePasswords() {
+  let migrated = false;
+  for (let u of users) {
+    // If password doesn't look like a SHA-256 hash (64 hex chars), hash it
+    if (u.password && !/^[a-f0-9]{64}$/.test(u.password)) {
+      u.password = await hashPassword(u.password);
+      migrated = true;
+    }
+  }
+  if (migrated) {
+    localStorage.setItem('admin_users', JSON.stringify(users));
+  }
+}
+
+/* ============================================================
    HELPERS
    ============================================================ */
 function sanitize(str) {
@@ -1156,12 +1193,23 @@ function showToast(msg, type = 'success') {
 /* ============================================================
    DIRTY STATE
    ============================================================ */
+var _saveTimeout = null;
 function markDirty() {
   isDirty = true;
   const badge = document.getElementById('unsavedBadge');
   if (badge) badge.classList.add('active');
-  // Har bir o'zgarishda avtomatik localStorage ga saqlash
-  saveToStorage();
+  // Collect form data before saving (with safety check for initialization)
+  try {
+    if (document.getElementById('hero-line1')) {
+      collectFormData();
+    }
+  } catch(e) { /* DOM elements may not exist yet during init */ }
+  // Debounced save - batch writes after 1 second of inactivity
+  if (_saveTimeout) clearTimeout(_saveTimeout);
+  _saveTimeout = setTimeout(function() {
+    saveToStorage();
+    _saveTimeout = null;
+  }, 1000);
 }
 
 function clearDirty() {
@@ -1171,6 +1219,13 @@ function clearDirty() {
 }
 
 window.addEventListener('beforeunload', function(e) {
+  // Flush any pending debounced save
+  if (_saveTimeout) {
+    clearTimeout(_saveTimeout);
+    _saveTimeout = null;
+    try { if (document.getElementById('hero-line1')) collectFormData(); } catch(ex) {}
+    saveToStorage();
+  }
   if (isDirty) {
     e.preventDefault();
     e.returnValue = '';
@@ -1573,20 +1628,22 @@ function togglePwd() {
   else { inp.type = 'password'; icon.className = 'fas fa-eye'; }
 }
 
-function doLogin() {
+async function doLogin() {
   const u = document.getElementById('loginUser').value.trim();
   const p = document.getElementById('loginPass').value;
   const errEl = document.getElementById('loginError');
   if (!u || !p) { errEl.textContent = 'Login va parolni kiriting'; return; }
-  const found = users.find(x => x.username === u && x.password === p);
+  const hashedP = await hashPassword(p);
+  const found = users.find(x => x.username === u && x.password === hashedP);
   if (!found) { errEl.textContent = 'Login yoki parol noto\'g\'ri'; return; }
   sessionStorage.setItem('admin_session', JSON.stringify({ id: found.id, username: found.username, role: found.role }));
   errEl.textContent = '';
   enterApp(found);
 }
 
-function checkSession() {
+async function checkSession() {
   loadFromStorage();
+  await migratePasswords();
   try {
     const sess = JSON.parse(sessionStorage.getItem('admin_session'));
     if (sess && sess.username) {
@@ -1664,7 +1721,7 @@ function fillAllForms() {
   initCharCount('hero-line1','cc-hero-line1',30);
   initCharCount('hero-line2','cc-hero-line2',30);
   initCharCount('hero-line3','cc-hero-line3',30);
-  initCharCount('hero-desc','cc-hero-desc',200);
+  initCharCount('hero-desc','cc-hero-desc',1000);
   initCharCount('hero-badge','cc-hero-badge',60);
   renderStatsPreview();
   renderStatsEdit();
@@ -2210,20 +2267,7 @@ function addBlock(type) {
   document.getElementById('block-add-value').focus();
 }
 
-function switchAddBlockType(newType) {
-  var typeInput = document.getElementById('block-add-type');
-  if (typeInput) typeInput.value = newType;
-  var btns = document.querySelectorAll('#block-add-type-btns button');
-  var colors = { title: 'var(--accent)', subtitle: 'var(--accent2)', text: 'var(--sub)' };
-  var bgs = { title: 'rgba(181,245,66,0.15)', subtitle: 'rgba(66,200,245,0.15)', text: 'rgba(153,153,153,0.15)' };
-  btns.forEach(function(btn) {
-    var t = btn.getAttribute('data-type');
-    var isActive = t === newType;
-    btn.style.borderColor = isActive ? colors[t] : 'var(--border)';
-    btn.style.background = isActive ? bgs[t] : 'transparent';
-    btn.style.color = isActive ? (t === 'text' ? 'var(--text)' : colors[t]) : 'var(--muted)';
-  });
-}
+// switchAddBlockType - removed (dead code)
 
 function confirmAddTextBlock() {
   var val = document.getElementById('block-add-value').value.trim();
@@ -2814,57 +2858,7 @@ async function previewImg(event, previewId, hiddenId) {
   }
 }
 
-/* ============================================================
-   GALLERY IMAGE PREVIEW & MANAGEMENT
-   ============================================================ */
-async function previewGalleryImg(event) {
-  const files = event.target.files;
-  if (!files || !files.length) return;
-  let galleryData = [];
-  try { galleryData = JSON.parse(document.getElementById('m-pf-gallery-data').value || '[]'); } catch(e) { galleryData = []; }
-  showToast('Rasmlar siqilmoqda... (' + files.length + ' ta)', 'warning');
-  for (let i = 0; i < files.length; i++) {
-    const file = files[i];
-    if (!file.type.startsWith('image/')) continue;
-    try {
-      const compressed = await compressImage(file, 800, 0.75);
-      galleryData.push(compressed);
-    } catch (err) {
-      showToast('Rasm yuklashda xatolik: ' + file.name, 'error');
-    }
-  }
-  document.getElementById('m-pf-gallery-data').value = JSON.stringify(galleryData);
-  renderGalleryPreview(galleryData);
-  markDirty();
-  const totalKB = Math.round(JSON.stringify(galleryData).length * 0.75 / 1024);
-  showToast(galleryData.length + ' ta rasm yuklandi (~' + totalKB + 'KB)', 'success');
-  // Reset file input
-  event.target.value = '';
-}
-
-function removeGalleryImg(idx) {
-  let galleryData = [];
-  try { galleryData = JSON.parse(document.getElementById('m-pf-gallery-data').value || '[]'); } catch(e) { galleryData = []; }
-  galleryData.splice(idx, 1);
-  document.getElementById('m-pf-gallery-data').value = JSON.stringify(galleryData);
-  renderGalleryPreview(galleryData);
-  markDirty();
-}
-
-function renderGalleryPreview(galleryData) {
-  const previewEl = document.getElementById('m-pf-gallery-preview');
-  if (!previewEl) return;
-  if (!galleryData || !galleryData.length) {
-    previewEl.innerHTML = '';
-    return;
-  }
-  previewEl.innerHTML = galleryData.map((img, i) =>
-    '<div style="position:relative;display:inline-block;margin:4px">'
-    + '<img src="' + sanitize(img) + '" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid var(--border)">'
-    + '<button type="button" onclick="removeGalleryImg(' + i + ')" style="position:absolute;top:-6px;right:-6px;width:22px;height:22px;background:rgba(0,0,0,0.8);border:1px solid var(--border);border-radius:50%;color:var(--red);cursor:pointer;font-size:0.6rem;display:flex;align-items:center;justify-content:center"><i class="fas fa-times"></i></button>'
-    + '</div>'
-  ).join('');
-}
+// previewGalleryImg, removeGalleryImg, renderGalleryPreview - removed (dead code)
 
 /* ============================================================
    BADGE STATUS
@@ -2920,7 +2914,7 @@ function openEditUser(id) {
     '<button class="btn btn-secondary" onclick="closeModal()">Bekor qilish</button><button class="btn btn-primary" onclick="saveUser(' + id + ')">Saqlash</button>', null);
 }
 
-function saveUser(id) {
+async function saveUser(id) {
   const name = document.getElementById('m-user-name').value.trim();
   const pass = document.getElementById('m-user-pass').value;
   const role = document.getElementById('m-user-role').value;
@@ -2929,13 +2923,13 @@ function saveUser(id) {
     const u = users.find(x => x.id === id);
     if (u) {
       u.username = name;
-      if (pass) u.password = pass;
+      if (pass) u.password = await hashPassword(pass);
       u.role = role;
     }
   } else {
     if (!pass) { showToast('Parolni kiriting', 'warning'); return; }
     if (users.find(x => x.username === name)) { showToast('Bu username band', 'error'); return; }
-    users.push({ id: nextId(users), username: name, password: pass, role: role });
+    users.push({ id: nextId(users), username: name, password: await hashPassword(pass), role: role });
   }
   localStorage.setItem('admin_users', JSON.stringify(users));
   renderUsersTable();
