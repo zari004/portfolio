@@ -1467,12 +1467,14 @@ function renderSocialsList() {
   }
   container.innerHTML = data.contact.socials.map(function(s, i) {
     var opt = SOCIAL_OPTIONS.find(function(o){ return o.key === s.key; }) || { label: s.key, icon:'fas fa-link', placeholder:'URL' };
-    return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">'
+    return '<div class="drag-social-item" draggable="true" data-idx="' + i + '" style="display:flex;align-items:center;gap:8px;margin-bottom:8px;border:1px solid transparent;border-radius:8px;padding:2px;cursor:grab;transition:border-color 0.2s,opacity 0.2s">'
+      + '<i class="fas fa-grip-vertical" style="color:var(--muted);font-size:0.6rem;flex-shrink:0;pointer-events:none"></i>'
       + '<div style="width:34px;height:34px;border-radius:8px;background:rgba(255,255,255,0.04);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="' + opt.icon + '" style="font-size:0.85rem;color:var(--accent)"></i></div>'
       + '<input class="form-input social-url-input" data-idx="' + i + '" value="' + sanitize(s.url || '') + '" placeholder="' + opt.placeholder + '" oninput="markDirty()" style="flex:1">'
       + '<button class="btn-icon" onclick="removeSocial(' + i + ')" title="O\'chirish"><i class="fas fa-trash" style="color:var(--red);font-size:0.7rem"></i></button>'
       + '</div>';
   }).join('');
+  initDragDrop('socials-list', 'drag-social-item', function(){ return data.contact.socials; }, function(a){ data.contact.socials = a; }, renderSocialsList);
 }
 
 function toggleSocialsMenu() {
@@ -1947,13 +1949,15 @@ function renderStatsEdit() {
   const el = document.getElementById('statsEdit');
   if (!data.hero.stats || !data.hero.stats.length) { el.innerHTML = ''; return; }
   el.innerHTML = data.hero.stats.map((s, i) =>
-    '<div class="stat-edit-row" style="display:flex;gap:10px;margin-bottom:10px;align-items:center">'
+    '<div class="drag-stat-item stat-edit-row" draggable="true" data-idx="' + i + '" style="display:flex;gap:10px;margin-bottom:10px;align-items:center;border:1px solid transparent;border-radius:8px;padding:4px;cursor:grab;transition:border-color 0.2s,opacity 0.2s">'
+    + '<i class="fas fa-grip-vertical" style="color:var(--muted);font-size:0.6rem;flex-shrink:0;pointer-events:none"></i>'
     + '<input class="form-input stat-num" value="' + sanitize(s.num) + '" placeholder="Raqam" style="width:70px" oninput="markDirty()">'
     + '<input class="form-input stat-suffix" value="' + sanitize(s.suffix) + '" placeholder="+" style="width:50px" oninput="markDirty()">'
     + '<input class="form-input stat-label" value="' + sanitize(s.label) + '" placeholder="Label" style="flex:1" oninput="markDirty()">'
     + '<button class="btn-icon" onclick="removeStat(' + i + ')" title="O\'chirish"><i class="fas fa-trash" style="color:var(--red);font-size:0.75rem"></i></button>'
     + '</div>'
   ).join('');
+  initDragDrop('statsEdit', 'drag-stat-item', function(){ return data.hero.stats; }, function(a){ data.hero.stats = a; }, function(){ renderStatsPreview(); renderStatsEdit(); });
 }
 
 function addStat() {
@@ -1993,11 +1997,12 @@ function toggleCompVisible() {
 function renderCompaniesList() {
   const el = document.getElementById('companiesList');
   if (!data.companies.items.length) { el.innerHTML = '<div class="empty-state"><i class="fas fa-building"></i><p>Kompaniyalar yo\'q</p></div>'; return; }
-  el.innerHTML = data.companies.items.map(c => {
+  el.innerHTML = data.companies.items.map((c, idx) => {
     const logoChar = sanitize(c.name.substring(0,3));
     const name = sanitize(c.name);
     const hasLogo = !!c.logo;
-    return '<div style="display:flex;align-items:center;gap:12px;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:10px;margin-bottom:8px;padding:12px 16px;box-sizing:border-box">'
+    return '<div class="drag-company-item" draggable="true" data-idx="' + idx + '" style="display:flex;align-items:center;gap:12px;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:10px;margin-bottom:8px;padding:12px 16px;box-sizing:border-box;cursor:grab;transition:border-color 0.2s,opacity 0.2s">'
+        + '<i class="fas fa-grip-vertical" style="color:#666;font-size:0.7rem;flex-shrink:0;pointer-events:none"></i>'
         + (hasLogo
           ? '<img src="' + sanitize(c.logo) + '" style="width:44px;height:44px;border-radius:8px;object-fit:contain;padding:3px;background:#2a2a2a;flex-shrink:0">'
           : '<div style="width:44px;height:44px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:800;color:#b5f542;background:rgba(181,245,66,0.08);border:1px solid rgba(181,245,66,0.15);text-transform:uppercase;flex-shrink:0;white-space:nowrap;overflow:hidden;line-height:1">' + logoChar + '</div>')
@@ -2011,6 +2016,7 @@ function renderCompaniesList() {
         + '</div>'
     + '</div>';
   }).join('');
+  initDragDrop('companiesList', 'drag-company-item', function(){ return data.companies.items; }, function(a){ data.companies.items = a; }, renderCompaniesList);
 }
 
 function openAddCompany() {
@@ -2090,7 +2096,7 @@ function renderPortfolioList() {
     const tag = sanitize(p.tag);
     const desc = sanitize(p.desc);
     const hasImg = !!p.img;
-    return '<div class="list-item" draggable="true" data-idx="' + idx + '" ondragstart="dragStart(event,' + idx + ')" ondragover="dragOver(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)" ondrop="dragDrop(event,' + idx + ')" ondragend="dragEnd(event)" style="display:flex;align-items:center;gap:12px;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:10px;margin-bottom:8px;padding:12px 16px;box-sizing:border-box">'
+    return '<div class="drag-portfolio-item list-item" draggable="true" data-idx="' + idx + '" style="display:flex;align-items:center;gap:12px;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:10px;margin-bottom:8px;padding:12px 16px;box-sizing:border-box;cursor:grab;transition:border-color 0.2s,opacity 0.2s">'
         + '<span class="drag-handle" style="color:#666;cursor:grab;font-size:0.9rem;padding:4px;flex-shrink:0"><i class="fas fa-grip-vertical"></i></span>'
         + (hasImg
           ? '<img src="' + sanitize(p.img) + '" style="width:44px;height:44px;border-radius:8px;object-fit:cover;background:#2a2a2a;flex-shrink:0">'
@@ -2105,6 +2111,7 @@ function renderPortfolioList() {
         + '</div>'
     + '</div>';
   }).join('');
+  initDragDrop('portfolioList', 'drag-portfolio-item', function(){ return data.portfolio; }, function(a){ data.portfolio = a; }, renderPortfolioList);
 }
 
 function dragStart(e, idx) {
@@ -2328,11 +2335,8 @@ function renderBlocksList() {
       addMoreBtn = '<button type="button" onclick="addMoreVideos(' + idx + ')" style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;border:1px solid var(--border);background:var(--card);color:#e74c3c;cursor:pointer;font-size:0.7rem" title="Video qo\'shish"><i class="fas fa-plus"></i></button>';
     }
 
-    return '<div style="display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:6px">'
-      + '<div style="display:flex;flex-direction:column;gap:2px;flex-shrink:0">'
-        + '<button type="button" onclick="moveBlockUp(' + idx + ')" style="background:none;border:none;color:' + (idx === 0 ? 'var(--border)' : 'var(--sub)') + ';cursor:pointer;font-size:0.6rem;padding:1px 4px" ' + (idx === 0 ? 'disabled' : '') + '><i class="fas fa-chevron-up"></i></button>'
-        + '<button type="button" onclick="moveBlockDown(' + idx + ')" style="background:none;border:none;color:' + (idx === _blocksData.length - 1 ? 'var(--border)' : 'var(--sub)') + ';cursor:pointer;font-size:0.6rem;padding:1px 4px" ' + (idx === _blocksData.length - 1 ? 'disabled' : '') + '><i class="fas fa-chevron-down"></i></button>'
-      + '</div>'
+    return '<div class="drag-block-item" draggable="true" data-idx="' + idx + '" style="display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:6px;cursor:grab;transition:border-color 0.2s,opacity 0.2s">'
+      + '<i class="fas fa-grip-vertical" style="color:var(--muted);font-size:0.65rem;flex-shrink:0;pointer-events:none"></i>'
       + '<div style="width:28px;height:28px;border-radius:6px;background:rgba(255,255,255,0.04);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fas ' + icon + '" style="font-size:0.7rem;color:' + iconColor + '"></i></div>'
       + '<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">'
         + '<span style="font-size:0.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;font-weight:600">' + label + '</span>'
@@ -2346,6 +2350,7 @@ function renderBlocksList() {
       + '</div>'
     + '</div>';
   }).join('');
+  initDragDrop('m-pf-blocks', 'drag-block-item', function(){ return _blocksData; }, function(a){ _blocksData = a; }, renderBlocksList);
 }
 
 function addBlock(type) {
@@ -2759,7 +2764,7 @@ function savePortfolioItem(id) {
     const idx = data.portfolio.findIndex(x => x.id === id);
     if (idx !== -1) data.portfolio[idx] = item;
   } else {
-    data.portfolio.push(item);
+    data.portfolio.unshift(item);
   }
   renderPortfolioList();
   closeModal();
@@ -2784,11 +2789,12 @@ function deletePortfolio(id) {
 function renderServicesList() {
   const el = document.getElementById('servicesList');
   if (!data.services.length) { el.innerHTML = '<div class="empty-state"><i class="fas fa-concierge-bell"></i><p>Xizmatlar yo\'q</p></div>'; return; }
-  el.innerHTML = data.services.map(s => {
+  el.innerHTML = data.services.map((s, idx) => {
     const title = sanitize(s.title);
     const desc = sanitize(s.desc);
     const iconCls = sanitize(s.icon);
-    return '<div style="display:flex;align-items:center;gap:12px;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:10px;margin-bottom:8px;padding:12px 16px;box-sizing:border-box">'
+    return '<div class="drag-service-item" draggable="true" data-idx="' + idx + '" style="display:flex;align-items:center;gap:12px;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:10px;margin-bottom:8px;padding:12px 16px;box-sizing:border-box;cursor:grab;transition:border-color 0.2s,opacity 0.2s">'
+        + '<i class="fas fa-grip-vertical" style="color:#666;font-size:0.7rem;flex-shrink:0;pointer-events:none"></i>'
         + '<div style="width:40px;height:40px;background:#141414;border:1px solid #2a2a2a;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="' + iconCls + '" style="color:#b5f542"></i></div>'
         + '<div style="flex:1;min-width:0">'
           + '<div style="font-size:0.9rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + title + '</div>'
@@ -2800,6 +2806,7 @@ function renderServicesList() {
         + '</div>'
     + '</div>';
   }).join('');
+  initDragDrop('servicesList', 'drag-service-item', function(){ return data.services; }, function(a){ data.services = a; }, renderServicesList);
 }
 
 function openAddService() {
@@ -2932,13 +2939,14 @@ function renderSkillTags() {
       + '<button type="button" onclick="removeSkill(' + i + ')" style="width:24px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:5px;border:1px solid rgba(245,66,66,0.2);background:rgba(245,66,66,0.04);color:var(--red);cursor:pointer;font-size:0.55rem;flex-shrink:0" title="O\'chirish"><i class="fas fa-trash"></i></button>'
       + '</div>';
   }).join('');
-  initSkillDragDrop();
+  initDragDrop('skillTags', 'skill-drag-item', function(){ return data.about.skills; }, function(a){ data.about.skills = a; }, renderSkillTags);
 }
 
-function initSkillDragDrop() {
-  var container = document.getElementById('skillTags');
+function initDragDrop(containerId, itemClass, getArray, setArray, renderFn) {
+  var container = document.getElementById(containerId);
+  if (!container) return;
   var dragIdx = null;
-  var items = container.querySelectorAll('.skill-drag-item');
+  var items = container.querySelectorAll('.' + itemClass);
   items.forEach(function(item) {
     item.addEventListener('dragstart', function(e) {
       dragIdx = parseInt(item.dataset.idx);
@@ -2947,56 +2955,47 @@ function initSkillDragDrop() {
     });
     item.addEventListener('dragend', function() {
       item.style.opacity = '1';
-      container.querySelectorAll('.skill-drag-item').forEach(function(el) {
+      container.querySelectorAll('.' + itemClass).forEach(function(el) {
         el.style.borderColor = 'var(--border)';
-        el.style.transform = '';
       });
       dragIdx = null;
     });
     item.addEventListener('dragover', function(e) {
       e.preventDefault();
       e.dataTransfer.dropEffect = 'move';
-      var targetIdx = parseInt(item.dataset.idx);
-      if (targetIdx !== dragIdx) {
-        item.style.borderColor = 'var(--accent)';
-      }
+      if (parseInt(item.dataset.idx) !== dragIdx) item.style.borderColor = 'var(--accent)';
     });
-    item.addEventListener('dragleave', function() {
-      item.style.borderColor = 'var(--border)';
-    });
+    item.addEventListener('dragleave', function() { item.style.borderColor = 'var(--border)'; });
     item.addEventListener('drop', function(e) {
       e.preventDefault();
       var targetIdx = parseInt(item.dataset.idx);
       if (dragIdx === null || dragIdx === targetIdx) return;
-      var moved = data.about.skills.splice(dragIdx, 1)[0];
-      data.about.skills.splice(targetIdx, 0, moved);
-      renderSkillTags();
+      var arr = getArray();
+      var moved = arr.splice(dragIdx, 1)[0];
+      arr.splice(targetIdx, 0, moved);
+      setArray(arr);
+      renderFn();
       markDirty();
     });
-    // Touch drag support
-    var touchStartY = 0, touchClone = null, touchIdx = null;
+    // Touch drag
     item.addEventListener('touchstart', function(e) {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON' || e.target.closest('button')) return;
-      touchIdx = parseInt(item.dataset.idx);
-      touchStartY = e.touches[0].clientY;
-      var timer = setTimeout(function() {
+      item._touchIdx = parseInt(item.dataset.idx);
+      item._touchTimer = setTimeout(function() {
         item._longPress = true;
         item.style.opacity = '0.4';
         document.body.style.overflow = 'hidden';
       }, 300);
-      item._touchTimer = timer;
     }, { passive: true });
     item.addEventListener('touchmove', function(e) {
       if (!item._longPress) { clearTimeout(item._touchTimer); return; }
       e.preventDefault();
       var touch = e.touches[0];
       var elUnder = document.elementFromPoint(touch.clientX, touch.clientY);
+      container.querySelectorAll('.' + itemClass).forEach(function(el) { el.style.borderColor = 'var(--border)'; });
       if (elUnder) {
-        var dragItem = elUnder.closest('.skill-drag-item');
-        container.querySelectorAll('.skill-drag-item').forEach(function(el) { el.style.borderColor = 'var(--border)'; });
-        if (dragItem && parseInt(dragItem.dataset.idx) !== touchIdx) {
-          dragItem.style.borderColor = 'var(--accent)';
-        }
+        var di = elUnder.closest('.' + itemClass);
+        if (di && parseInt(di.dataset.idx) !== item._touchIdx) di.style.borderColor = 'var(--accent)';
       }
     }, { passive: false });
     item.addEventListener('touchend', function(e) {
@@ -3007,15 +3006,17 @@ function initSkillDragDrop() {
       document.body.style.overflow = '';
       var touch = e.changedTouches[0];
       var elUnder = document.elementFromPoint(touch.clientX, touch.clientY);
-      container.querySelectorAll('.skill-drag-item').forEach(function(el) { el.style.borderColor = 'var(--border)'; });
+      container.querySelectorAll('.' + itemClass).forEach(function(el) { el.style.borderColor = 'var(--border)'; });
       if (elUnder) {
-        var dragItem = elUnder.closest('.skill-drag-item');
-        if (dragItem) {
-          var targetIdx = parseInt(dragItem.dataset.idx);
-          if (touchIdx !== null && touchIdx !== targetIdx) {
-            var moved = data.about.skills.splice(touchIdx, 1)[0];
-            data.about.skills.splice(targetIdx, 0, moved);
-            renderSkillTags();
+        var di = elUnder.closest('.' + itemClass);
+        if (di) {
+          var targetIdx = parseInt(di.dataset.idx);
+          if (item._touchIdx !== null && item._touchIdx !== targetIdx) {
+            var arr = getArray();
+            var moved = arr.splice(item._touchIdx, 1)[0];
+            arr.splice(targetIdx, 0, moved);
+            setArray(arr);
+            renderFn();
             markDirty();
           }
         }
