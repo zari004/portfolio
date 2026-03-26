@@ -535,8 +535,8 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
   <!-- Sidebar -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-brand">
-      <div class="brand-icon">D</div>
-      <div class="brand-text">dizay<span>n.</span></div>
+      <div class="brand-icon" id="sidebar-brand-icon">D</div>
+      <div class="brand-text" id="sidebar-brand-text">dizay<span>n.</span></div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section">Bo'limlar</div>
@@ -879,11 +879,11 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
           <div class="form-row">
             <div class="form-group">
               <label>Logo matni</label>
-              <input class="form-input" id="set-logoText" placeholder="dizay" oninput="markDirty()">
+              <input class="form-input" id="set-logoText" placeholder="dizay" oninput="markDirty();updateSidebarLogo()">
             </div>
             <div class="form-group">
               <label>Logo accent</label>
-              <input class="form-input" id="set-logoAccent" placeholder="n." oninput="markDirty()">
+              <input class="form-input" id="set-logoAccent" placeholder="n." oninput="markDirty();updateSidebarLogo()">
             </div>
           </div>
           <div class="form-group">
@@ -1930,6 +1930,7 @@ function fillAllForms() {
   // Settings
   document.getElementById('set-logoText').value = data.settings.logoText || '';
   document.getElementById('set-logoAccent').value = data.settings.logoAccent || '';
+  updateSidebarLogo();
   document.getElementById('set-siteTitle').value = data.settings.siteTitle || '';
   document.getElementById('set-footerText').value = data.settings.footerText || '';
   document.getElementById('set-cvUrl').value = data.settings.cvUrl || '';
@@ -3166,6 +3167,15 @@ async function previewImg(event, previewId, hiddenId) {
 function updateBadgeStatus() {
   const el = document.getElementById('badge-toggle');
   if (data.settings.badgeOpen) el.classList.add('on'); else el.classList.remove('on');
+}
+
+function updateSidebarLogo() {
+  var logoText = document.getElementById('set-logoText').value || 'dizay';
+  var logoAccent = document.getElementById('set-logoAccent').value || 'n.';
+  var brandText = document.getElementById('sidebar-brand-text');
+  var brandIcon = document.getElementById('sidebar-brand-icon');
+  if (brandText) brandText.innerHTML = sanitize(logoText) + '<span>' + sanitize(logoAccent) + '</span>';
+  if (brandIcon) brandIcon.textContent = (logoText.charAt(0) || 'D').toUpperCase();
 }
 
 function renderCvLabels() {
