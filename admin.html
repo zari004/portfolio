@@ -1347,7 +1347,11 @@ function saveToStorage() {
           });
         }
         if (lite.about && lite.about.img && lite.about.img.length > 1000) lite.about.img = '[IDB]';
-        localStorage.setItem('portfolio_admin_data', JSON.stringify(lite));
+        try {
+          localStorage.setItem('portfolio_admin_data', JSON.stringify(lite));
+        } catch(e2) {
+          console.warn('[SAVE] Lite versiya ham localStorage ga sig\'madi, faqat IndexedDB');
+        }
       }
     }).catch(function(err) {
       console.error('[IDB ERROR]', err);
@@ -1672,18 +1676,32 @@ function renderRecent(visits) {
 
 function renderSiteStatus(visits) {
   var el = document.getElementById('an-status');
-  var storageUsed = 0;
-  try {
-    for (var k in localStorage) { if (localStorage.hasOwnProperty(k)) storageUsed += localStorage[k].length; }
-  } catch(e) {}
-  var storageMB = (storageUsed / (1024*1024)).toFixed(2);
-  var storagePct = (storageUsed / (5*1024*1024) * 100).toFixed(1);
   var oldest = visits.length ? visits[0].date : '-';
   var newest = visits.length ? visits[visits.length-1].date : '-';
+  // IndexedDB hajmini hisoblash
   el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
-    + '<div><div style="font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">localStorage ishlatilishi</div><div class="an-progress"><div class="an-progress-fill" style="width:' + Math.min(storagePct,100) + '%"></div></div><div style="font-size:.75rem;color:var(--sub)">' + storageMB + ' MB / 5 MB (' + storagePct + '%)</div></div>'
+    + '<div><div style="font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">IndexedDB ishlatilishi</div><div style="font-size:.85rem;color:var(--sub);margin-top:8px" id="an-idb-size"><i class="fas fa-spinner fa-spin" style="font-size:.7rem"></i> hisoblanmoqda...</div></div>'
     + '<div><div style="font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Ma\'lumotlar davri</div><div style="font-size:.85rem;color:var(--sub);margin-top:8px">' + oldest + ' — ' + newest + '</div><div style="font-size:.75rem;color:var(--muted);margin-top:4px">' + visits.length + ' ta tashrif saqlangan</div></div>'
     + '</div>';
+  // IndexedDB hajmini async hisoblash
+  loadFromIDB().then(function(idbData) {
+    var idbSizeEl = document.getElementById('an-idb-size');
+    if (!idbSizeEl) return;
+    var idbMB = 0;
+    if (idbData) {
+      var json = JSON.stringify(idbData);
+      idbMB = (json.length / (1024 * 1024)).toFixed(2);
+    }
+    // localStorage hajmini ham ko'rsatish
+    var lsUsed = 0;
+    try { for (var k in localStorage) { if (localStorage.hasOwnProperty(k)) lsUsed += localStorage[k].length; } } catch(e) {}
+    var lsMB = (lsUsed / (1024 * 1024)).toFixed(2);
+    idbSizeEl.innerHTML = '<span style="font-size:1.1rem;font-weight:700;color:var(--accent)">' + idbMB + ' MB</span> <span style="font-size:.75rem;color:var(--muted)">ishlatilgan</span>'
+      + '<div style="font-size:.7rem;color:var(--muted);margin-top:4px">localStorage: ' + lsMB + ' MB / 5 MB</div>';
+  }).catch(function() {
+    var idbSizeEl = document.getElementById('an-idb-size');
+    if (idbSizeEl) idbSizeEl.textContent = 'Hisoblab bo\'lmadi';
+  });
 }
 
 function clearAnalytics() {

@@ -1283,27 +1283,7 @@ function getData() {
   return DEFAULT_DATA;
 }
 
-// IndexedDB dan to'liq ma'lumotlarni yuklash
-function loadImagesFromIDB() {
-  try {
-    var req = indexedDB.open('portfolio_db', 1);
-    req.onupgradeneeded = function(e) { e.target.result.createObjectStore('data'); };
-    req.onsuccess = function(e) {
-      var db = e.target.result;
-      var tx = db.transaction('data', 'readonly');
-      var store = tx.objectStore('data');
-      var get = store.get('portfolio_admin_data');
-      get.onsuccess = function() {
-        var idbData = get.result;
-        if (!idbData) return;
-        // IndexedDB da to'liq data bor — uni global qilib applyData chaqirish
-        window.__idbData = idbData;
-        console.log('[SITE] IndexedDB dan yuklandi, qayta render');
-        applyData();
-      };
-    };
-  } catch(e) { console.warn('[IDB]', e); }
-}
+// IndexedDB dan yuklash INIT blokida amalga oshiriladi (double render oldini olish uchun)
 
 // ============ APPLY DATA ============
 function applyData() {
@@ -2008,16 +1988,72 @@ document.addEventListener('keydown', function(e) {
 });
 
 // ============ INIT ============
-applyData();
-loadImagesFromIDB();
-initVideoObserver();
+// IndexedDB dan avval yuklash — agar bor bo'lsa, faqat bir marta render
+(function() {
+  var idbLoaded = false;
+  try {
+    var req = indexedDB.open('portfolio_db', 1);
+    req.onupgradeneeded = function(e) { e.target.result.createObjectStore('data'); };
+    req.onsuccess = function(e) {
+      var db = e.target.result;
+      var tx = db.transaction('data', 'readonly');
+      var get = tx.objectStore('data').get('portfolio_admin_data');
+      get.onsuccess = function() {
+        if (get.result) {
+          window.__idbData = get.result;
+          console.log('[SITE] IndexedDB dan yuklandi, birinchi render');
+        }
+        if (!idbLoaded) {
+          idbLoaded = true;
+          applyData();
+          initVideoObserver();
+        }
+      };
+      get.onerror = function() {
+        if (!idbLoaded) { idbLoaded = true; applyData(); initVideoObserver(); }
+      };
+    };
+    req.onerror = function() {
+      if (!idbLoaded) { idbLoaded = true; applyData(); initVideoObserver(); }
+    };
+    // Fallback: agar IndexedDB 300ms ichida javob bermasa, localStorage bilan render
+    setTimeout(function() {
+      if (!idbLoaded) {
+        idbLoaded = true;
+        console.log('[SITE] IndexedDB sekin, localStorage bilan render');
+        applyData();
+        initVideoObserver();
+      }
+    }, 300);
+  } catch(e) {
+    if (!idbLoaded) { idbLoaded = true; applyData(); initVideoObserver(); }
+  }
+})();
 initAurora();
 
 // Admin paneldan o'zgarish bo'lsa saytni yangilash
+// localStorage o'zgarganda IndexedDB dan ham to'liq data yuklash
 window.addEventListener('storage', function(e) {
   if (e.key === 'portfolio_admin_data') {
-    applyData();
-    setTimeout(initVideoObserver, 100);
+    try {
+      var req = indexedDB.open('portfolio_db', 1);
+      req.onupgradeneeded = function(ev) { ev.target.result.createObjectStore('data'); };
+      req.onsuccess = function(ev) {
+        var db = ev.target.result;
+        var tx = db.transaction('data', 'readonly');
+        var get = tx.objectStore('data').get('portfolio_admin_data');
+        get.onsuccess = function() {
+          if (get.result) window.__idbData = get.result;
+          applyData();
+          setTimeout(initVideoObserver, 100);
+        };
+        get.onerror = function() { applyData(); setTimeout(initVideoObserver, 100); };
+      };
+      req.onerror = function() { applyData(); setTimeout(initVideoObserver, 100); };
+    } catch(err) {
+      applyData();
+      setTimeout(initVideoObserver, 100);
+    }
   }
 });
 </script>
