@@ -1678,29 +1678,70 @@ function renderSiteStatus(visits) {
   var el = document.getElementById('an-status');
   var oldest = visits.length ? visits[0].date : '-';
   var newest = visits.length ? visits[visits.length-1].date : '-';
-  // IndexedDB hajmini hisoblash
-  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
-    + '<div><div style="font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">IndexedDB ishlatilishi</div><div style="font-size:.85rem;color:var(--sub);margin-top:8px" id="an-idb-size"><i class="fas fa-spinner fa-spin" style="font-size:.7rem"></i> hisoblanmoqda...</div></div>'
-    + '<div><div style="font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Ma\'lumotlar davri</div><div style="font-size:.85rem;color:var(--sub);margin-top:8px">' + oldest + ' — ' + newest + '</div><div style="font-size:.75rem;color:var(--muted);margin-top:4px">' + visits.length + ' ta tashrif saqlangan</div></div>'
-    + '</div>';
-  // IndexedDB hajmini async hisoblash
+  el.innerHTML = '<div id="an-storage-visual"><div style="text-align:center;padding:20px;color:var(--muted)"><i class="fas fa-spinner fa-spin"></i></div></div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px">'
+    + '<div style="background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:10px;padding:14px">'
+    + '<div style="font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px"><i class="fas fa-calendar-alt" style="margin-right:4px"></i>Ma\'lumotlar davri</div>'
+    + '<div style="font-size:.9rem;font-weight:600">' + oldest + ' — ' + newest + '</div>'
+    + '<div style="font-size:.75rem;color:var(--muted);margin-top:4px">' + visits.length + ' ta tashrif</div></div>'
+    + '<div style="background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:10px;padding:14px">'
+    + '<div style="font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px"><i class="fas fa-database" style="margin-right:4px"></i>Kontent</div>'
+    + '<div style="font-size:.9rem;font-weight:600">' + (data.portfolio ? data.portfolio.length : 0) + ' ta loyiha</div>'
+    + '<div style="font-size:.75rem;color:var(--muted);margin-top:4px">' + (data.services ? data.services.length : 0) + ' xizmat</div></div></div>';
+
   loadFromIDB().then(function(idbData) {
-    var idbSizeEl = document.getElementById('an-idb-size');
-    if (!idbSizeEl) return;
-    var idbMB = 0;
+    var vis = document.getElementById('an-storage-visual');
+    if (!vis) return;
+    var idbBytes = 0, imgBytes = 0;
     if (idbData) {
       var json = JSON.stringify(idbData);
-      idbMB = (json.length / (1024 * 1024)).toFixed(2);
+      idbBytes = json.length;
+      if (idbData.portfolio) idbData.portfolio.forEach(function(p) {
+        if (p.img) imgBytes += p.img.length;
+        if (p.blocks) p.blocks.forEach(function(b) {
+          if (b.type === 'image') {
+            var arr = Array.isArray(b.content) ? b.content : [b.content || ''];
+            arr.forEach(function(c) { imgBytes += (c || '').length; });
+          }
+        });
+      });
+      if (idbData.about && idbData.about.img) imgBytes += idbData.about.img.length;
+      if (idbData.about && idbData.about.skills) idbData.about.skills.forEach(function(s) {
+        if (typeof s === 'object' && s.logo) imgBytes += s.logo.length;
+      });
     }
-    // localStorage hajmini ham ko'rsatish
     var lsUsed = 0;
     try { for (var k in localStorage) { if (localStorage.hasOwnProperty(k)) lsUsed += localStorage[k].length; } } catch(e) {}
+    var totalMB = (idbBytes / (1024 * 1024)).toFixed(2);
+    var imgMB = (imgBytes / (1024 * 1024)).toFixed(2);
+    var otherMB = ((idbBytes - imgBytes) / (1024 * 1024)).toFixed(2);
     var lsMB = (lsUsed / (1024 * 1024)).toFixed(2);
-    idbSizeEl.innerHTML = '<span style="font-size:1.1rem;font-weight:700;color:var(--accent)">' + idbMB + ' MB</span> <span style="font-size:.75rem;color:var(--muted)">ishlatilgan</span>'
-      + '<div style="font-size:.7rem;color:var(--muted);margin-top:4px">localStorage: ' + lsMB + ' MB / 5 MB</div>';
+    var maxMB = 50;
+    var pct = Math.min(Math.round((idbBytes / (maxMB * 1024 * 1024)) * 100), 100);
+    var imgPct = idbBytes > 0 ? Math.round((imgBytes / idbBytes) * 100) : 0;
+    var barClr = pct < 50 ? 'var(--accent)' : pct < 80 ? '#f59e0b' : '#ef4444';
+
+    vis.innerHTML = '<div style="display:flex;align-items:flex-end;gap:12px;margin-bottom:12px">'
+      + '<div style="font-size:2.2rem;font-weight:800;color:var(--accent);line-height:1">' + totalMB + '</div>'
+      + '<div style="font-size:.85rem;color:var(--muted);padding-bottom:4px">MB ishlatilgan</div></div>'
+      + '<div style="width:100%;height:22px;background:rgba(255,255,255,0.05);border-radius:11px;overflow:hidden;position:relative">'
+      + '<div style="height:100%;width:' + pct + '%;background:linear-gradient(90deg,' + barClr + ',' + barClr + '88);border-radius:11px;transition:width 0.8s ease;min-width:' + (pct > 0 ? '2' : '0') + '%"></div>'
+      + '<div style="position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:.6rem;color:var(--muted)">' + pct + '% (~' + maxMB + ' MB limit)</div></div>'
+      + '<div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap">'
+      + '<div style="flex:1;min-width:100px;background:rgba(181,245,66,0.05);border:1px solid rgba(181,245,66,0.12);border-radius:8px;padding:10px">'
+      + '<div style="display:flex;align-items:center;gap:5px;margin-bottom:6px"><div style="width:8px;height:8px;border-radius:50%;background:var(--accent)"></div><span style="font-size:.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px">Rasmlar</span></div>'
+      + '<div style="font-size:1.1rem;font-weight:700">' + imgMB + ' MB</div>'
+      + '<div style="font-size:.65rem;color:var(--muted);margin-top:2px">' + imgPct + '% jami</div></div>'
+      + '<div style="flex:1;min-width:100px;background:rgba(99,102,241,0.05);border:1px solid rgba(99,102,241,0.12);border-radius:8px;padding:10px">'
+      + '<div style="display:flex;align-items:center;gap:5px;margin-bottom:6px"><div style="width:8px;height:8px;border-radius:50%;background:#6366f1"></div><span style="font-size:.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px">Matn</span></div>'
+      + '<div style="font-size:1.1rem;font-weight:700">' + otherMB + ' MB</div></div>'
+      + '<div style="flex:1;min-width:100px;background:rgba(245,158,11,0.05);border:1px solid rgba(245,158,11,0.12);border-radius:8px;padding:10px">'
+      + '<div style="display:flex;align-items:center;gap:5px;margin-bottom:6px"><div style="width:8px;height:8px;border-radius:50%;background:#f59e0b"></div><span style="font-size:.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px">localStorage</span></div>'
+      + '<div style="font-size:1.1rem;font-weight:700">' + lsMB + ' MB</div>'
+      + '<div style="font-size:.65rem;color:var(--muted);margin-top:2px">' + Math.round((lsUsed / (5 * 1024 * 1024)) * 100) + '% / 5 MB</div></div></div>';
   }).catch(function() {
-    var idbSizeEl = document.getElementById('an-idb-size');
-    if (idbSizeEl) idbSizeEl.textContent = 'Hisoblab bo\'lmadi';
+    var vis = document.getElementById('an-storage-visual');
+    if (vis) vis.innerHTML = '<div style="color:var(--muted);text-align:center;padding:12px">Xotira hisoblanmadi</div>';
   });
 }
 
