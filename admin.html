@@ -2966,6 +2966,22 @@ function removeSkill(idx) {
   markDirty();
 }
 
+function updateSkillName(idx, newName) {
+  normalizeSkills();
+  var trimmed = newName.trim();
+  if (!trimmed) { renderSkillTags(); return; }
+  data.about.skills[idx].name = trimmed;
+  markDirty();
+}
+
+function removeSkillLogo(idx) {
+  normalizeSkills();
+  data.about.skills[idx].logo = '';
+  renderSkillTags();
+  markDirty();
+  showToast('Logo o\'chirildi', 'success');
+}
+
 function uploadSkillLogo(idx) {
   var fileInput = document.createElement('input');
   fileInput.type = 'file';
