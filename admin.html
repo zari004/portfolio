@@ -2922,10 +2922,8 @@ function renderSkillTags() {
     var logoPreview = s.logo
       ? '<img src="' + sanitize(s.logo) + '" style="width:28px;height:28px;object-fit:contain;border-radius:5px;cursor:pointer" onclick="uploadSkillLogo(' + i + ')" title="Logoni almashtirish" onerror="this.style.display=\'none\'">'
       : '<span onclick="uploadSkillLogo(' + i + ')" style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:5px;background:var(--border);font-size:0.6rem;color:var(--muted);cursor:pointer" title="Logo yuklash"><i class="fas fa-plus"></i></span>';
-    var upBtn = i > 0 ? '<button type="button" onclick="moveSkill(' + i + ',-1)" style="width:24px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:5px;border:1px solid var(--border);background:var(--card);color:var(--muted);cursor:pointer;font-size:0.55rem;flex-shrink:0" title="Yuqoriga"><i class="fas fa-chevron-up"></i></button>' : '<span style="width:24px;flex-shrink:0"></span>';
-    var downBtn = i < data.about.skills.length - 1 ? '<button type="button" onclick="moveSkill(' + i + ',1)" style="width:24px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:5px;border:1px solid var(--border);background:var(--card);color:var(--muted);cursor:pointer;font-size:0.55rem;flex-shrink:0" title="Pastga"><i class="fas fa-chevron-down"></i></button>' : '<span style="width:24px;flex-shrink:0"></span>';
-    return '<div style="display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:6px 10px;margin-bottom:6px">'
-      + '<div style="display:flex;flex-direction:column;gap:2px;flex-shrink:0">' + upBtn + downBtn + '</div>'
+    return '<div class="skill-drag-item" draggable="true" data-idx="' + i + '" style="display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:6px 10px;margin-bottom:6px;cursor:grab;transition:opacity 0.2s,transform 0.2s,border-color 0.2s">'
+      + '<i class="fas fa-grip-vertical" style="color:var(--muted);font-size:0.7rem;flex-shrink:0;pointer-events:none"></i>'
       + logoPreview
       + '<input class="form-input skill-name-input" data-idx="' + i + '" value="' + sanitize(s.name) + '" style="flex:1;font-size:0.85rem;font-weight:500;padding:4px 8px;border:1px solid transparent;background:transparent;color:var(--text);border-radius:5px" onfocus="this.style.borderColor=\'var(--accent)\';this.style.background=\'var(--bg)\'" onblur="this.style.borderColor=\'transparent\';this.style.background=\'transparent\';updateSkillName(' + i + ',this.value)" onkeydown="if(event.key===\'Enter\'){this.blur()}">'
       + (s.logo ? '<button type="button" onclick="removeSkillLogo(' + i + ')" style="width:24px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:5px;border:1px solid var(--border);background:var(--card);color:var(--muted);cursor:pointer;font-size:0.55rem;flex-shrink:0" title="Logoni o\'chirish"><i class="fas fa-image" style="position:relative"><span style="position:absolute;top:-3px;right:-3px;font-size:6px;color:var(--red)"><i class="fas fa-times"></i></span></i></button>' : '')
@@ -2934,6 +2932,96 @@ function renderSkillTags() {
       + '<button type="button" onclick="removeSkill(' + i + ')" style="width:24px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:5px;border:1px solid rgba(245,66,66,0.2);background:rgba(245,66,66,0.04);color:var(--red);cursor:pointer;font-size:0.55rem;flex-shrink:0" title="O\'chirish"><i class="fas fa-trash"></i></button>'
       + '</div>';
   }).join('');
+  initSkillDragDrop();
+}
+
+function initSkillDragDrop() {
+  var container = document.getElementById('skillTags');
+  var dragIdx = null;
+  var items = container.querySelectorAll('.skill-drag-item');
+  items.forEach(function(item) {
+    item.addEventListener('dragstart', function(e) {
+      dragIdx = parseInt(item.dataset.idx);
+      item.style.opacity = '0.4';
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    item.addEventListener('dragend', function() {
+      item.style.opacity = '1';
+      container.querySelectorAll('.skill-drag-item').forEach(function(el) {
+        el.style.borderColor = 'var(--border)';
+        el.style.transform = '';
+      });
+      dragIdx = null;
+    });
+    item.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      var targetIdx = parseInt(item.dataset.idx);
+      if (targetIdx !== dragIdx) {
+        item.style.borderColor = 'var(--accent)';
+      }
+    });
+    item.addEventListener('dragleave', function() {
+      item.style.borderColor = 'var(--border)';
+    });
+    item.addEventListener('drop', function(e) {
+      e.preventDefault();
+      var targetIdx = parseInt(item.dataset.idx);
+      if (dragIdx === null || dragIdx === targetIdx) return;
+      var moved = data.about.skills.splice(dragIdx, 1)[0];
+      data.about.skills.splice(targetIdx, 0, moved);
+      renderSkillTags();
+      markDirty();
+    });
+    // Touch drag support
+    var touchStartY = 0, touchClone = null, touchIdx = null;
+    item.addEventListener('touchstart', function(e) {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON' || e.target.closest('button')) return;
+      touchIdx = parseInt(item.dataset.idx);
+      touchStartY = e.touches[0].clientY;
+      var timer = setTimeout(function() {
+        item._longPress = true;
+        item.style.opacity = '0.4';
+        document.body.style.overflow = 'hidden';
+      }, 300);
+      item._touchTimer = timer;
+    }, { passive: true });
+    item.addEventListener('touchmove', function(e) {
+      if (!item._longPress) { clearTimeout(item._touchTimer); return; }
+      e.preventDefault();
+      var touch = e.touches[0];
+      var elUnder = document.elementFromPoint(touch.clientX, touch.clientY);
+      if (elUnder) {
+        var dragItem = elUnder.closest('.skill-drag-item');
+        container.querySelectorAll('.skill-drag-item').forEach(function(el) { el.style.borderColor = 'var(--border)'; });
+        if (dragItem && parseInt(dragItem.dataset.idx) !== touchIdx) {
+          dragItem.style.borderColor = 'var(--accent)';
+        }
+      }
+    }, { passive: false });
+    item.addEventListener('touchend', function(e) {
+      clearTimeout(item._touchTimer);
+      if (!item._longPress) return;
+      item._longPress = false;
+      item.style.opacity = '1';
+      document.body.style.overflow = '';
+      var touch = e.changedTouches[0];
+      var elUnder = document.elementFromPoint(touch.clientX, touch.clientY);
+      container.querySelectorAll('.skill-drag-item').forEach(function(el) { el.style.borderColor = 'var(--border)'; });
+      if (elUnder) {
+        var dragItem = elUnder.closest('.skill-drag-item');
+        if (dragItem) {
+          var targetIdx = parseInt(dragItem.dataset.idx);
+          if (touchIdx !== null && touchIdx !== targetIdx) {
+            var moved = data.about.skills.splice(touchIdx, 1)[0];
+            data.about.skills.splice(targetIdx, 0, moved);
+            renderSkillTags();
+            markDirty();
+          }
+        }
+      }
+    });
+  });
 }
 
 function addSkill() {
