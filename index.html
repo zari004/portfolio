@@ -733,6 +733,22 @@
     .pd-lightbox-close:hover {
       border-color: var(--accent); color: var(--accent);
     }
+    .pd-lightbox-nav {
+      position: absolute; top: 50%; transform: translateY(-50%);
+      width: 44px; height: 44px; border-radius: 50%;
+      background: var(--card); border: 1px solid var(--border);
+      color: var(--text); font-size: 18px;
+      cursor: pointer; display: none; align-items: center; justify-content: center;
+      transition: all 0.2s; z-index: 2001;
+    }
+    .pd-lightbox-nav:hover { border-color: var(--accent); color: var(--accent); }
+    .pd-lightbox-nav.prev { left: 20px; }
+    .pd-lightbox-nav.next { right: 20px; }
+    .pd-lightbox-counter {
+      position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+      color: var(--sub); font-size: 13px; font-family: 'JetBrains Mono', monospace;
+      display: none;
+    }
     @media (max-width: 900px) {
       .pd-hero { min-height: 35vh; }
       .pd-hero-content { padding: 24px 20px 32px; }
@@ -1054,9 +1070,12 @@
 </button>
 
 <!-- GALLERY LIGHTBOX -->
-<div class="pd-lightbox" id="pdLightbox" onclick="closeLightbox()">
+<div class="pd-lightbox" id="pdLightbox" onclick="if(event.target===this)closeLightbox()">
   <button class="pd-lightbox-close" onclick="closeLightbox()"><i class="fas fa-times"></i></button>
+  <button class="pd-lightbox-nav prev" id="lbPrev" onclick="event.stopPropagation();lightboxNav(-1)"><i class="fas fa-chevron-left"></i></button>
   <img id="pdLightboxImg" src="" alt="">
+  <button class="pd-lightbox-nav next" id="lbNext" onclick="event.stopPropagation();lightboxNav(1)"><i class="fas fa-chevron-right"></i></button>
+  <div class="pd-lightbox-counter" id="lbCounter"></div>
 </div>
 
 <script>
@@ -1972,11 +1991,46 @@ window.addEventListener('popstate', function(e) {
   }
 });
 
+var _lbImages = [];
+var _lbIdx = 0;
+
+function collectLightboxImages() {
+  _lbImages = [];
+  document.querySelectorAll('.pd-block-image img, .pd-grid-img img, .pd-gallery-item img').forEach(function(img) {
+    if (img.src) _lbImages.push(img.src);
+  });
+}
+
 function openLightbox(src) {
-  const lb = document.getElementById('pdLightbox');
-  const img = document.getElementById('pdLightboxImg');
-  img.src = src;
-  lb.classList.add('active');
+  collectLightboxImages();
+  _lbIdx = _lbImages.indexOf(src);
+  if (_lbIdx === -1) { _lbImages = [src]; _lbIdx = 0; }
+  showLightboxImg();
+  document.getElementById('pdLightbox').classList.add('active');
+}
+
+function showLightboxImg() {
+  document.getElementById('pdLightboxImg').src = _lbImages[_lbIdx];
+  var prev = document.getElementById('lbPrev');
+  var next = document.getElementById('lbNext');
+  var counter = document.getElementById('lbCounter');
+  if (_lbImages.length > 1) {
+    prev.style.display = _lbIdx > 0 ? 'flex' : 'none';
+    next.style.display = _lbIdx < _lbImages.length - 1 ? 'flex' : 'none';
+    counter.style.display = 'block';
+    counter.textContent = (_lbIdx + 1) + ' / ' + _lbImages.length;
+  } else {
+    prev.style.display = 'none';
+    next.style.display = 'none';
+    counter.style.display = 'none';
+  }
+}
+
+function lightboxNav(dir) {
+  _lbIdx += dir;
+  if (_lbIdx < 0) _lbIdx = 0;
+  if (_lbIdx >= _lbImages.length) _lbIdx = _lbImages.length - 1;
+  showLightboxImg();
 }
 
 function openPdLightbox(src) { openLightbox(src); }
@@ -1987,9 +2041,12 @@ function closeLightbox() {
 
 // Close detail with Escape key
 document.addEventListener('keydown', function(e) {
+  var lb = document.getElementById('pdLightbox');
+  var lbActive = lb && lb.classList.contains('active');
+  if (lbActive && e.key === 'ArrowLeft') { lightboxNav(-1); return; }
+  if (lbActive && e.key === 'ArrowRight') { lightboxNav(1); return; }
   if (e.key === 'Escape') {
-    const lb = document.getElementById('pdLightbox');
-    if (lb && lb.classList.contains('active')) {
+    if (lbActive) {
       closeLightbox();
     } else {
       const detail = document.getElementById('projectDetail');
