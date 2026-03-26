@@ -1608,30 +1608,34 @@ function initVideoObserver() {
 // ============ CV DOWNLOAD ============
 function downloadCV(e) {
   e.preventDefault();
-  const btn = document.getElementById('cv-btn');
-  let url = btn ? btn.dataset.cvurl : '';
+  var btn = document.getElementById('cv-btn');
+  var url = btn ? btn.dataset.cvurl : '';
   if (!url) return;
 
-  // Google Drive fayl havolasini yuklab olish havolasiga aylantirish
-  var driveMatch = url.match(/drive.google.com/file/d/([a-zA-Z0-9_-]+)/);
+  // Google Drive fayl havolasi
+  var driveMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
   if (driveMatch) {
-    url = 'https://drive.google.com/uc?export=download&id=' + driveMatch[1];
-  }
-  // Google Docs havolasini PDF export ga aylantirish
-  if (url.indexOf('docs.google.com/document') !== -1) {
-    url = url
-      .replace(//edit.*$/, '/export?format=pdf')
-      .replace(//pub.*$/, '/export?format=pdf')
-      .replace(//preview.*$/, '/export?format=pdf');
+    // iframe orqali majburiy yuklab olish
+    var dlUrl = 'https://drive.google.com/uc?export=download&confirm=t&id=' + driveMatch[1];
+    var iframe = document.getElementById('cv-dl-frame');
+    if (!iframe) {
+      iframe = document.createElement('iframe');
+      iframe.id = 'cv-dl-frame';
+      iframe.style.display = 'none';
+      document.body.appendChild(iframe);
+    }
+    iframe.src = dlUrl;
+    return;
   }
 
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'CV.pdf';
-  a.target = '_blank';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+  // Google Docs havolasi
+  if (url.indexOf('docs.google.com/document') !== -1) {
+    url = url.replace(/\/edit.*$/, '/export?format=pdf')
+             .replace(/\/pub.*$/, '/export?format=pdf')
+             .replace(/\/preview.*$/, '/export?format=pdf');
+  }
+
+  window.location.href = url;
 }
 
 // ============ AURORA ANIMATION ============
