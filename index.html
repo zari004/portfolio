@@ -1612,14 +1612,19 @@ function downloadCV(e) {
   let url = btn ? btn.dataset.cvurl : '';
   if (!url) return;
 
-  // Google Docs havolasini PDF yuklab olish havolasiga aylantirish
-  // https://docs.google.com/document/d/ID/edit â /export?format=pdf
-  url = url
-    .replace(/\/edit.*$/, '/export?format=pdf')
-    .replace(/\/pub.*$/, '/export?format=pdf')
-    .replace(/\/preview.*$/, '/export?format=pdf');
+  // Google Drive fayl havolasini yuklab olish havolasiga aylantirish
+  var driveMatch = url.match(/drive.google.com/file/d/([a-zA-Z0-9_-]+)/);
+  if (driveMatch) {
+    url = 'https://drive.google.com/uc?export=download&id=' + driveMatch[1];
+  }
+  // Google Docs havolasini PDF export ga aylantirish
+  if (url.indexOf('docs.google.com/document') !== -1) {
+    url = url
+      .replace(//edit.*$/, '/export?format=pdf')
+      .replace(//pub.*$/, '/export?format=pdf')
+      .replace(//preview.*$/, '/export?format=pdf');
+  }
 
-  // Agar Google Docs havolasi bo'lmasa, to'g'ridan link sifatida ochish
   const a = document.createElement('a');
   a.href = url;
   a.download = 'CV.pdf';
