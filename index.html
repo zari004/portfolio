@@ -824,8 +824,8 @@
     <li><a href="#contact">Aloqa</a></li>
   </ul>
   <div style="display:flex;gap:10px;align-items:center;">
-    <a id="cv-btn" href="#" onclick="downloadCV(event)" style="display:none;align-items:center;gap:7px;padding:9px 18px;border-radius:8px;border:1px solid var(--border);color:var(--text);font-size:13px;font-weight:600;text-decoration:none;transition:all 0.2s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text)'">
-      <i class="fas fa-file-pdf"></i> CV olish
+    <a id="cv-btn" href="#" onclick="downloadCV(event)" style="display:none;align-items:center;gap:7px;padding:9px 18px;border-radius:8px;border:1px solid var(--border);color:var(--text);font-size:13px;font-weight:600;text-decoration:none;transition:all 0.2s;overflow:hidden" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text)'">
+      <i class="fas fa-file-pdf"></i> <span id="cv-btn-text" style="display:inline-block;transition:opacity 0.3s,transform 0.3s">CV olish</span>
     </a>
     <a href="#contact" class="nav-cta">Bog'lanish</a>
   </div>
@@ -1499,6 +1499,7 @@ function applyData() {
     if (s.cvUrl) {
       cvBtn.style.display = 'inline-flex';
       cvBtn.dataset.cvurl = s.cvUrl;
+      initCvLabelRotation(s.cvLabels || []);
     } else {
       cvBtn.style.display = 'none';
     }
@@ -1624,6 +1625,41 @@ function initVideoObserver() {
   });
 }
 
+// ============ CV LABEL ROTATION ============
+var _cvLabelTimer = null;
+function initCvLabelRotation(labels) {
+  if (_cvLabelTimer) { clearInterval(_cvLabelTimer); _cvLabelTimer = null; }
+  var textEl = document.getElementById('cv-btn-text');
+  if (!textEl || !labels || !labels.length) { if (textEl) textEl.textContent = 'CV olish'; return; }
+  var allLabels = ['CV olish'].concat(labels);
+  // Shuffle (tasodifiy tartib)
+  function shuffle(arr) {
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+  var shuffled = shuffle(allLabels);
+  var idx = 0;
+  textEl.textContent = shuffled[0];
+  _cvLabelTimer = setInterval(function() {
+    textEl.style.opacity = '0';
+    textEl.style.transform = 'translateY(-8px)';
+    setTimeout(function() {
+      idx = (idx + 1) % shuffled.length;
+      if (idx === 0) shuffled = shuffle(allLabels);
+      textEl.textContent = shuffled[idx];
+      textEl.style.transform = 'translateY(8px)';
+      requestAnimationFrame(function() {
+        textEl.style.opacity = '1';
+        textEl.style.transform = 'translateY(0)';
+      });
+    }, 300);
+  }, 3000);
+}
+
 // ============ CV DOWNLOAD ============
 function downloadCV(e) {
   e.preventDefault();
@@ -1635,6 +1671,7 @@ function downloadCV(e) {
   var driveMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
   if (driveMatch) {
     var imgUrl = 'https://drive.google.com/uc?export=view&id=' + driveMatch[1];
+    if (_cvLabelTimer) { clearInterval(_cvLabelTimer); _cvLabelTimer = null; }
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Yuklanmoqda...';
     btn.style.pointerEvents = 'none';
     var img = new Image();
@@ -1664,13 +1701,15 @@ function downloadCV(e) {
         // Fallback — oddiy yuklab olish
         window.open('https://drive.google.com/uc?export=download&confirm=t&id=' + driveMatch[1], '_blank');
       }
-      btn.innerHTML = '<i class="fas fa-file-pdf"></i> CV olish';
+      btn.innerHTML = '<i class="fas fa-file-pdf"></i> <span id="cv-btn-text" style="display:inline-block;transition:opacity 0.3s,transform 0.3s">CV olish</span>';
+      try { var _d2 = getData(); initCvLabelRotation(_d2.settings.cvLabels || []); } catch(e2) {}
       btn.style.pointerEvents = '';
     };
     img.onerror = function() {
       // CORS xatosi bo'lsa — oddiy yuklab olish
       window.open('https://drive.google.com/uc?export=download&confirm=t&id=' + driveMatch[1], '_blank');
-      btn.innerHTML = '<i class="fas fa-file-pdf"></i> CV olish';
+      btn.innerHTML = '<i class="fas fa-file-pdf"></i> <span id="cv-btn-text" style="display:inline-block;transition:opacity 0.3s,transform 0.3s">CV olish</span>';
+      try { var _d2 = getData(); initCvLabelRotation(_d2.settings.cvLabels || []); } catch(e2) {}
       btn.style.pointerEvents = '';
     };
     img.src = imgUrl;

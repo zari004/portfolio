@@ -898,6 +898,14 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
             <label>CV URL (havola)</label>
             <input class="form-input" id="set-cvUrl" placeholder="https://drive.google.com/..." oninput="markDirty()">
           </div>
+          <div class="form-group">
+            <label>CV tugma nomlari <span style="font-size:0.7rem;color:var(--muted)">(har 3 soniyada almashadi, stiker qo'shsa bo'ladi)</span></label>
+            <div id="cvLabelsList"></div>
+            <div style="display:flex;gap:6px;margin-top:6px">
+              <input class="form-input" id="newCvLabel" placeholder="Masalan: Resume olish 📄" style="flex:1" onkeydown="if(event.key==='Enter'){addCvLabel()}">
+              <button class="btn btn-primary" onclick="addCvLabel()" style="padding:6px 14px;font-size:0.78rem"><i class="fas fa-plus"></i></button>
+            </div>
+          </div>
           <div class="toggle-wrap" style="margin-top:8px">
             <div class="toggle on" id="badge-toggle" onclick="toggleBadge()"></div>
             <span class="toggle-label">Badge ko'rinishi (Yangi loyihalar)</span>
@@ -1062,7 +1070,7 @@ const DEFAULT_DATA = {
     logoText: 'dizay', logoAccent: 'n.',
     siteTitle: 'Portfolio – Grafik Dizayner',
     footerText: '© 2025 dizayn. Barcha huquqlar himoyalangan.',
-    cvUrl: '', badgeOpen: true,
+    cvUrl: '', cvLabels: [], badgeOpen: true,
     fontSizeHero: '72', fontSizeSection: '40', fontSizeBody: '16'
   }
 };
@@ -1408,6 +1416,7 @@ function collectFormData() {
   data.settings.siteTitle = document.getElementById('set-siteTitle').value;
   data.settings.footerText = document.getElementById('set-footerText').value;
   data.settings.cvUrl = document.getElementById('set-cvUrl').value;
+  // cvLabels allaqachon data.settings.cvLabels da saqlanadi (addCvLabel/removeCvLabel orqali)
   data.settings.fontSizeHero = document.getElementById('set-fontHero').value;
   data.settings.fontSizeSection = document.getElementById('set-fontSection').value;
   data.settings.fontSizeBody = document.getElementById('set-fontBody').value;
@@ -1924,6 +1933,8 @@ function fillAllForms() {
   document.getElementById('set-siteTitle').value = data.settings.siteTitle || '';
   document.getElementById('set-footerText').value = data.settings.footerText || '';
   document.getElementById('set-cvUrl').value = data.settings.cvUrl || '';
+  if (!data.settings.cvLabels) data.settings.cvLabels = [];
+  renderCvLabels();
   document.getElementById('set-fontHero').value = data.settings.fontSizeHero || '72';
   document.getElementById('set-fontSection').value = data.settings.fontSizeSection || '40';
   document.getElementById('set-fontBody').value = data.settings.fontSizeBody || '16';
@@ -3155,6 +3166,38 @@ async function previewImg(event, previewId, hiddenId) {
 function updateBadgeStatus() {
   const el = document.getElementById('badge-toggle');
   if (data.settings.badgeOpen) el.classList.add('on'); else el.classList.remove('on');
+}
+
+function renderCvLabels() {
+  var el = document.getElementById('cvLabelsList');
+  if (!el) return;
+  if (!data.settings.cvLabels) data.settings.cvLabels = [];
+  if (!data.settings.cvLabels.length) { el.innerHTML = '<div style="padding:8px;color:var(--muted);font-size:0.78rem;text-align:center;border:1px dashed var(--border);border-radius:8px">Faqat "CV olish" ko\'rinadi. Qo\'shimcha nomlar qo\'shing!</div>'; return; }
+  el.innerHTML = data.settings.cvLabels.map(function(label, i) {
+    return '<div class="drag-cvlabel-item" draggable="true" data-idx="' + i + '" style="display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:6px 10px;margin-bottom:6px;cursor:grab;transition:border-color 0.2s,opacity 0.2s">'
+      + '<i class="fas fa-grip-vertical" style="color:var(--muted);font-size:0.6rem;flex-shrink:0;pointer-events:none"></i>'
+      + '<span style="flex:1;font-size:0.85rem">' + sanitize(label) + '</span>'
+      + '<button type="button" onclick="removeCvLabel(' + i + ')" style="width:22px;height:22px;display:flex;align-items:center;justify-content:center;border-radius:5px;border:1px solid rgba(245,66,66,0.2);background:rgba(245,66,66,0.04);color:var(--red);cursor:pointer;font-size:0.5rem;flex-shrink:0"><i class="fas fa-trash"></i></button>'
+      + '</div>';
+  }).join('');
+  initDragDrop('cvLabelsList', 'drag-cvlabel-item', function(){ return data.settings.cvLabels; }, function(a){ data.settings.cvLabels = a; }, renderCvLabels);
+}
+
+function addCvLabel() {
+  var input = document.getElementById('newCvLabel');
+  var val = input.value.trim();
+  if (!val) return;
+  if (!data.settings.cvLabels) data.settings.cvLabels = [];
+  data.settings.cvLabels.push(val);
+  input.value = '';
+  renderCvLabels();
+  markDirty();
+}
+
+function removeCvLabel(idx) {
+  data.settings.cvLabels.splice(idx, 1);
+  renderCvLabels();
+  markDirty();
 }
 
 function toggleBadge() {
