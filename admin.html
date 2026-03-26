@@ -997,7 +997,7 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
 </div>
 
 <!-- MODAL -->
-<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal(false)">
   <div class="modal">
     <div class="modal-header">
       <h3 id="modalTitle">Modal</h3>
@@ -2069,7 +2069,7 @@ function saveCompanyItem(id) {
   }
   renderCompaniesList();
   updateCompaniesPreview();
-  closeModal();
+  closeModal(true);
   markDirty();
   showToast('Kompaniya saqlandi', 'success');
 }
@@ -2778,7 +2778,7 @@ function savePortfolioItem(id) {
     data.portfolio.unshift(item);
   }
   renderPortfolioList();
-  closeModal();
+  closeModal(true);
   saveToStorage();
   markDirty();
   showToast('Loyiha saqlandi', 'success');
@@ -2907,7 +2907,7 @@ function saveServiceItem(id) {
     data.services.push(item);
   }
   renderServicesList();
-  closeModal();
+  closeModal(true);
   markDirty();
   showToast('Xizmat saqlandi', 'success');
 }
@@ -3265,7 +3265,7 @@ async function saveUser(id) {
   }
   localStorage.setItem('admin_users', JSON.stringify(users));
   renderUsersTable();
-  closeModal();
+  closeModal(true);
   showToast('Foydalanuvchi saqlandi', 'success');
 }
 
@@ -3289,8 +3289,23 @@ function openModal(title, bodyHTML, footerHTML) {
   overlay.classList.add('active');
 }
 
-function closeModal() {
+function closeModal(force) {
+  if (!force && modalHasData()) {
+    if (!confirm('Ma\'lumotlar saqlanmagan. Chiqishni xohlaysizmi?')) return;
+  }
   document.getElementById('modalOverlay').classList.remove('active');
+}
+
+function modalHasData() {
+  var body = document.getElementById('modalBody');
+  if (!body) return false;
+  var inputs = body.querySelectorAll('input.form-input, textarea.form-input');
+  for (var i = 0; i < inputs.length; i++) {
+    var inp = inputs[i];
+    if (inp.type === 'hidden' || inp.type === 'color') continue;
+    if (inp.value && inp.value.trim()) return true;
+  }
+  return false;
 }
 
 /* ============================================================
@@ -3429,7 +3444,7 @@ async function confirmResetAll() {
   var hashedP = await hashPassword(p);
   var found = users.find(function(x) { return x.username === u && x.password === hashedP; });
   if (!found) { errEl.textContent = 'Login yoki parol noto\'g\'ri'; return; }
-  closeModal();
+  closeModal(true);
   localStorage.removeItem('portfolio_admin_data');
   localStorage.removeItem('admin_users');
   localStorage.removeItem('github_config');
