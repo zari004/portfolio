@@ -1284,6 +1284,58 @@ function getData() {
   return DEFAULT_DATA;
 }
 
+// IndexedDB dan rasmlarni yuklash
+function loadImagesFromIDB() {
+  try {
+    var req = indexedDB.open('portfolio_db', 1);
+    req.onupgradeneeded = function(e) { e.target.result.createObjectStore('data'); };
+    req.onsuccess = function(e) {
+      var db = e.target.result;
+      var tx = db.transaction('data', 'readonly');
+      var store = tx.objectStore('data');
+      var get = store.get('portfolio_admin_data');
+      get.onsuccess = function() {
+        var idbData = get.result;
+        if (!idbData) return;
+        var d = getData();
+        var needsRefresh = false;
+        if (d.portfolio && idbData.portfolio) {
+          d.portfolio.forEach(function(p) {
+            var idbP = idbData.portfolio.find(function(ip) { return ip.id === p.id; });
+            if (!idbP) return;
+            if (p.img === '[IDB]' && idbP.img) { p.img = idbP.img; needsRefresh = true; }
+            if (p.blocks && idbP.blocks) {
+              p.blocks.forEach(function(b, bi) {
+                if (b.type === 'image' && bi < idbP.blocks.length) {
+                  var idbB = idbP.blocks[bi];
+                  if (b.content === '[IDB]') { b.content = idbB.content; needsRefresh = true; }
+                  if (Array.isArray(b.content)) {
+                    for (var ci = 0; ci < b.content.length; ci++) {
+                      if (b.content[ci] === '[IDB]' && idbB.content && (Array.isArray(idbB.content) ? idbB.content[ci] : idbB.content)) {
+                        b.content[ci] = Array.isArray(idbB.content) ? idbB.content[ci] : idbB.content;
+                        needsRefresh = true;
+                      }
+                    }
+                  }
+                }
+              });
+            }
+          });
+        }
+        if (d.about && idbData.about && d.about.img === '[IDB]') {
+          d.about.img = idbData.about.img;
+          needsRefresh = true;
+        }
+        if (needsRefresh) {
+          console.log('[SITE] Rasmlar IndexedDB dan yuklandi, qayta render');
+          window.__idbData = idbData;
+          applyData();
+        }
+      };
+    };
+  } catch(e) { console.warn('[IDB]', e); }
+}
+
 // ============ APPLY DATA ============
 function applyData() {
   const d = getData();
@@ -1988,6 +2040,7 @@ document.addEventListener('keydown', function(e) {
 
 // ============ INIT ============
 applyData();
+loadImagesFromIDB();
 initVideoObserver();
 initAurora();
 

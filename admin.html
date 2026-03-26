@@ -1240,7 +1240,6 @@ function loadFromStorage() {
     const raw = localStorage.getItem('portfolio_admin_data');
     data = raw ? JSON.parse(raw) : deepClone(DEFAULT_DATA);
   } catch { data = deepClone(DEFAULT_DATA); }
-  // ensure all sections exist
   for (const key in DEFAULT_DATA) {
     if (!(key in data)) data[key] = deepClone(DEFAULT_DATA[key]);
   }
@@ -1249,19 +1248,114 @@ function loadFromStorage() {
     const rawU = localStorage.getItem('admin_users');
     users = rawU ? JSON.parse(rawU) : deepClone(DEFAULT_USERS);
   } catch { users = deepClone(DEFAULT_USERS); }
+  // IndexedDB dan to'liq ma'lumotni yuklash ([IDB] placeholder larni almashtirish)
+  loadFromIDB().then(function(idbData) {
+    if (!idbData) return;
+    var needsRefresh = false;
+    // IDB dan to'liq rasmlarni olish
+    if (idbData.portfolio && data.portfolio) {
+      data.portfolio.forEach(function(p, i) {
+        var idbP = idbData.portfolio.find(function(ip) { return ip.id === p.id; });
+        if (!idbP) return;
+        if (p.img === '[IDB]' || (!p.img && idbP.img)) { p.img = idbP.img; needsRefresh = true; }
+        if (p.blocks && idbP.blocks) {
+          p.blocks.forEach(function(b, bi) {
+            if (bi < idbP.blocks.length && b.type === 'image') {
+              if (b.content === '[IDB]' || (Array.isArray(b.content) && b.content.indexOf('[IDB]') >= 0)) {
+                b.content = idbP.blocks[bi].content;
+                needsRefresh = true;
+              }
+            }
+          });
+        }
+      });
+    }
+    if (idbData.about && data.about && (data.about.img === '[IDB]' || (!data.about.img && idbData.about.img))) {
+      data.about.img = idbData.about.img;
+      needsRefresh = true;
+    }
+    if (needsRefresh) {
+      console.log('[IDB] Rasmlar IndexedDB dan yuklandi');
+      fillAllForms();
+    }
+  }).catch(function(err) {
+    console.warn('[IDB] Yuklashda xatolik:', err);
+  });
+}
+
+// IndexedDB — katta hajmli ma'lumotlar uchun (50-100+ MB)
+function openDB() {
+  return new Promise(function(resolve, reject) {
+    var req = indexedDB.open('portfolio_db', 1);
+    req.onupgradeneeded = function(e) {
+      var db = e.target.result;
+      if (!db.objectStoreNames.contains('data')) db.createObjectStore('data');
+    };
+    req.onsuccess = function(e) { resolve(e.target.result); };
+    req.onerror = function(e) { reject(e.target.error); };
+  });
+}
+
+function saveToIDB(data) {
+  return openDB().then(function(db) {
+    return new Promise(function(resolve, reject) {
+      var tx = db.transaction('data', 'readwrite');
+      tx.objectStore('data').put(JSON.parse(JSON.stringify(data)), 'portfolio_admin_data');
+      tx.oncomplete = resolve;
+      tx.onerror = function() { reject(tx.error); };
+    });
+  });
+}
+
+function loadFromIDB() {
+  return openDB().then(function(db) {
+    return new Promise(function(resolve, reject) {
+      var tx = db.transaction('data', 'readonly');
+      var req = tx.objectStore('data').get('portfolio_admin_data');
+      req.onsuccess = function() { resolve(req.result || null); };
+      req.onerror = function() { reject(req.error); };
+    });
+  });
 }
 
 function saveToStorage() {
   try {
-    var json = JSON.stringify(data);
-    localStorage.setItem('portfolio_admin_data', json);
+    // Users — localStorage da (kichik)
     localStorage.setItem('admin_users', JSON.stringify(users));
-    // Debug: hajmni ko'rsatish
-    var sizeMB = (json.length / (1024 * 1024)).toFixed(2);
-    console.log('[SAVE] localStorage ga saqlandi: ' + sizeMB + ' MB, portfolio: ' + (data.portfolio ? data.portfolio.length : 0) + ' ta');
+    // Data — IndexedDB ga (katta)
+    saveToIDB(data).then(function() {
+      var json = JSON.stringify(data);
+      var sizeMB = (json.length / (1024 * 1024)).toFixed(2);
+      console.log('[SAVE] IndexedDB ga saqlandi: ' + sizeMB + ' MB');
+      // localStorage ga ham saqlash (sayt uchun)
+      try {
+        localStorage.setItem('portfolio_admin_data', json);
+      } catch(e) {
+        // localStorage to'lsa — faqat IndexedDB da saqlanadi
+        console.warn('[SAVE] localStorage to\'ldi, faqat IndexedDB da saqlandi');
+        // Rasmlarni olib tashlagan holda localStorage ga saqlash
+        var lite = JSON.parse(json);
+        if (lite.portfolio) {
+          lite.portfolio.forEach(function(p) {
+            if (p.img && p.img.length > 1000) p.img = '[IDB]';
+            if (p.blocks) p.blocks.forEach(function(b) {
+              if (b.type === 'image') {
+                if (Array.isArray(b.content)) b.content = b.content.map(function(c) { return c && c.length > 1000 ? '[IDB]' : c; });
+                else if (b.content && b.content.length > 1000) b.content = '[IDB]';
+              }
+            });
+          });
+        }
+        if (lite.about && lite.about.img && lite.about.img.length > 1000) lite.about.img = '[IDB]';
+        localStorage.setItem('portfolio_admin_data', JSON.stringify(lite));
+      }
+    }).catch(function(err) {
+      console.error('[IDB ERROR]', err);
+      showToast('Saqlashda xatolik: ' + err.message, 'error');
+    });
   } catch(e) {
     console.error('[SAVE ERROR]', e);
-    showToast('Saqlashda xatolik: ' + (e.name === 'QuotaExceededError' ? 'Xotira to\'ldi! Rasmlarni kichikroq qiling' : e.message), 'error');
+    showToast('Saqlashda xatolik: ' + e.message, 'error');
   }
 }
 
