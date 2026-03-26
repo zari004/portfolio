@@ -853,7 +853,7 @@
     </h1>
     <p id="hero-desc">
       Brendlar, mahsulotlar va raqamli tajribalar uchun vizual identifikatsiyalar
-      yarataman. Har bir loyiha â noyob hikoya.
+      yarataman. Har bir loyiha — noyob hikoya.
     </p>
     <div class="hero-btns">
       <a href="#portfolio" class="btn-primary">
@@ -902,7 +902,7 @@
 <section id="portfolio">
   <div class="section-tag">Portfolio</div>
   <h2 class="section-title">So'nggi Ishlar</h2>
-  <p class="section-sub">Yakunlangan loyihalardan tanlanma â har biri o'z muammosini yechish uchun yaratilgan.</p>
+  <p class="section-sub">Yakunlangan loyihalardan tanlanma — har biri o'z muammosini yechish uchun yaratilgan.</p>
   <div class="portfolio-filter" id="portfolio-filter"></div>
   <div class="portfolio-grid" id="portfolio-grid"></div>
 </section>
@@ -969,7 +969,7 @@
 <section id="contact">
   <div class="section-tag">Aloqa</div>
   <h2 class="section-title">Loyiha boshlaylikmi?</h2>
-  <p class="section-sub">G'oyangiz bor â keling, uni birgalikda amalga oshiramiz.</p>
+  <p class="section-sub">G'oyangiz bor — keling, uni birgalikda amalga oshiramiz.</p>
   <div class="contact-wrapper">
     <div class="contact-info">
       <h2>Bog'lanish<br><span style="color:var(--accent)">oson.</span></h2>
@@ -1064,7 +1064,7 @@
 const DEFAULT_DATA = {
   hero: {
     line1: 'Grafik', line2: 'Dizayner', line3: '& Kreativ',
-    desc: "Brendlar, mahsulotlar va raqamli tajribalar uchun vizual identifikatsiyalar yarataman. Har bir loyiha â noyob hikoya.",
+    desc: "Brendlar, mahsulotlar va raqamli tajribalar uchun vizual identifikatsiyalar yarataman. Har bir loyiha — noyob hikoya.",
     badge: 'Yangi loyihalar qabul qilinmoqda',
     stats: [
       { num:'50', suffix:'+', label:'Yakunlangan loyiha' },
@@ -1113,7 +1113,7 @@ const DEFAULT_DATA = {
   },
   settings: {
     logoText:'dizay', logoAccent:'n.',
-    siteTitle:'Portfolio â Grafik Dizayner',
+    siteTitle:'Portfolio — Grafik Dizayner',
     footerText:'Â© 2025 dizayn. Barcha huquqlar himoyalangan.',
     cvUrl: '',
     badgeOpen: true,
@@ -1529,7 +1529,7 @@ function renderMarquee(items) {
     </div>`;
   };
 
-  // Ikkita nusxa â uzluksiz aylanish uchun
+  // Ikkita nusxa — uzluksiz aylanish uchun
   const html = items.map(makeItem).join('');
   track.innerHTML = html + html;
 
@@ -1750,7 +1750,7 @@ function initAurora() {
       points.push({ x, y: centerY + wave1 + wave2 + wave3 });
     }
 
-    // Gradient band chizish â har bir nuqta uchun vertikal gradient
+    // Gradient band chizish — har bir nuqta uchun vertikal gradient
     for (let i = 0; i < points.length - 1; i++) {
       const p = points[i];
       const grad = ctx.createLinearGradient(p.x, p.y - bandW * 0.5, p.x, p.y + bandW * 0.5);
@@ -1797,7 +1797,7 @@ function openProjectDetail(idx) {
   // Push state for browser back button
   history.pushState({ projectDetail: true, idx: idx }, '', '#project-' + idx);
 
-  // Build hero media â asosiy rasm yoki bloklardagi birinchi rasm
+  // Build hero media — asosiy rasm yoki bloklardagi birinchi rasm
   var heroImg = p.img || '';
   if (!heroImg && p.blocks && p.blocks.length) {
     var firstImgBlock = p.blocks.find(function(b){ return b.type === 'image' && b.content; });
@@ -1874,7 +1874,7 @@ function openProjectDetail(idx) {
         if (images.length === 1) {
           return '<div class="pd-block-image"><img src="' + images[0] + '" onclick="openPdLightbox(this.src)" alt=""></div>';
         }
-        // Multiple images â grid layout
+        // Multiple images — grid layout
         // 4 ta rasm = 2 ustun, qolganlar = 3 ustun
         var colClass = images.length === 4 ? 'cols-2' : 'cols-3';
         return '<div class="pd-block-images-grid ' + colClass + '">'
