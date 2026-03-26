@@ -1050,6 +1050,14 @@
         <label>Xabar</label>
         <textarea id="cf-message" placeholder="Loyihangiz haqida qisqacha ma'lumot bering..."></textarea>
       </div>
+      <div class="cf-group">
+        <label>Rasmlar <span style="font-size:0.75em;color:var(--sub)">(ixtiyoriy, 10 tagacha)</span></label>
+        <div id="cf-files-preview" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px"></div>
+        <label style="display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border-radius:8px;border:1px dashed var(--border);color:var(--sub);font-size:13px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--sub)'">
+          <i class="fas fa-image"></i> Rasm tanlash
+          <input type="file" id="cf-files" accept="image/*" multiple style="display:none" onchange="previewContactFiles(this)">
+        </label>
+      </div>
       <button class="btn-submit" onclick="sendContactMessage()" id="cf-submit">
         <i class="fas fa-paper-plane"></i> Xabar yuborish
       </button>
@@ -1220,6 +1228,36 @@ function queueYtPlayer(uid, ytId, controls) {
 }
 
 // ============ CONTACT FORM ============
+var _contactFiles = [];
+
+function previewContactFiles(input) {
+  var files = Array.from(input.files);
+  if (_contactFiles.length + files.length > 10) {
+    alert('Eng ko\'pi bilan 10 ta rasm yuklash mumkin');
+    files = files.slice(0, 10 - _contactFiles.length);
+  }
+  files.forEach(function(f) { _contactFiles.push(f); });
+  renderContactFilesPreview();
+  input.value = '';
+}
+
+function removeContactFile(idx) {
+  _contactFiles.splice(idx, 1);
+  renderContactFilesPreview();
+}
+
+function renderContactFilesPreview() {
+  var container = document.getElementById('cf-files-preview');
+  if (!_contactFiles.length) { container.innerHTML = ''; return; }
+  container.innerHTML = _contactFiles.map(function(f, i) {
+    var url = URL.createObjectURL(f);
+    return '<div style="position:relative;width:60px;height:60px;border-radius:8px;overflow:hidden;border:1px solid var(--border)">'
+      + '<img src="' + url + '" style="width:100%;height:100%;object-fit:cover">'
+      + '<button onclick="removeContactFile(' + i + ')" style="position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,0.7);border:none;color:#fff;font-size:8px;cursor:pointer;display:flex;align-items:center;justify-content:center"><i class="fas fa-times"></i></button>'
+      + '</div>';
+  }).join('');
+}
+
 function sendContactMessage() {
   var name = document.getElementById('cf-name').value.trim();
   var email = document.getElementById('cf-email').value.trim();
@@ -1240,31 +1278,38 @@ function sendContactMessage() {
 
   if (method === 'telegram' && c.botToken && c.chatId) {
     var text = 'ð© Yangi xabar!\n\nð¤ Ism: ' + name + '\nð§ Email: ' + email + '\nð± Telefon: ' + (phone || '-') + '\nð¬ Telegram: ' + (tgUser || '-') + '\nð§ Xizmat: ' + service + '\n\nð¬ Xabar:\n' + message;
-    fetch('https://api.telegram.org/bot' + c.botToken + '/sendMessage', {
+    var botUrl = 'https://api.telegram.org/bot' + c.botToken;
+    function onContactSuccess() {
+      btn.innerHTML = '<i class="fas fa-check"></i> Yuborildi!';
+      btn.style.background = '#22c55e';
+      ['cf-name','cf-email','cf-phone','cf-telegram','cf-service','cf-message'].forEach(function(id) { document.getElementById(id).value = ''; });
+      _contactFiles = []; renderContactFilesPreview();
+      setTimeout(function() { btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane"></i> Xabar yuborish'; btn.style.background = ''; }, 3000);
+    }
+    function onContactError() {
+      btn.innerHTML = '<i class="fas fa-times"></i> Xatolik!';
+      btn.style.background = '#ef4444';
+      setTimeout(function() { btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane"></i> Xabar yuborish'; btn.style.background = ''; }, 3000);
+    }
+    fetch(botUrl + '/sendMessage', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ chat_id: c.chatId, text: text })
     }).then(function(r) { return r.json(); }).then(function(res) {
-      if (res.ok) {
-        btn.innerHTML = '<i class="fas fa-check"></i> Yuborildi!';
-        btn.style.background = '#22c55e';
-        document.getElementById('cf-name').value = '';
-        document.getElementById('cf-email').value = '';
-        document.getElementById('cf-phone').value = '';
-        document.getElementById('cf-telegram').value = '';
-        document.getElementById('cf-service').value = '';
-        document.getElementById('cf-message').value = '';
-        setTimeout(function() { btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane"></i> Xabar yuborish'; btn.style.background = ''; }, 3000);
-      } else {
-        btn.innerHTML = '<i class="fas fa-times"></i> Xatolik!';
-        btn.style.background = '#ef4444';
-        setTimeout(function() { btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane"></i> Xabar yuborish'; btn.style.background = ''; }, 3000);
-      }
-    }).catch(function() {
-      btn.innerHTML = '<i class="fas fa-times"></i> Tarmoq xatosi!';
-      btn.style.background = '#ef4444';
-      setTimeout(function() { btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane"></i> Xabar yuborish'; btn.style.background = ''; }, 3000);
-    });
+      if (!res.ok) { onContactError(); return; }
+      if (!_contactFiles.length) { onContactSuccess(); return; }
+      var sendNext = function(idx) {
+        if (idx >= _contactFiles.length) { onContactSuccess(); return; }
+        var fd = new FormData();
+        fd.append('chat_id', c.chatId);
+        fd.append('photo', _contactFiles[idx]);
+        if (idx === 0) fd.append('caption', 'Rasm ' + (idx+1) + '/' + _contactFiles.length + ' — ' + name);
+        fetch(botUrl + '/sendPhoto', { method: 'POST', body: fd })
+          .then(function() { sendNext(idx + 1); })
+          .catch(function() { sendNext(idx + 1); });
+      };
+      sendNext(0);
+    }).catch(function() { onContactError(); });
   } else if (method === 'email') {
     var subject = 'Yangi xabar: ' + service;
     var body = 'Ism: ' + name + '\nEmail: ' + email + '\nTelefon: ' + (phone || '-') + '\nTelegram: ' + (tgUser || '-') + '\nXizmat: ' + service + '\n\nXabar:\n' + message;
