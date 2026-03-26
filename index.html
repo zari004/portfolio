@@ -1688,7 +1688,7 @@ function downloadCV(e) {
         var doc = new jsPDF(orientation, 'mm', [pdfW, pdfH]);
         doc.addImage(img, 'PNG', 0, 0, pdfW, pdfH);
         var cvName = 'CV';
-        try { var _d = getData(); if (_d.hero && _d.hero.line1) cvName = 'CV_' + _d.hero.line1.replace(/[^a-zA-Z0-9_\-\s]/g, '').trim().replace(/\s+/g, '_'); } catch(e) {}
+        try { var _d = getData(); if (_d.settings && _d.settings.cvName) cvName = _d.settings.cvName.replace(/[^a-zA-Z0-9_\-\s]/g, '').trim().replace(/\s+/g, '_'); else if (_d.hero && _d.hero.line1) cvName = 'CV_' + _d.hero.line1.replace(/[^a-zA-Z0-9_\-\s]/g, '').trim().replace(/\s+/g, '_'); } catch(e) {}
         doc.save(cvName + '.pdf');
       } catch(err) {
         // Fallback — oddiy yuklab olish

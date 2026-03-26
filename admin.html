@@ -899,6 +899,10 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
             <input class="form-input" id="set-cvUrl" placeholder="https://drive.google.com/..." oninput="markDirty()">
           </div>
           <div class="form-group">
+            <label>CV fayl nomi <span style="font-size:0.7rem;color:var(--muted)">(yuklaganda ko'rinadigan nom)</span></label>
+            <input class="form-input" id="set-cvName" placeholder="Masalan: Zarnigor_Orifova_CV" oninput="markDirty()">
+          </div>
+          <div class="form-group">
             <label>CV tugma nomlari <span style="font-size:0.7rem;color:var(--muted)">(har 3 soniyada almashadi, stiker qo'shsa bo'ladi)</span></label>
             <div id="cvLabelsList"></div>
             <div style="display:flex;gap:6px;margin-top:6px">
@@ -1070,7 +1074,7 @@ const DEFAULT_DATA = {
     logoText: 'dizay', logoAccent: 'n.',
     siteTitle: 'Portfolio – Grafik Dizayner',
     footerText: '© 2025 dizayn. Barcha huquqlar himoyalangan.',
-    cvUrl: '', cvLabels: [], badgeOpen: true,
+    cvUrl: '', cvName: '', cvLabels: [], badgeOpen: true,
     fontSizeHero: '72', fontSizeSection: '40', fontSizeBody: '16'
   }
 };
@@ -1416,6 +1420,7 @@ function collectFormData() {
   data.settings.siteTitle = document.getElementById('set-siteTitle').value;
   data.settings.footerText = document.getElementById('set-footerText').value;
   data.settings.cvUrl = document.getElementById('set-cvUrl').value;
+  data.settings.cvName = document.getElementById('set-cvName').value;
   // cvLabels allaqachon data.settings.cvLabels da saqlanadi (addCvLabel/removeCvLabel orqali)
   data.settings.fontSizeHero = document.getElementById('set-fontHero').value;
   data.settings.fontSizeSection = document.getElementById('set-fontSection').value;
@@ -1934,6 +1939,7 @@ function fillAllForms() {
   document.getElementById('set-siteTitle').value = data.settings.siteTitle || '';
   document.getElementById('set-footerText').value = data.settings.footerText || '';
   document.getElementById('set-cvUrl').value = data.settings.cvUrl || '';
+  document.getElementById('set-cvName').value = data.settings.cvName || '';
   if (!data.settings.cvLabels) data.settings.cvLabels = [];
   renderCvLabels();
   document.getElementById('set-fontHero').value = data.settings.fontSizeHero || '72';
