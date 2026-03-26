@@ -3410,9 +3410,31 @@ function injectDataIntoPortfolio(html) {
 function resetAll() {
   if (!confirm('DIQQAT! Barcha ma\'lumotlar o\'chiriladi. Davom etmoqchimisiz?')) return;
   if (!confirm('Rostdan ham barchasini tozalashni xohlaysizmi? Bu qaytarib bo\'lmaydi!')) return;
+  openModal('Tasdiqlash',
+    '<p style="color:var(--red);font-size:0.85rem;margin-bottom:16px"><i class="fas fa-exclamation-triangle"></i> Bu amalni bajarish uchun login va parolingizni kiriting.</p>'
+    + '<div class="form-group"><label>Login</label><input class="form-input" id="reset-confirm-user" placeholder="Login"></div>'
+    + '<div class="form-group"><label>Parol</label><input class="form-input" id="reset-confirm-pass" type="password" placeholder="Parol"></div>'
+    + '<div id="reset-confirm-err" style="color:var(--red);font-size:0.8rem;margin-top:4px"></div>',
+    '<button class="btn btn-secondary" onclick="closeModal()">Bekor qilish</button>'
+    + '<button class="btn btn-danger" onclick="confirmResetAll()"><i class="fas fa-trash-alt"></i> Tozalash</button>',
+    null
+  );
+}
+
+async function confirmResetAll() {
+  var u = document.getElementById('reset-confirm-user').value.trim();
+  var p = document.getElementById('reset-confirm-pass').value;
+  var errEl = document.getElementById('reset-confirm-err');
+  if (!u || !p) { errEl.textContent = 'Login va parolni kiriting'; return; }
+  var hashedP = await hashPassword(p);
+  var found = users.find(function(x) { return x.username === u && x.password === hashedP; });
+  if (!found) { errEl.textContent = 'Login yoki parol noto\'g\'ri'; return; }
+  closeModal();
   localStorage.removeItem('portfolio_admin_data');
   localStorage.removeItem('admin_users');
   localStorage.removeItem('github_config');
+  // IndexedDB ham tozalash
+  try { var db = await openDB(); var tx = db.transaction('data', 'readwrite'); tx.objectStore('data').clear(); } catch(e) {}
   data = deepClone(DEFAULT_DATA);
   users = deepClone(DEFAULT_USERS);
   localStorage.setItem('admin_users', JSON.stringify(users));
