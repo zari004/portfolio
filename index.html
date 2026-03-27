@@ -1323,6 +1323,16 @@ function sendContactMessage() {
   }
 }
 
+// ============ LOAD INJECTED DATA ============
+(function() {
+  try {
+    var el = document.getElementById('admin-injected-data');
+    if (el && el.textContent.trim()) {
+      window.__PORTFOLIO_DATA__ = JSON.parse(el.textContent);
+    }
+  } catch(e) { console.error('[SITE] Injected data parse xatolik:', e); }
+})();
+
 // ============ LOAD DATA ============
 function getData() {
   try {
@@ -1709,48 +1719,54 @@ function downloadCV(e) {
   // Google Drive fayl havolasi — rasmni PDF ga aylantirish
   var driveMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
   if (driveMatch) {
-    var imgUrl = 'https://drive.google.com/uc?export=view&id=' + driveMatch[1];
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Yuklanmoqda...';
+    var fileId = driveMatch[1];
+    var downloadUrl = 'https://drive.google.com/uc?export=download&confirm=t&id=' + fileId;
+    var cvName = 'CV';
+    try { var _d = getData(); if (_d.settings && _d.settings.cvName) cvName = _d.settings.cvName.replace(/[^a-zA-Z0-9_\-\s]/g, '').trim().replace(/\s+/g, '_'); else if (_d.hero && _d.hero.line1) cvName = 'CV_' + _d.hero.line1.replace(/[^a-zA-Z0-9_\-\s]/g, '').trim().replace(/\s+/g, '_'); } catch(e) {}
+
+    function resetCvBtn() {
+      btn.innerHTML = '<span id="cv-btn-text">CV olish</span> <i class="fas fa-file-pdf"></i>';
+      try { var _d2 = getData(); initCvLabelRotation(_d2.settings.cvLabels || []); } catch(e2) {}
+      btn.style.pointerEvents = '';
+    }
+
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Yuklanmoqda...';
     btn.style.pointerEvents = 'none';
+
+    // Rasmni yuklashga harakat qilish (PDF ga aylantirish uchun)
+    var imgDone = false;
     var img = new Image();
     img.crossOrigin = 'anonymous';
     img.onload = function() {
+      if (imgDone) return; imgDone = true;
       try {
         var jsPDF = window.jspdf.jsPDF;
-        // A4 o'lchamiga moslashtirish
-        var pageW = 210; // mm
-        var pageH = 297; // mm
+        var pageW = 210, pageH = 297;
         var imgRatio = img.width / img.height;
         var pdfW, pdfH;
-        if (imgRatio > pageW / pageH) {
-          pdfW = pageW;
-          pdfH = pageW / imgRatio;
-        } else {
-          pdfH = pageH;
-          pdfW = pageH * imgRatio;
-        }
-        var orientation = pdfW > pdfH ? 'landscape' : 'portrait';
-        var doc = new jsPDF(orientation, 'mm', [pdfW, pdfH]);
+        if (imgRatio > pageW / pageH) { pdfW = pageW; pdfH = pageW / imgRatio; }
+        else { pdfH = pageH; pdfW = pageH * imgRatio; }
+        var doc = new jsPDF(pdfW > pdfH ? 'landscape' : 'portrait', 'mm', [pdfW, pdfH]);
         doc.addImage(img, 'PNG', 0, 0, pdfW, pdfH);
-        var cvName = 'CV';
-        try { var _d = getData(); if (_d.settings && _d.settings.cvName) cvName = _d.settings.cvName.replace(/[^a-zA-Z0-9_\-\s]/g, '').trim().replace(/\s+/g, '_'); else if (_d.hero && _d.hero.line1) cvName = 'CV_' + _d.hero.line1.replace(/[^a-zA-Z0-9_\-\s]/g, '').trim().replace(/\s+/g, '_'); } catch(e) {}
         doc.save(cvName + '.pdf');
       } catch(err) {
-        // Fallback — oddiy yuklab olish
-        window.open('https://drive.google.com/uc?export=download&confirm=t&id=' + driveMatch[1], '_blank');
+        window.open(downloadUrl, '_blank');
       }
-      btn.innerHTML = '<span id="cv-btn-text">CV olish</span> <i class="fas fa-file-pdf"></i>';
-      try { var _d2 = getData(); initCvLabelRotation(_d2.settings.cvLabels || []); } catch(e2) {}
-      btn.style.pointerEvents = '';
+      resetCvBtn();
     };
     img.onerror = function() {
-      // CORS xatosi bo'lsa — oddiy yuklab olish
-      window.open('https://drive.google.com/uc?export=download&confirm=t&id=' + driveMatch[1], '_blank');
-      btn.innerHTML = '<span id="cv-btn-text">CV olish</span> <i class="fas fa-file-pdf"></i>';
-      try { var _d2 = getData(); initCvLabelRotation(_d2.settings.cvLabels || []); } catch(e2) {}
-      btn.style.pointerEvents = '';
+      if (imgDone) return; imgDone = true;
+      window.open(downloadUrl, '_blank');
+      resetCvBtn();
     };
-    img.src = imgUrl;
+    // 8 soniyada javob bo'lmasa — to'g'ridan-to'g'ri yuklab olish
+    setTimeout(function() {
+      if (imgDone) return; imgDone = true;
+      img.src = '';
+      window.open(downloadUrl, '_blank');
+      resetCvBtn();
+    }, 8000);
+    img.src = 'https://drive.google.com/uc?export=view&id=' + fileId;
     return;
   }
 
