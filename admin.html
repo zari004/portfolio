@@ -3511,14 +3511,14 @@ function injectDataIntoHtml(html, cleanData) {
 
   // Site title
   if (s.siteTitle) {
-    html = html.replace(/<title>[^<]*<\/title>/, '<title>' + s.siteTitle + '<\/title>');
+    html = html.replace(/<title>[^<]*<\/title>/, '<title>' + s.siteTitle + '<' + '/title>');
   }
 
   // JSON ni xavfsiz qilish
   var jsonStr = JSON.stringify(cleanData);
-  // </script> ni buzmaslik uchun
-  jsonStr = jsonStr.split('<\/script>').join('<\\\/script>');
-  jsonStr = jsonStr.split('</script>').join('<\\/script>');
+  // script tegini buzmaslik uchun
+  jsonStr = jsonStr.split('<' + '/script>').join('<\\/' + 'script>');
+  jsonStr = jsonStr.split('<' + '/Script>').join('<\\/' + 'Script>');
 
   var dataTag = '\n<script id="admin-injected-data" type="application/json">\n' + jsonStr + '\n</' + 'script>\n';
 
@@ -3526,7 +3526,7 @@ function injectDataIntoHtml(html, cleanData) {
   html = html.replace(/<script id="admin-injected-data"[^>]*>[\s\S]*?<\/script>\n?/g, '');
 
   // </body> dan oldin qo'shish
-  html = html.replace(/<\/body>/, dataTag + '</body>');
+  html = html.replace(/<\/body>/, dataTag + '<' + '/body>');
 
   return html;
 }
