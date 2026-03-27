@@ -3386,10 +3386,22 @@ async function pushToGitHub() {
       if (getResp.ok) {
         const fileData = await getResp.json();
         sha = fileData.sha;
-        // Decode content and inject data
-        const currentContent = atob(fileData.content.replace(/\n/g, ''));
-        const newContent = injectDataIntoPortfolio(currentContent);
-        const encoded = btoa(unescape(encodeURIComponent(newContent)));
+        // Decode content (UTF-8 safe)
+        var rawBytes = atob(fileData.content.replace(/\n/g, ''));
+        var bytes = new Uint8Array(rawBytes.length);
+        for (var i = 0; i < rawBytes.length; i++) bytes[i] = rawBytes.charCodeAt(i);
+        var currentContent = new TextDecoder('utf-8').decode(bytes);
+        var newContent = injectDataIntoPortfolio(currentContent);
+        // Encode back (UTF-8 safe)
+        var encBytes = new TextEncoder().encode(newContent);
+        var binStr = '';
+        // Chunk processing to avoid call stack overflow
+        var chunkSize = 8192;
+        for (var ci = 0; ci < encBytes.length; ci += chunkSize) {
+          var chunk = encBytes.subarray(ci, Math.min(ci + chunkSize, encBytes.length));
+          for (var j = 0; j < chunk.length; j++) binStr += String.fromCharCode(chunk[j]);
+        }
+        var encoded = btoa(binStr);
         const putResp = await fetch(apiBase, {
           method: 'PUT',
           headers: { 'Authorization': 'token ' + cfg.token, 'Content-Type': 'application/json', 'Accept': 'application/vnd.github.v3+json' },
