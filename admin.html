@@ -991,7 +991,12 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
           </div>
           <div style="margin-top:16px; display:flex; gap:10px">
             <button class="btn btn-secondary" onclick="saveGitHubConfig()"><i class="fas fa-save"></i> Konfigni saqlash</button>
-            <button class="btn btn-primary" onclick="pushToGitHub()"><i class="fas fa-cloud-upload-alt"></i> GitHub'ga Push</button>
+            <button class="btn btn-primary" id="ghPushBtn" onclick="pushToGitHub()"><i class="fas fa-cloud-upload-alt"></i> GitHub'ga Push</button>
+          </div>
+          <!-- Push progress log -->
+          <div id="ghPushLog" style="display:none;margin-top:16px;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:16px;max-height:350px;overflow-y:auto">
+            <div style="font-size:0.8rem;font-weight:600;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px">Push Jarayoni</div>
+            <div id="ghPushLogContent" style="font-family:'JetBrains Mono',monospace;font-size:0.78rem;line-height:1.6"></div>
           </div>
         </div>
       </div>
@@ -3369,6 +3374,39 @@ async function pushToGitHub() {
   if (!cfg || !cfg.token || !cfg.owner || !cfg.repo) {
     showToast('GitHub konfiguratsiyasini to\'ldiring', 'error'); return;
   }
+
+  // Progress log
+  var logWrap = document.getElementById('ghPushLog');
+  var logEl = document.getElementById('ghPushLogContent');
+  var pushBtn = document.getElementById('ghPushBtn');
+  logWrap.style.display = 'block';
+  logEl.innerHTML = '';
+  pushBtn.disabled = true;
+  pushBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Yuklanmoqda...';
+  var startTime = Date.now();
+
+  function ghLog(msg, type) {
+    var color = type === 'ok' ? 'var(--accent)' : type === 'err' ? 'var(--red)' : type === 'warn' ? '#f59e0b' : 'var(--text)';
+    var icon = type === 'ok' ? 'fa-check-circle' : type === 'err' ? 'fa-times-circle' : type === 'warn' ? 'fa-clock' : 'fa-chevron-right';
+    var time = ((Date.now() - startTime) / 1000).toFixed(1) + 's';
+    logEl.innerHTML += '<div style="color:' + color + ';margin-bottom:4px"><i class="fas ' + icon + '" style="width:14px;margin-right:6px;font-size:0.7rem"></i><span style="color:var(--muted);margin-right:6px">[' + time + ']</span>' + msg + '</div>';
+    logWrap.scrollTop = logWrap.scrollHeight;
+  }
+
+  function ghDone(success) {
+    pushBtn.disabled = false;
+    pushBtn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> GitHub\'ga Push';
+    var total = ((Date.now() - startTime) / 1000).toFixed(1);
+    if (success) {
+      ghLog('Jarayon tugadi (' + total + ' soniya)', 'ok');
+      logEl.innerHTML += '<div style="margin-top:10px;padding:10px;background:rgba(181,245,66,0.08);border:1px solid rgba(181,245,66,0.2);border-radius:8px;color:var(--accent);font-weight:600;text-align:center"><i class="fas fa-check-circle" style="margin-right:6px"></i>Muvaffaqiyatli yuborildi!</div>';
+    } else {
+      ghLog('Jarayon xatolik bilan tugadi (' + total + ' soniya)', 'err');
+      logEl.innerHTML += '<div style="margin-top:10px;padding:10px;background:rgba(245,66,66,0.08);border:1px solid rgba(245,66,66,0.2);border-radius:8px;color:var(--red);font-weight:600;text-align:center"><i class="fas fa-times-circle" style="margin-right:6px"></i>Xatolik yuz berdi</div>';
+    }
+    logWrap.scrollTop = logWrap.scrollHeight;
+  }
+
   collectFormData();
   saveToStorage();
   clearDirty();
@@ -3377,16 +3415,30 @@ async function pushToGitHub() {
   var repoBase = 'https://api.github.com/repos/' + cfg.owner + '/' + cfg.repo;
   var rawBase = 'https://raw.githubusercontent.com/' + cfg.owner + '/' + cfg.repo + '/' + cfg.branch;
 
-  showToast('Rasmlar yuklanmoqda...', 'warning');
+  ghLog('Ma\'lumotlar tayyorlanmoqda...');
 
   try {
-    // 1-qadam: Ma'lumotlardan base64 rasmlarni ajratib, GitHub'ga alohida fayllar sifatida yuklash
+    // 1-qadam: Rasmlarni ajratib yuklash
     var dataClone = JSON.parse(JSON.stringify(data));
     var uploadCount = 0;
     var skipCount = 0;
+    var errorCount = 0;
+
+    // Avval barcha base64 rasmlarni sanash
+    var totalImages = 0;
+    function countImages(obj) {
+      if (!obj || typeof obj !== 'object') return;
+      var keys = Array.isArray(obj) ? obj.map(function(_, i) { return i; }) : Object.keys(obj);
+      for (var k = 0; k < keys.length; k++) {
+        var val = obj[keys[k]];
+        if (typeof val === 'string' && val.indexOf('data:image/') === 0 && val.length > 200) totalImages++;
+        else if (val && typeof val === 'object') countImages(val);
+      }
+    }
+    countImages(dataClone);
+    ghLog('Topilgan rasmlar: ' + totalImages + ' ta');
 
     async function uploadBase64Image(base64str) {
-      // Hash yaratish (fayl nomini aniqlash uchun)
       var hashInput = base64str.substring(22, 122) + ':' + base64str.length;
       var hashBuf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(hashInput));
       var hashHex = Array.from(new Uint8Array(hashBuf)).map(function(b) { return b.toString(16).padStart(2, '0'); }).join('').substring(0, 16);
@@ -3394,14 +3446,18 @@ async function pushToGitHub() {
       var ext = extMatch ? extMatch[1].replace('jpeg', 'jpg') : 'png';
       var filename = 'assets/img_' + hashHex + '.' + ext;
       var rawUrl = rawBase + '/' + filename;
+      var sizeKB = Math.round(base64str.length * 0.75 / 1024);
 
-      // Fayl mavjudligini tekshirish
       try {
         var checkResp = await fetch(repoBase + '/contents/' + filename + '?ref=' + cfg.branch, { headers: ghHeaders });
-        if (checkResp.ok) { skipCount++; return rawUrl; }
+        if (checkResp.ok) {
+          skipCount++;
+          ghLog(filename + ' — mavjud (' + sizeKB + ' KB)', 'ok');
+          return rawUrl;
+        }
       } catch(e) {}
 
-      // Yangi fayl yuklash
+      ghLog(filename + ' yuklanmoqda... (' + sizeKB + ' KB)', 'warn');
       var pureBase64 = base64str.split(',')[1];
       var uploadResp = await fetch(repoBase + '/contents/' + filename, {
         method: 'PUT',
@@ -3410,14 +3466,15 @@ async function pushToGitHub() {
       });
       if (!uploadResp.ok) {
         var errData = await uploadResp.json().catch(function() { return {}; });
-        console.error('Rasm yuklash xato:', filename, errData);
-        return base64str; // Xatolik bo'lsa asl qiymatni qaytarish
+        errorCount++;
+        ghLog(filename + ' — XATOLIK: ' + (errData.message || 'noma\'lum'), 'err');
+        return base64str;
       }
       uploadCount++;
+      ghLog(filename + ' — yuklandi', 'ok');
       return rawUrl;
     }
 
-    // Rekursiv skanerlash — barcha base64 rasmlarni topib yuklash
     async function scanAndUpload(obj) {
       if (!obj || typeof obj !== 'object') return;
       var keys = Array.isArray(obj) ? obj.map(function(_, i) { return i; }) : Object.keys(obj);
@@ -3432,28 +3489,35 @@ async function pushToGitHub() {
       }
     }
 
-    await scanAndUpload(dataClone);
-    showToast(uploadCount + ' ta rasm yuklandi, ' + skipCount + ' ta mavjud edi', 'success');
+    if (totalImages > 0) {
+      ghLog('Rasmlar GitHub\'ga yuklanmoqda...', 'warn');
+      await scanAndUpload(dataClone);
+      ghLog('Rasmlar: ' + uploadCount + ' yuklandi, ' + skipCount + ' mavjud, ' + errorCount + ' xato', uploadCount + skipCount > 0 ? 'ok' : 'err');
+    } else {
+      ghLog('Rasmlar yo\'q — o\'tkazilmoqda', 'ok');
+    }
 
     // 2-qadam: HTML faylni olish
-    showToast('HTML yangilanmoqda...', 'warning');
+    ghLog('GitHub\'dan ' + cfg.path + ' yuklanmoqda...', 'warn');
     var fileApiUrl = repoBase + '/contents/' + cfg.path + '?ref=' + cfg.branch;
     var getResp = await fetch(fileApiUrl, { headers: ghHeaders });
 
     if (!getResp.ok) {
-      showToast('HTML fayl topilmadi: ' + getResp.status, 'error');
-      return;
+      ghLog('HTML fayl topilmadi: ' + getResp.status, 'err');
+      ghDone(false); return;
     }
 
     var fileData = await getResp.json();
+    ghLog(cfg.path + ' topildi (SHA: ' + fileData.sha.substring(0, 7) + ')', 'ok');
 
-    // HTML contentni olish — download_url orqali (xavfsizroq, katta fayllar uchun ishlaydi)
     var htmlContent = '';
     if (fileData.download_url) {
+      ghLog('HTML kontent yuklanmoqda (download_url)...', 'warn');
       var dlResp = await fetch(fileData.download_url);
-      if (!dlResp.ok) { showToast('HTML yuklash xato', 'error'); return; }
+      if (!dlResp.ok) { ghLog('HTML yuklash xato: ' + dlResp.status, 'err'); ghDone(false); return; }
       htmlContent = await dlResp.text();
     } else if (fileData.content) {
+      ghLog('HTML kontent dekodlanmoqda (base64)...', 'warn');
       var rawBytes = atob(fileData.content.replace(/\n/g, ''));
       var bArr = new Uint8Array(rawBytes.length);
       for (var i = 0; i < rawBytes.length; i++) bArr[i] = rawBytes.charCodeAt(i);
@@ -3461,19 +3525,23 @@ async function pushToGitHub() {
     }
 
     if (!htmlContent || htmlContent.length < 100) {
-      showToast('Xatolik: HTML fayl bo\'sh yoki yuklanmadi', 'error');
-      return;
+      ghLog('HTML fayl bo\'sh yoki yuklanmadi (' + (htmlContent ? htmlContent.length : 0) + ' belgi)', 'err');
+      ghDone(false); return;
     }
+    ghLog('HTML yuklandi: ' + htmlContent.length + ' belgi', 'ok');
 
-    // 3-qadam: Ma'lumotlarni inject qilish (rasmlar endi URL, base64 emas)
+    // 3-qadam: Ma'lumotlarni inject qilish
+    ghLog('Ma\'lumotlar HTML ga inject qilinmoqda...', 'warn');
     var newHtml = injectDataIntoHtml(htmlContent, dataClone);
 
     if (!newHtml || newHtml.length < 100) {
-      showToast('Xatolik: yangilangan HTML bo\'sh', 'error');
-      return;
+      ghLog('Inject qilingan HTML bo\'sh (' + (newHtml ? newHtml.length : 0) + ' belgi)', 'err');
+      ghDone(false); return;
     }
+    ghLog('Yangi HTML: ' + newHtml.length + ' belgi (asl: ' + htmlContent.length + ')', 'ok');
 
-    // 4-qadam: HTML ni GitHub ga push qilish
+    // 4-qadam: Push
+    ghLog('GitHub\'ga push qilinmoqda...', 'warn');
     var encBytes = new TextEncoder().encode(newHtml);
     var binStr = '';
     for (var ci = 0; ci < encBytes.length; ci += 8192) {
@@ -3481,6 +3549,7 @@ async function pushToGitHub() {
       for (var j = ci; j < end; j++) binStr += String.fromCharCode(encBytes[j]);
     }
     var encoded = btoa(binStr);
+    ghLog('Encoded hajmi: ' + Math.round(encoded.length / 1024) + ' KB');
 
     var putResp = await fetch(repoBase + '/contents/' + cfg.path, {
       method: 'PUT',
@@ -3494,15 +3563,19 @@ async function pushToGitHub() {
     });
 
     if (putResp.ok) {
-      showToast('GitHub\'ga muvaffaqiyatli yuborildi!', 'success');
+      var putData = await putResp.json();
+      ghLog('Push muvaffaqiyatli! (SHA: ' + putData.content.sha.substring(0, 7) + ')', 'ok');
+      ghDone(true);
     } else {
       var putErr = await putResp.json().catch(function() { return { message: 'Noma\'lum xato' }; });
-      showToast('Push xatolik: ' + putErr.message, 'error');
+      ghLog('Push xatolik: ' + putErr.message, 'err');
+      ghDone(false);
     }
 
   } catch (err) {
-    showToast('Xatolik: ' + err.message, 'error');
+    ghLog('Kutilmagan xatolik: ' + err.message, 'err');
     console.error('pushToGitHub error:', err);
+    ghDone(false);
   }
 }
 
