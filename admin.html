@@ -3386,26 +3386,54 @@ async function pushToGitHub() {
       if (getResp.ok) {
         const fileData = await getResp.json();
         sha = fileData.sha;
-        // Decode content (UTF-8 safe)
-        var rawBytes = atob(fileData.content.replace(/\n/g, ''));
-        var bytes = new Uint8Array(rawBytes.length);
-        for (var i = 0; i < rawBytes.length; i++) bytes[i] = rawBytes.charCodeAt(i);
-        var currentContent = new TextDecoder('utf-8').decode(bytes);
+
+        // Katta fayllar uchun content bo'sh bo'lishi mumkin — blob orqali yuklash
+        var currentContent = '';
+        if (fileData.content) {
+          var rawBytes = atob(fileData.content.replace(/\n/g, ''));
+          var bytes = new Uint8Array(rawBytes.length);
+          for (var i = 0; i < rawBytes.length; i++) bytes[i] = rawBytes.charCodeAt(i);
+          currentContent = new TextDecoder('utf-8').decode(bytes);
+        } else if (fileData.download_url) {
+          var dlResp = await fetch(fileData.download_url);
+          currentContent = await dlResp.text();
+        } else {
+          // Blob API orqali yuklab olish
+          var blobUrl = 'https://api.github.com/repos/' + cfg.owner + '/' + cfg.repo + '/git/blobs/' + fileData.sha;
+          var blobResp = await fetch(blobUrl, { headers: { 'Authorization': 'token ' + cfg.token, 'Accept': 'application/vnd.github.v3+json' } });
+          var blobData = await blobResp.json();
+          var rawB = atob(blobData.content.replace(/\n/g, ''));
+          var bts = new Uint8Array(rawB.length);
+          for (var bi = 0; bi < rawB.length; bi++) bts[bi] = rawB.charCodeAt(bi);
+          currentContent = new TextDecoder('utf-8').decode(bts);
+        }
+
+        if (!currentContent || currentContent.length < 100) {
+          showToast('Xatolik: fayl kontenti yuklanmadi', 'error');
+          return;
+        }
+
         var newContent = injectDataIntoPortfolio(currentContent);
-        // Encode back (UTF-8 safe)
+
+        if (!newContent || newContent.length < 100) {
+          showToast('Xatolik: inject qilingan kontent bo\'sh', 'error');
+          return;
+        }
+
+        // Encode (UTF-8 safe, chunked)
         var encBytes = new TextEncoder().encode(newContent);
         var binStr = '';
-        // Chunk processing to avoid call stack overflow
         var chunkSize = 8192;
         for (var ci = 0; ci < encBytes.length; ci += chunkSize) {
           var chunk = encBytes.subarray(ci, Math.min(ci + chunkSize, encBytes.length));
           for (var j = 0; j < chunk.length; j++) binStr += String.fromCharCode(chunk[j]);
         }
         var encoded = btoa(binStr);
+
         const putResp = await fetch(apiBase, {
           method: 'PUT',
           headers: { 'Authorization': 'token ' + cfg.token, 'Content-Type': 'application/json', 'Accept': 'application/vnd.github.v3+json' },
-          body: JSON.stringify({ message: 'Admin panel: update portfolio data', content: encoded, sha: sha, branch: cfg.branch })
+          body: JSON.stringify({ message: 'Admin panel: ma\'lumotlar yangilandi', content: encoded, sha: sha, branch: cfg.branch })
         });
         if (putResp.ok) {
           showToast('GitHub\'ga muvaffaqiyatli yuborildi!', 'success');
@@ -3428,15 +3456,15 @@ async function pushToGitHub() {
 }
 
 function injectDataIntoPortfolio(html) {
-  // Inject all admin data into the portfolio HTML
-  const d = data;
-  const s = d.settings;
+  var d = data;
+  var s = d.settings || {};
 
   // Replace site title
-  html = html.replace(/<title>[^<]*<\/title>/, '<title>' + s.siteTitle + '</title>');
+  if (s.siteTitle) html = html.replace(/<title>[^<]*<\/title>/, '<title>' + s.siteTitle + '</title>');
 
-  // Inject data as a JSON script tag
-  const dataScript = '\n<script id="admin-injected-data" type="application/json">\n' + JSON.stringify(d) + '\n</' + 'script>\n';
+  // JSON ni xavfsiz qilish — </script> ni buzmaslik uchun
+  var jsonStr = JSON.stringify(d).replace(/<\/script>/gi, '<\\/script>');
+  var dataScript = '\n<script id="admin-injected-data" type="application/json">\n' + jsonStr + '\n</' + 'script>\n';
 
   // Remove old injected data
   html = html.replace(/<script id="admin-injected-data"[^>]*>[\s\S]*?<\/script>\n?/g, '');
