@@ -3364,113 +3364,169 @@ function updateGHStatus(cfg) {
 }
 
 async function pushToGitHub() {
-  let cfg;
-  try { cfg = JSON.parse(localStorage.getItem('github_config')); } catch { cfg = null; }
+  var cfg;
+  try { cfg = JSON.parse(localStorage.getItem('github_config')); } catch(e) { cfg = null; }
   if (!cfg || !cfg.token || !cfg.owner || !cfg.repo) {
     showToast('GitHub konfiguratsiyasini to\'ldiring', 'error'); return;
   }
-  // Save current data first
   collectFormData();
   saveToStorage();
   clearDirty();
 
-  showToast('GitHub\'ga yuborilmoqda...', 'warning');
+  var ghHeaders = { 'Authorization': 'token ' + cfg.token, 'Accept': 'application/vnd.github.v3+json' };
+  var repoBase = 'https://api.github.com/repos/' + cfg.owner + '/' + cfg.repo;
+  var rawBase = 'https://raw.githubusercontent.com/' + cfg.owner + '/' + cfg.repo + '/' + cfg.branch;
+
+  showToast('Rasmlar yuklanmoqda...', 'warning');
+
   try {
-    const apiBase = 'https://api.github.com/repos/' + cfg.owner + '/' + cfg.repo + '/contents/' + cfg.path;
-    // Get current file to get SHA
-    let sha = '';
-    try {
-      const getResp = await fetch(apiBase + '?ref=' + cfg.branch, {
-        headers: { 'Authorization': 'token ' + cfg.token, 'Accept': 'application/vnd.github.v3+json' }
+    // 1-qadam: Ma'lumotlardan base64 rasmlarni ajratib, GitHub'ga alohida fayllar sifatida yuklash
+    var dataClone = JSON.parse(JSON.stringify(data));
+    var uploadCount = 0;
+    var skipCount = 0;
+
+    async function uploadBase64Image(base64str) {
+      // Hash yaratish (fayl nomini aniqlash uchun)
+      var hashInput = base64str.substring(22, 122) + ':' + base64str.length;
+      var hashBuf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(hashInput));
+      var hashHex = Array.from(new Uint8Array(hashBuf)).map(function(b) { return b.toString(16).padStart(2, '0'); }).join('').substring(0, 16);
+      var extMatch = base64str.match(/data:image\/(\w+)/);
+      var ext = extMatch ? extMatch[1].replace('jpeg', 'jpg') : 'png';
+      var filename = 'assets/img_' + hashHex + '.' + ext;
+      var rawUrl = rawBase + '/' + filename;
+
+      // Fayl mavjudligini tekshirish
+      try {
+        var checkResp = await fetch(repoBase + '/contents/' + filename + '?ref=' + cfg.branch, { headers: ghHeaders });
+        if (checkResp.ok) { skipCount++; return rawUrl; }
+      } catch(e) {}
+
+      // Yangi fayl yuklash
+      var pureBase64 = base64str.split(',')[1];
+      var uploadResp = await fetch(repoBase + '/contents/' + filename, {
+        method: 'PUT',
+        headers: Object.assign({}, ghHeaders, { 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ message: 'Rasm: ' + filename, content: pureBase64, branch: cfg.branch })
       });
-      if (getResp.ok) {
-        const fileData = await getResp.json();
-        sha = fileData.sha;
-
-        // Katta fayllar uchun content bo'sh bo'lishi mumkin — blob orqali yuklash
-        var currentContent = '';
-        if (fileData.content) {
-          var rawBytes = atob(fileData.content.replace(/\n/g, ''));
-          var bytes = new Uint8Array(rawBytes.length);
-          for (var i = 0; i < rawBytes.length; i++) bytes[i] = rawBytes.charCodeAt(i);
-          currentContent = new TextDecoder('utf-8').decode(bytes);
-        } else if (fileData.download_url) {
-          var dlResp = await fetch(fileData.download_url);
-          currentContent = await dlResp.text();
-        } else {
-          // Blob API orqali yuklab olish
-          var blobUrl = 'https://api.github.com/repos/' + cfg.owner + '/' + cfg.repo + '/git/blobs/' + fileData.sha;
-          var blobResp = await fetch(blobUrl, { headers: { 'Authorization': 'token ' + cfg.token, 'Accept': 'application/vnd.github.v3+json' } });
-          var blobData = await blobResp.json();
-          var rawB = atob(blobData.content.replace(/\n/g, ''));
-          var bts = new Uint8Array(rawB.length);
-          for (var bi = 0; bi < rawB.length; bi++) bts[bi] = rawB.charCodeAt(bi);
-          currentContent = new TextDecoder('utf-8').decode(bts);
-        }
-
-        if (!currentContent || currentContent.length < 100) {
-          showToast('Xatolik: fayl kontenti yuklanmadi', 'error');
-          return;
-        }
-
-        var newContent = injectDataIntoPortfolio(currentContent);
-
-        if (!newContent || newContent.length < 100) {
-          showToast('Xatolik: inject qilingan kontent bo\'sh', 'error');
-          return;
-        }
-
-        // Encode (UTF-8 safe, chunked)
-        var encBytes = new TextEncoder().encode(newContent);
-        var binStr = '';
-        var chunkSize = 8192;
-        for (var ci = 0; ci < encBytes.length; ci += chunkSize) {
-          var chunk = encBytes.subarray(ci, Math.min(ci + chunkSize, encBytes.length));
-          for (var j = 0; j < chunk.length; j++) binStr += String.fromCharCode(chunk[j]);
-        }
-        var encoded = btoa(binStr);
-
-        const putResp = await fetch(apiBase, {
-          method: 'PUT',
-          headers: { 'Authorization': 'token ' + cfg.token, 'Content-Type': 'application/json', 'Accept': 'application/vnd.github.v3+json' },
-          body: JSON.stringify({ message: 'Admin panel: ma\'lumotlar yangilandi', content: encoded, sha: sha, branch: cfg.branch })
-        });
-        if (putResp.ok) {
-          showToast('GitHub\'ga muvaffaqiyatli yuborildi!', 'success');
-        } else {
-          const err = await putResp.json();
-          showToast('Xatolik: ' + (err.message || 'Noma\'lum'), 'error');
-        }
-      } else if (getResp.status === 404) {
-        // File doesn't exist, create it
-        showToast('Fayl topilmadi. Avval portfolio faylini yarating.', 'error');
-      } else {
-        showToast('GitHub API xatolik: ' + getResp.status, 'error');
+      if (!uploadResp.ok) {
+        var errData = await uploadResp.json().catch(function() { return {}; });
+        console.error('Rasm yuklash xato:', filename, errData);
+        return base64str; // Xatolik bo'lsa asl qiymatni qaytarish
       }
-    } catch (netErr) {
-      showToast('Tarmoq xatoligi: ' + netErr.message, 'error');
+      uploadCount++;
+      return rawUrl;
     }
+
+    // Rekursiv skanerlash — barcha base64 rasmlarni topib yuklash
+    async function scanAndUpload(obj) {
+      if (!obj || typeof obj !== 'object') return;
+      var keys = Array.isArray(obj) ? obj.map(function(_, i) { return i; }) : Object.keys(obj);
+      for (var k = 0; k < keys.length; k++) {
+        var key = keys[k];
+        var val = obj[key];
+        if (typeof val === 'string' && val.indexOf('data:image/') === 0 && val.length > 200) {
+          obj[key] = await uploadBase64Image(val);
+        } else if (val && typeof val === 'object') {
+          await scanAndUpload(val);
+        }
+      }
+    }
+
+    await scanAndUpload(dataClone);
+    showToast(uploadCount + ' ta rasm yuklandi, ' + skipCount + ' ta mavjud edi', 'success');
+
+    // 2-qadam: HTML faylni olish
+    showToast('HTML yangilanmoqda...', 'warning');
+    var fileApiUrl = repoBase + '/contents/' + cfg.path + '?ref=' + cfg.branch;
+    var getResp = await fetch(fileApiUrl, { headers: ghHeaders });
+
+    if (!getResp.ok) {
+      showToast('HTML fayl topilmadi: ' + getResp.status, 'error');
+      return;
+    }
+
+    var fileData = await getResp.json();
+
+    // HTML contentni olish — download_url orqali (xavfsizroq, katta fayllar uchun ishlaydi)
+    var htmlContent = '';
+    if (fileData.download_url) {
+      var dlResp = await fetch(fileData.download_url);
+      if (!dlResp.ok) { showToast('HTML yuklash xato', 'error'); return; }
+      htmlContent = await dlResp.text();
+    } else if (fileData.content) {
+      var rawBytes = atob(fileData.content.replace(/\n/g, ''));
+      var bArr = new Uint8Array(rawBytes.length);
+      for (var i = 0; i < rawBytes.length; i++) bArr[i] = rawBytes.charCodeAt(i);
+      htmlContent = new TextDecoder('utf-8').decode(bArr);
+    }
+
+    if (!htmlContent || htmlContent.length < 100) {
+      showToast('Xatolik: HTML fayl bo\'sh yoki yuklanmadi', 'error');
+      return;
+    }
+
+    // 3-qadam: Ma'lumotlarni inject qilish (rasmlar endi URL, base64 emas)
+    var newHtml = injectDataIntoHtml(htmlContent, dataClone);
+
+    if (!newHtml || newHtml.length < 100) {
+      showToast('Xatolik: yangilangan HTML bo\'sh', 'error');
+      return;
+    }
+
+    // 4-qadam: HTML ni GitHub ga push qilish
+    var encBytes = new TextEncoder().encode(newHtml);
+    var binStr = '';
+    for (var ci = 0; ci < encBytes.length; ci += 8192) {
+      var end = Math.min(ci + 8192, encBytes.length);
+      for (var j = ci; j < end; j++) binStr += String.fromCharCode(encBytes[j]);
+    }
+    var encoded = btoa(binStr);
+
+    var putResp = await fetch(repoBase + '/contents/' + cfg.path, {
+      method: 'PUT',
+      headers: Object.assign({}, ghHeaders, { 'Content-Type': 'application/json' }),
+      body: JSON.stringify({
+        message: 'Admin: portfolio yangilandi',
+        content: encoded,
+        sha: fileData.sha,
+        branch: cfg.branch
+      })
+    });
+
+    if (putResp.ok) {
+      showToast('GitHub\'ga muvaffaqiyatli yuborildi!', 'success');
+    } else {
+      var putErr = await putResp.json().catch(function() { return { message: 'Noma\'lum xato' }; });
+      showToast('Push xatolik: ' + putErr.message, 'error');
+    }
+
   } catch (err) {
     showToast('Xatolik: ' + err.message, 'error');
+    console.error('pushToGitHub error:', err);
   }
 }
 
-function injectDataIntoPortfolio(html) {
-  var d = data;
-  var s = d.settings || {};
+function injectDataIntoHtml(html, cleanData) {
+  var s = cleanData.settings || {};
 
-  // Replace site title
-  if (s.siteTitle) html = html.replace(/<title>[^<]*<\/title>/, '<title>' + s.siteTitle + '</title>');
+  // Site title
+  if (s.siteTitle) {
+    html = html.replace(/<title>[^<]*<\/title>/, '<title>' + s.siteTitle + '<\/title>');
+  }
 
-  // JSON ni xavfsiz qilish — </script> ni buzmaslik uchun
-  var jsonStr = JSON.stringify(d).replace(/<\/script>/gi, '<\\/script>');
-  var dataScript = '\n<script id="admin-injected-data" type="application/json">\n' + jsonStr + '\n</' + 'script>\n';
+  // JSON ni xavfsiz qilish
+  var jsonStr = JSON.stringify(cleanData);
+  // </script> ni buzmaslik uchun
+  jsonStr = jsonStr.split('<\/script>').join('<\\\/script>');
+  jsonStr = jsonStr.split('</script>').join('<\\/script>');
 
-  // Remove old injected data
+  var dataTag = '\n<script id="admin-injected-data" type="application/json">\n' + jsonStr + '\n</' + 'script>\n';
+
+  // Eskisini olib tashlash
   html = html.replace(/<script id="admin-injected-data"[^>]*>[\s\S]*?<\/script>\n?/g, '');
 
-  // Insert before closing </body>
-  html = html.replace('</body>', dataScript + '</body>');
+  // </body> dan oldin qo'shish
+  html = html.replace(/<\/body>/, dataTag + '</body>');
 
   return html;
 }
