@@ -206,7 +206,7 @@ input, textarea, select, button { font-family: inherit; }
 /* Cards & Forms */
 .form-card {
   background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 28px; margin-bottom: 20px;
-  max-width: 100%; overflow: hidden;
+  max-width: 100%; overflow: visible;
 }
 .form-card-title { font-size: 1rem; font-weight: 700; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
 .form-card-title i { color: var(--accent); font-size: 0.9rem; }
@@ -784,7 +784,7 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
           <div id="socials-list" style="margin-bottom:12px"></div>
           <div style="position:relative;display:inline-block">
             <button type="button" class="btn btn-secondary btn-sm" onclick="toggleSocialsMenu()" style="display:inline-flex;align-items:center;gap:6px"><i class="fas fa-plus"></i> Tarmoq qo'shish</button>
-            <div id="socials-add-menu" style="display:none;position:absolute;bottom:100%;left:0;margin-bottom:6px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:6px;z-index:100;min-width:200px;box-shadow:0 8px 24px rgba(0,0,0,0.3);max-height:250px;overflow-y:auto;overscroll-behavior:contain"></div>
+            <div id="socials-add-menu" style="display:none;position:absolute;top:100%;left:0;margin-top:6px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:6px;z-index:9999;min-width:220px;box-shadow:0 8px 24px rgba(0,0,0,0.5);max-height:300px;overflow-y:auto;overscroll-behavior:contain"></div>
           </div>
         </div>
         <div class="form-card">
