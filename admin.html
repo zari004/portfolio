@@ -3440,149 +3440,139 @@ async function pushToGitHub() {
   ghLog('Ma\'lumotlar tayyorlanmoqda...');
 
   try {
-    // 1-qadam: data.json faylga saqlash (rasmlar bilan birga)
+    // ======= Git Data API orqali push (katta fayllar uchun) =======
     var dataClone = JSON.parse(JSON.stringify(data));
     var jsonStr = JSON.stringify(dataClone);
-    var jsonSizeKB = Math.round(jsonStr.length / 1024);
     var jsonSizeMB = (jsonStr.length / 1048576).toFixed(1);
-    ghLog('Ma\'lumot hajmi: ' + jsonSizeKB + ' KB (' + jsonSizeMB + ' MB)');
+    ghLog('Ma\'lumot hajmi: ' + jsonSizeMB + ' MB');
 
-    // Base64 encode
-    var jsonBytes = new TextEncoder().encode(jsonStr);
-    var jsonBin = '';
-    for (var ci = 0; ci < jsonBytes.length; ci += 8192) {
-      var end = Math.min(ci + 8192, jsonBytes.length);
-      for (var j = ci; j < end; j++) jsonBin += String.fromCharCode(jsonBytes[j]);
-    }
-    var jsonEncoded = btoa(jsonBin);
-
-    // data.json ni tekshirish (mavjud bo'lsa SHA kerak)
-    ghLog('data.json tekshirilmoqda...', 'warn');
-    var dataJsonSha = null;
-    try {
-      var checkResp = await fetch(repoBase + '/contents/data.json?ref=' + cfg.branch, { headers: ghHeaders });
-      if (checkResp.ok) {
-        var checkData = await checkResp.json();
-        dataJsonSha = checkData.sha;
-        ghLog('data.json mavjud (SHA: ' + dataJsonSha.substring(0, 7) + ')', 'ok');
-      } else {
-        ghLog('data.json yangi yaratiladi', 'ok');
+    // Base64 encode helper
+    function encodeToBase64(str) {
+      var bytes = new TextEncoder().encode(str);
+      var bin = '';
+      for (var i = 0; i < bytes.length; i += 8192) {
+        var end = Math.min(i + 8192, bytes.length);
+        for (var j = i; j < end; j++) bin += String.fromCharCode(bytes[j]);
       }
-    } catch(e) {}
+      return btoa(bin);
+    }
 
-    // data.json yuklash
-    ghLog('data.json yuklanmoqda (' + jsonSizeMB + ' MB)...', 'warn');
-    var djBody = {
-      message: 'Admin: data yangilandi',
-      content: jsonEncoded,
-      branch: cfg.branch
-    };
-    if (dataJsonSha) djBody.sha = dataJsonSha;
-    var djResp = await fetch(repoBase + '/contents/data.json', {
-      method: 'PUT',
+    async function ghFetch(url, opts) {
+      var resp = await fetch(url, opts);
+      var json = await resp.json().catch(function() { return {}; });
+      if (!resp.ok) throw new Error(json.message || 'API xato: ' + resp.status);
+      return json;
+    }
+
+    // 1-qadam: Joriy branch ref ni olish
+    ghLog('Branch ma\'lumoti olinmoqda...', 'warn');
+    var refData = await ghFetch(repoBase + '/git/ref/heads/' + cfg.branch, { headers: ghHeaders });
+    var latestCommitSha = refData.object.sha;
+    ghLog('Joriy commit: ' + latestCommitSha.substring(0, 7), 'ok');
+
+    // 2-qadam: Joriy commit ning tree sini olish
+    var commitData = await ghFetch(repoBase + '/git/commits/' + latestCommitSha, { headers: ghHeaders });
+    var baseTreeSha = commitData.tree.sha;
+
+    // 3-qadam: data.json uchun blob yaratish
+    ghLog('data.json blob yaratilmoqda (' + jsonSizeMB + ' MB)...', 'warn');
+    var blobData = await ghFetch(repoBase + '/git/blobs', {
+      method: 'POST',
       headers: Object.assign({}, ghHeaders, { 'Content-Type': 'application/json' }),
-      body: JSON.stringify(djBody)
+      body: JSON.stringify({ content: encodeToBase64(jsonStr), encoding: 'base64' })
     });
+    ghLog('data.json blob tayyor: ' + blobData.sha.substring(0, 7), 'ok');
 
-    if (!djResp.ok) {
-      var djErr = await djResp.json().catch(function() { return { message: 'Noma\'lum xato' }; });
-      ghLog('data.json yuklab bo\'lmadi: ' + djErr.message, 'err');
-      ghDone(false); return;
-    }
-    ghLog('data.json muvaffaqiyatli yuklandi!', 'ok');
-
-    // 2-qadam: index.html da data.json ni yuklash kodi borligini tekshirish
-    ghLog('index.html tekshirilmoqda...', 'warn');
-    var fileApiUrl = repoBase + '/contents/' + cfg.path + '?ref=' + cfg.branch;
-    var getResp = await fetch(fileApiUrl, { headers: ghHeaders });
-
-    if (!getResp.ok) {
-      ghLog('HTML fayl topilmadi: ' + getResp.status, 'err');
-      ghDone(false); return;
-    }
-
-    var fileData = await getResp.json();
-    ghLog(cfg.path + ' topildi (SHA: ' + fileData.sha.substring(0, 7) + ')', 'ok');
-
+    // 4-qadam: index.html ni tekshirish va yangilash
+    ghLog('index.html yuklanmoqda...', 'warn');
+    var htmlResp = await fetch(repoBase + '/contents/' + cfg.path + '?ref=' + cfg.branch, { headers: ghHeaders });
+    var htmlFileData = await htmlResp.json();
     var htmlContent = '';
-    if (fileData.download_url) {
-      var dlResp = await fetch(fileData.download_url);
-      if (!dlResp.ok) { ghLog('HTML yuklash xato', 'err'); ghDone(false); return; }
+    if (htmlFileData.download_url) {
+      var dlResp = await fetch(htmlFileData.download_url);
       htmlContent = await dlResp.text();
-    } else if (fileData.content) {
-      var rawBytes = atob(fileData.content.replace(/\n/g, ''));
+    } else if (htmlFileData.content) {
+      var rawBytes = atob(htmlFileData.content.replace(/\n/g, ''));
       var bArr = new Uint8Array(rawBytes.length);
       for (var i = 0; i < rawBytes.length; i++) bArr[i] = rawBytes.charCodeAt(i);
       htmlContent = new TextDecoder('utf-8').decode(bArr);
     }
 
-    if (!htmlContent || htmlContent.length < 100) {
-      ghLog('HTML fayl bo\'sh', 'err');
-      ghDone(false); return;
-    }
-
-    // Eski inject qilingan datani tozalash
+    // Eski inject datani tozalash
     var cleanHtml = htmlContent.replace(/<script id="admin-injected-data"[^>]*>[\s\S]*?<\/script>\n?/g, '');
 
-    // data.json yuklash kodini qo'shish (agar yo'q bo'lsa)
+    // data.json loader qo'shish
+    var htmlChanged = false;
     if (cleanHtml.indexOf('__DATA_JSON_LOADER__') === -1) {
       ghLog('data.json loader kodi qo\'shilmoqda...', 'warn');
       var loaderScript = '\n<script id="__DATA_JSON_LOADER__">\n' +
         '(function(){try{var x=new XMLHttpRequest();x.open("GET","data.json?v="+Date.now(),false);x.send();' +
-        'if(x.status===200){window.__PORTFOLIO_DATA__=JSON.parse(x.responseText);}}catch(e){console.error("[SITE] data.json xatolik:",e);}})();\n' +
+        'if(x.status===200){window.__PORTFOLIO_DATA__=JSON.parse(x.responseText);}}catch(e){console.error("[SITE] data.json:",e);}})();\n' +
         '</' + 'script>\n';
-      // getData() funksiyasidan OLDIN joylashtirish
       var getDataPos = cleanHtml.indexOf('function getData()');
       if (getDataPos > -1) {
-        // getData dan oldingi script tegini topish
-        var beforeGetData = cleanHtml.substring(0, getDataPos);
-        cleanHtml = beforeGetData + loaderScript + cleanHtml.substring(getDataPos);
+        cleanHtml = cleanHtml.substring(0, getDataPos) + loaderScript + cleanHtml.substring(getDataPos);
+        htmlChanged = true;
       }
     }
+    if (cleanHtml !== htmlContent) htmlChanged = true;
 
-    // Site title o'zgartirish
+    // Site title
     var s = dataClone.settings || {};
     if (s.siteTitle) {
-      cleanHtml = cleanHtml.replace(/<title>[^<]*<\/title>/, '<title>' + s.siteTitle + '<' + '/title>');
+      var newHtml = cleanHtml.replace(/<title>[^<]*<\/title>/, '<title>' + s.siteTitle + '<' + '/title>');
+      if (newHtml !== cleanHtml) { cleanHtml = newHtml; htmlChanged = true; }
     }
 
-    if (cleanHtml === htmlContent) {
-      ghLog('index.html o\'zgarishlarsiz — push shart emas', 'ok');
-      ghDone(true); return;
+    // 5-qadam: Yangi tree yaratish
+    var treeItems = [
+      { path: 'data.json', mode: '100644', type: 'blob', sha: blobData.sha }
+    ];
+
+    if (htmlChanged) {
+      ghLog('index.html ham yangilanmoqda...', 'warn');
+      var htmlBlobData = await ghFetch(repoBase + '/git/blobs', {
+        method: 'POST',
+        headers: Object.assign({}, ghHeaders, { 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ content: encodeToBase64(cleanHtml), encoding: 'base64' })
+      });
+      treeItems.push({ path: cfg.path, mode: '100644', type: 'blob', sha: htmlBlobData.sha });
     }
 
-    // 3-qadam: HTML push
-    ghLog('index.html yangilanmoqda...', 'warn');
-    var encBytes = new TextEncoder().encode(cleanHtml);
-    var binStr = '';
-    for (var ci2 = 0; ci2 < encBytes.length; ci2 += 8192) {
-      var end2 = Math.min(ci2 + 8192, encBytes.length);
-      for (var j2 = ci2; j2 < end2; j2++) binStr += String.fromCharCode(encBytes[j2]);
-    }
-    var encoded = btoa(binStr);
+    ghLog('Git tree yaratilmoqda...', 'warn');
+    var treeData = await ghFetch(repoBase + '/git/trees', {
+      method: 'POST',
+      headers: Object.assign({}, ghHeaders, { 'Content-Type': 'application/json' }),
+      body: JSON.stringify({ base_tree: baseTreeSha, tree: treeItems })
+    });
+    ghLog('Tree tayyor: ' + treeData.sha.substring(0, 7), 'ok');
 
-    var putResp = await fetch(repoBase + '/contents/' + cfg.path, {
-      method: 'PUT',
+    // 6-qadam: Commit yaratish
+    ghLog('Commit yaratilmoqda...', 'warn');
+    var newCommit = await ghFetch(repoBase + '/git/commits', {
+      method: 'POST',
       headers: Object.assign({}, ghHeaders, { 'Content-Type': 'application/json' }),
       body: JSON.stringify({
         message: 'Admin: portfolio yangilandi',
-        content: encoded,
-        sha: fileData.sha,
-        branch: cfg.branch
+        tree: treeData.sha,
+        parents: [latestCommitSha]
       })
     });
+    ghLog('Commit: ' + newCommit.sha.substring(0, 7), 'ok');
 
-    if (putResp.ok) {
-      ghLog('index.html muvaffaqiyatli yuborildi!', 'ok');
-      ghDone(true);
-    } else {
-      var putErr = await putResp.json().catch(function() { return { message: 'Noma\'lum xato' }; });
-      ghLog('index.html push xatolik: ' + putErr.message, 'err');
-      ghDone(false);
-    }
+    // 7-qadam: Branch ref yangilash
+    ghLog('Branch yangilanmoqda...', 'warn');
+    await ghFetch(repoBase + '/git/refs/heads/' + cfg.branch, {
+      method: 'PATCH',
+      headers: Object.assign({}, ghHeaders, { 'Content-Type': 'application/json' }),
+      body: JSON.stringify({ sha: newCommit.sha })
+    });
+
+    ghLog('Muvaffaqiyatli push qilindi!', 'ok');
+    ghDone(true);
 
   } catch (err) {
-    ghLog('Kutilmagan xatolik: ' + err.message, 'err');
+    ghLog('Xatolik: ' + err.message, 'err');
     console.error('pushToGitHub error:', err);
     ghDone(false);
   }
