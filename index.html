@@ -1339,6 +1339,10 @@ function sendContactMessage() {
 }
 
 // ============ LOAD DATA ============
+
+<script id="__DATA_JSON_LOADER__">
+(function(){try{var x=new XMLHttpRequest();x.open("GET","data.json?v="+Date.now(),false);x.send();if(x.status===200){window.__PORTFOLIO_DATA__=JSON.parse(x.responseText);}}catch(e){console.error("[SITE] data.json:",e);}})();
+</script>
 function getData() {
   try {
     // IndexedDB dan to'liq ma'lumot mavjud bo'lsa â uni ishlat
