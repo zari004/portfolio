@@ -3440,11 +3440,56 @@ async function pushToGitHub() {
   ghLog('Ma\'lumotlar tayyorlanmoqda...');
 
   try {
-    // ======= Git Data API orqali push (katta fayllar uchun) =======
+    // ======= Git Data API orqali push =======
     var dataClone = JSON.parse(JSON.stringify(data));
+
+    // Rasmlarni web uchun optimizatsiya (push uchun yengillashtirish)
+    // Admin panelda to'liq sifat saqlanadi, faqat GitHub ga yengil versiya ketadi
+    function compressForWeb(base64str) {
+      return new Promise(function(resolve) {
+        if (!base64str || base64str.indexOf('data:image/') !== 0) { resolve(base64str); return; }
+        var img = new Image();
+        img.onload = function() {
+          var maxW = 800, maxH = 800;
+          var w = img.width, h = img.height;
+          if (w > maxW || h > maxH) {
+            var ratio = Math.min(maxW / w, maxH / h);
+            w = Math.round(w * ratio);
+            h = Math.round(h * ratio);
+          }
+          var canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          var ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL('image/jpeg', 0.65));
+        };
+        img.onerror = function() { resolve(base64str); };
+        img.src = base64str;
+      });
+    }
+
+    async function compressAllImages(obj) {
+      if (!obj || typeof obj !== 'object') return;
+      var keys = Array.isArray(obj) ? obj.map(function(_, i) { return i; }) : Object.keys(obj);
+      for (var k = 0; k < keys.length; k++) {
+        var key = keys[k];
+        var val = obj[key];
+        if (typeof val === 'string' && val.indexOf('data:image/') === 0 && val.length > 5000) {
+          obj[key] = await compressForWeb(val);
+        } else if (val && typeof val === 'object') {
+          await compressAllImages(val);
+        }
+      }
+    }
+
+    var origSize = JSON.stringify(dataClone).length;
+    ghLog('Asl hajm: ' + (origSize / 1048576).toFixed(1) + ' MB');
+    ghLog('Rasmlar web uchun optimizatsiya qilinmoqda...', 'warn');
+    await compressAllImages(dataClone);
+
     var jsonStr = JSON.stringify(dataClone);
     var jsonSizeMB = (jsonStr.length / 1048576).toFixed(1);
-    ghLog('Ma\'lumot hajmi: ' + jsonSizeMB + ' MB');
+    ghLog('Optimizatsiya: ' + (origSize / 1048576).toFixed(1) + ' MB → ' + jsonSizeMB + ' MB', 'ok');
 
     // Base64 encode helper
     function encodeToBase64(str) {
