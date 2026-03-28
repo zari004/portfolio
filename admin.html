@@ -3436,92 +3436,63 @@ async function pushToGitHub() {
 
   var ghHeaders = { 'Authorization': 'token ' + cfg.token, 'Accept': 'application/vnd.github.v3+json' };
   var repoBase = 'https://api.github.com/repos/' + cfg.owner + '/' + cfg.repo;
-  var rawBase = 'https://raw.githubusercontent.com/' + cfg.owner + '/' + cfg.repo + '/' + cfg.branch;
 
   ghLog('Ma\'lumotlar tayyorlanmoqda...');
 
   try {
-    // 1-qadam: Rasmlarni ajratib yuklash
+    // 1-qadam: data.json faylga saqlash (rasmlar bilan birga)
     var dataClone = JSON.parse(JSON.stringify(data));
-    var uploadCount = 0;
-    var skipCount = 0;
-    var errorCount = 0;
+    var jsonStr = JSON.stringify(dataClone);
+    var jsonSizeKB = Math.round(jsonStr.length / 1024);
+    var jsonSizeMB = (jsonStr.length / 1048576).toFixed(1);
+    ghLog('Ma\'lumot hajmi: ' + jsonSizeKB + ' KB (' + jsonSizeMB + ' MB)');
 
-    // Avval barcha base64 rasmlarni sanash
-    var totalImages = 0;
-    function countImages(obj) {
-      if (!obj || typeof obj !== 'object') return;
-      var keys = Array.isArray(obj) ? obj.map(function(_, i) { return i; }) : Object.keys(obj);
-      for (var k = 0; k < keys.length; k++) {
-        var val = obj[keys[k]];
-        if (typeof val === 'string' && val.indexOf('data:image/') === 0 && val.length > 200) totalImages++;
-        else if (val && typeof val === 'object') countImages(val);
+    // Base64 encode
+    var jsonBytes = new TextEncoder().encode(jsonStr);
+    var jsonBin = '';
+    for (var ci = 0; ci < jsonBytes.length; ci += 8192) {
+      var end = Math.min(ci + 8192, jsonBytes.length);
+      for (var j = ci; j < end; j++) jsonBin += String.fromCharCode(jsonBytes[j]);
+    }
+    var jsonEncoded = btoa(jsonBin);
+
+    // data.json ni tekshirish (mavjud bo'lsa SHA kerak)
+    ghLog('data.json tekshirilmoqda...', 'warn');
+    var dataJsonSha = null;
+    try {
+      var checkResp = await fetch(repoBase + '/contents/data.json?ref=' + cfg.branch, { headers: ghHeaders });
+      if (checkResp.ok) {
+        var checkData = await checkResp.json();
+        dataJsonSha = checkData.sha;
+        ghLog('data.json mavjud (SHA: ' + dataJsonSha.substring(0, 7) + ')', 'ok');
+      } else {
+        ghLog('data.json yangi yaratiladi', 'ok');
       }
+    } catch(e) {}
+
+    // data.json yuklash
+    ghLog('data.json yuklanmoqda (' + jsonSizeMB + ' MB)...', 'warn');
+    var djBody = {
+      message: 'Admin: data yangilandi',
+      content: jsonEncoded,
+      branch: cfg.branch
+    };
+    if (dataJsonSha) djBody.sha = dataJsonSha;
+    var djResp = await fetch(repoBase + '/contents/data.json', {
+      method: 'PUT',
+      headers: Object.assign({}, ghHeaders, { 'Content-Type': 'application/json' }),
+      body: JSON.stringify(djBody)
+    });
+
+    if (!djResp.ok) {
+      var djErr = await djResp.json().catch(function() { return { message: 'Noma\'lum xato' }; });
+      ghLog('data.json yuklab bo\'lmadi: ' + djErr.message, 'err');
+      ghDone(false); return;
     }
-    countImages(dataClone);
-    ghLog('Topilgan rasmlar: ' + totalImages + ' ta');
+    ghLog('data.json muvaffaqiyatli yuklandi!', 'ok');
 
-    async function uploadBase64Image(base64str) {
-      var hashInput = base64str.substring(22, 122) + ':' + base64str.length;
-      var hashBuf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(hashInput));
-      var hashHex = Array.from(new Uint8Array(hashBuf)).map(function(b) { return b.toString(16).padStart(2, '0'); }).join('').substring(0, 16);
-      var extMatch = base64str.match(/data:image\/(\w+)/);
-      var ext = extMatch ? extMatch[1].replace('jpeg', 'jpg') : 'png';
-      var filename = 'assets/img_' + hashHex + '.' + ext;
-      var rawUrl = rawBase + '/' + filename;
-      var sizeKB = Math.round(base64str.length * 0.75 / 1024);
-
-      try {
-        var checkResp = await fetch(repoBase + '/contents/' + filename + '?ref=' + cfg.branch, { headers: ghHeaders });
-        if (checkResp.ok) {
-          skipCount++;
-          ghLog(filename + ' — mavjud (' + sizeKB + ' KB)', 'ok');
-          return rawUrl;
-        }
-      } catch(e) {}
-
-      ghLog(filename + ' yuklanmoqda... (' + sizeKB + ' KB)', 'warn');
-      var pureBase64 = base64str.split(',')[1];
-      var uploadResp = await fetch(repoBase + '/contents/' + filename, {
-        method: 'PUT',
-        headers: Object.assign({}, ghHeaders, { 'Content-Type': 'application/json' }),
-        body: JSON.stringify({ message: 'Rasm: ' + filename, content: pureBase64, branch: cfg.branch })
-      });
-      if (!uploadResp.ok) {
-        var errData = await uploadResp.json().catch(function() { return {}; });
-        errorCount++;
-        ghLog(filename + ' — XATOLIK: ' + (errData.message || 'noma\'lum'), 'err');
-        return base64str;
-      }
-      uploadCount++;
-      ghLog(filename + ' — yuklandi', 'ok');
-      return rawUrl;
-    }
-
-    async function scanAndUpload(obj) {
-      if (!obj || typeof obj !== 'object') return;
-      var keys = Array.isArray(obj) ? obj.map(function(_, i) { return i; }) : Object.keys(obj);
-      for (var k = 0; k < keys.length; k++) {
-        var key = keys[k];
-        var val = obj[key];
-        if (typeof val === 'string' && val.indexOf('data:image/') === 0 && val.length > 200) {
-          obj[key] = await uploadBase64Image(val);
-        } else if (val && typeof val === 'object') {
-          await scanAndUpload(val);
-        }
-      }
-    }
-
-    if (totalImages > 0) {
-      ghLog('Rasmlar GitHub\'ga yuklanmoqda...', 'warn');
-      await scanAndUpload(dataClone);
-      ghLog('Rasmlar: ' + uploadCount + ' yuklandi, ' + skipCount + ' mavjud, ' + errorCount + ' xato', uploadCount + skipCount > 0 ? 'ok' : 'err');
-    } else {
-      ghLog('Rasmlar yo\'q — o\'tkazilmoqda', 'ok');
-    }
-
-    // 2-qadam: HTML faylni olish
-    ghLog('GitHub\'dan ' + cfg.path + ' yuklanmoqda...', 'warn');
+    // 2-qadam: index.html da data.json ni yuklash kodi borligini tekshirish
+    ghLog('index.html tekshirilmoqda...', 'warn');
     var fileApiUrl = repoBase + '/contents/' + cfg.path + '?ref=' + cfg.branch;
     var getResp = await fetch(fileApiUrl, { headers: ghHeaders });
 
@@ -3535,12 +3506,10 @@ async function pushToGitHub() {
 
     var htmlContent = '';
     if (fileData.download_url) {
-      ghLog('HTML kontent yuklanmoqda (download_url)...', 'warn');
       var dlResp = await fetch(fileData.download_url);
-      if (!dlResp.ok) { ghLog('HTML yuklash xato: ' + dlResp.status, 'err'); ghDone(false); return; }
+      if (!dlResp.ok) { ghLog('HTML yuklash xato', 'err'); ghDone(false); return; }
       htmlContent = await dlResp.text();
     } else if (fileData.content) {
-      ghLog('HTML kontent dekodlanmoqda (base64)...', 'warn');
       var rawBytes = atob(fileData.content.replace(/\n/g, ''));
       var bArr = new Uint8Array(rawBytes.length);
       for (var i = 0; i < rawBytes.length; i++) bArr[i] = rawBytes.charCodeAt(i);
@@ -3548,31 +3517,49 @@ async function pushToGitHub() {
     }
 
     if (!htmlContent || htmlContent.length < 100) {
-      ghLog('HTML fayl bo\'sh yoki yuklanmadi (' + (htmlContent ? htmlContent.length : 0) + ' belgi)', 'err');
+      ghLog('HTML fayl bo\'sh', 'err');
       ghDone(false); return;
     }
-    ghLog('HTML yuklandi: ' + htmlContent.length + ' belgi', 'ok');
 
-    // 3-qadam: Ma'lumotlarni inject qilish
-    ghLog('Ma\'lumotlar HTML ga inject qilinmoqda...', 'warn');
-    var newHtml = injectDataIntoHtml(htmlContent, dataClone);
+    // Eski inject qilingan datani tozalash
+    var cleanHtml = htmlContent.replace(/<script id="admin-injected-data"[^>]*>[\s\S]*?<\/script>\n?/g, '');
 
-    if (!newHtml || newHtml.length < 100) {
-      ghLog('Inject qilingan HTML bo\'sh (' + (newHtml ? newHtml.length : 0) + ' belgi)', 'err');
-      ghDone(false); return;
+    // data.json yuklash kodini qo'shish (agar yo'q bo'lsa)
+    if (cleanHtml.indexOf('__DATA_JSON_LOADER__') === -1) {
+      ghLog('data.json loader kodi qo\'shilmoqda...', 'warn');
+      var loaderScript = '\n<script id="__DATA_JSON_LOADER__">\n' +
+        '(function(){try{var x=new XMLHttpRequest();x.open("GET","data.json?v="+Date.now(),false);x.send();' +
+        'if(x.status===200){window.__PORTFOLIO_DATA__=JSON.parse(x.responseText);}}catch(e){console.error("[SITE] data.json xatolik:",e);}})();\n' +
+        '</' + 'script>\n';
+      // getData() funksiyasidan OLDIN joylashtirish
+      var getDataPos = cleanHtml.indexOf('function getData()');
+      if (getDataPos > -1) {
+        // getData dan oldingi script tegini topish
+        var beforeGetData = cleanHtml.substring(0, getDataPos);
+        cleanHtml = beforeGetData + loaderScript + cleanHtml.substring(getDataPos);
+      }
     }
-    ghLog('Yangi HTML: ' + newHtml.length + ' belgi (asl: ' + htmlContent.length + ')', 'ok');
 
-    // 4-qadam: Push
-    ghLog('GitHub\'ga push qilinmoqda...', 'warn');
-    var encBytes = new TextEncoder().encode(newHtml);
+    // Site title o'zgartirish
+    var s = dataClone.settings || {};
+    if (s.siteTitle) {
+      cleanHtml = cleanHtml.replace(/<title>[^<]*<\/title>/, '<title>' + s.siteTitle + '<' + '/title>');
+    }
+
+    if (cleanHtml === htmlContent) {
+      ghLog('index.html o\'zgarishlarsiz — push shart emas', 'ok');
+      ghDone(true); return;
+    }
+
+    // 3-qadam: HTML push
+    ghLog('index.html yangilanmoqda...', 'warn');
+    var encBytes = new TextEncoder().encode(cleanHtml);
     var binStr = '';
-    for (var ci = 0; ci < encBytes.length; ci += 8192) {
-      var end = Math.min(ci + 8192, encBytes.length);
-      for (var j = ci; j < end; j++) binStr += String.fromCharCode(encBytes[j]);
+    for (var ci2 = 0; ci2 < encBytes.length; ci2 += 8192) {
+      var end2 = Math.min(ci2 + 8192, encBytes.length);
+      for (var j2 = ci2; j2 < end2; j2++) binStr += String.fromCharCode(encBytes[j2]);
     }
     var encoded = btoa(binStr);
-    ghLog('Encoded hajmi: ' + Math.round(encoded.length / 1024) + ' KB');
 
     var putResp = await fetch(repoBase + '/contents/' + cfg.path, {
       method: 'PUT',
@@ -3586,12 +3573,11 @@ async function pushToGitHub() {
     });
 
     if (putResp.ok) {
-      var putData = await putResp.json();
-      ghLog('Push muvaffaqiyatli! (SHA: ' + putData.content.sha.substring(0, 7) + ')', 'ok');
+      ghLog('index.html muvaffaqiyatli yuborildi!', 'ok');
       ghDone(true);
     } else {
       var putErr = await putResp.json().catch(function() { return { message: 'Noma\'lum xato' }; });
-      ghLog('Push xatolik: ' + putErr.message, 'err');
+      ghLog('index.html push xatolik: ' + putErr.message, 'err');
       ghDone(false);
     }
 
@@ -3600,37 +3586,6 @@ async function pushToGitHub() {
     console.error('pushToGitHub error:', err);
     ghDone(false);
   }
-}
-
-function injectDataIntoHtml(html, cleanData) {
-  var s = cleanData.settings || {};
-
-  // Site title
-  if (s.siteTitle) {
-    html = html.replace(/<title>[^<]*<\/title>/, '<title>' + s.siteTitle + '<' + '/title>');
-  }
-
-  // JSON ni xavfsiz qilish
-  var jsonStr = JSON.stringify(cleanData);
-  // script tegini buzmaslik uchun
-  jsonStr = jsonStr.split('<' + '/script>').join('<\\/' + 'script>');
-  jsonStr = jsonStr.split('<' + '/Script>').join('<\\/' + 'Script>');
-
-  var dataTag = '\n<script id="admin-injected-data" type="application/json">\n' + jsonStr + '\n</' + 'script>\n';
-
-  // Eskisini olib tashlash
-  html = html.replace(/<script id="admin-injected-data"[^>]*>[\s\S]*?<\/script>\n?/g, '');
-
-  // <body> dan keyin (eng tepaga) qo'shish — INIT scriptdan oldin bo'lishi kerak
-  var bodyMatch = html.match(/<body[^>]*>/);
-  if (bodyMatch) {
-    var bodyTag = bodyMatch[0];
-    html = html.replace(bodyTag, bodyTag + dataTag);
-  } else {
-    html = html.replace(/<\/body>/, dataTag + '<' + '/body>');
-  }
-
-  return html;
 }
 
 /* ============================================================
