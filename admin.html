@@ -1449,20 +1449,31 @@ function toggleMsgSettings() {
    SOCIALS (dinamik ijtimoiy tarmoqlar)
    ============================================================ */
 var SOCIAL_OPTIONS = [
-  { key:'instagram', label:'Instagram', icon:'fab fa-instagram', placeholder:'https://instagram.com/...' },
-  { key:'telegram', label:'Telegram', icon:'fab fa-telegram', placeholder:'https://t.me/...' },
-  { key:'behance', label:'Behance', icon:'fab fa-behance', placeholder:'https://behance.net/...' },
-  { key:'dribbble', label:'Dribbble', icon:'fab fa-dribbble', placeholder:'https://dribbble.com/...' },
-  { key:'facebook', label:'Facebook', icon:'fab fa-facebook', placeholder:'https://facebook.com/...' },
-  { key:'twitter', label:'X (Twitter)', icon:'fab fa-twitter', placeholder:'https://x.com/...' },
-  { key:'linkedin', label:'LinkedIn', icon:'fab fa-linkedin', placeholder:'https://linkedin.com/in/...' },
-  { key:'youtube', label:'YouTube', icon:'fab fa-youtube', placeholder:'https://youtube.com/@...' },
-  { key:'tiktok', label:'TikTok', icon:'fab fa-tiktok', placeholder:'https://tiktok.com/@...' },
-  { key:'pinterest', label:'Pinterest', icon:'fab fa-pinterest', placeholder:'https://pinterest.com/...' },
-  { key:'github', label:'GitHub', icon:'fab fa-github', placeholder:'https://github.com/...' },
-  { key:'whatsapp', label:'WhatsApp', icon:'fab fa-whatsapp', placeholder:'https://wa.me/...' },
-  { key:'vk', label:'VK', icon:'fab fa-vk', placeholder:'https://vk.com/...' },
-  { key:'website', label:'Vebsayt', icon:'fas fa-globe', placeholder:'https://...' }
+  // Ijtimoiy tarmoqlar
+  { key:'instagram', label:'Instagram', icon:'fab fa-instagram', placeholder:'https://instagram.com/...', group:'Ijtimoiy tarmoqlar' },
+  { key:'telegram', label:'Telegram', icon:'fab fa-telegram', placeholder:'https://t.me/...', group:'Ijtimoiy tarmoqlar' },
+  { key:'behance', label:'Behance', icon:'fab fa-behance', placeholder:'https://behance.net/...', group:'Ijtimoiy tarmoqlar' },
+  { key:'dribbble', label:'Dribbble', icon:'fab fa-dribbble', placeholder:'https://dribbble.com/...', group:'Ijtimoiy tarmoqlar' },
+  { key:'facebook', label:'Facebook', icon:'fab fa-facebook', placeholder:'https://facebook.com/...', group:'Ijtimoiy tarmoqlar' },
+  { key:'twitter', label:'X (Twitter)', icon:'fab fa-twitter', placeholder:'https://x.com/...', group:'Ijtimoiy tarmoqlar' },
+  { key:'linkedin', label:'LinkedIn', icon:'fab fa-linkedin', placeholder:'https://linkedin.com/in/...', group:'Ijtimoiy tarmoqlar' },
+  { key:'youtube', label:'YouTube', icon:'fab fa-youtube', placeholder:'https://youtube.com/@...', group:'Ijtimoiy tarmoqlar' },
+  { key:'tiktok', label:'TikTok', icon:'fab fa-tiktok', placeholder:'https://tiktok.com/@...', group:'Ijtimoiy tarmoqlar' },
+  { key:'pinterest', label:'Pinterest', icon:'fab fa-pinterest', placeholder:'https://pinterest.com/...', group:'Ijtimoiy tarmoqlar' },
+  { key:'github', label:'GitHub', icon:'fab fa-github', placeholder:'https://github.com/...', group:'Ijtimoiy tarmoqlar' },
+  { key:'whatsapp', label:'WhatsApp', icon:'fab fa-whatsapp', placeholder:'https://wa.me/998...', group:'Ijtimoiy tarmoqlar' },
+  { key:'vk', label:'VK', icon:'fab fa-vk', placeholder:'https://vk.com/...', group:'Ijtimoiy tarmoqlar' },
+  { key:'threads', label:'Threads', icon:'fab fa-threads', placeholder:'https://threads.net/@...', group:'Ijtimoiy tarmoqlar' },
+  // Aloqa
+  { key:'email', label:'Email', icon:'fas fa-envelope', placeholder:'email@example.com', group:'Aloqa' },
+  { key:'phone', label:'Telefon', icon:'fas fa-phone', placeholder:'+998 XX XXX XX XX', group:'Aloqa' },
+  { key:'location', label:'Manzil', icon:'fas fa-map-marker-alt', placeholder:'Toshkent, O\'zbekiston', group:'Aloqa' },
+  // Vebsaytlar va platformalar
+  { key:'website', label:'Vebsayt', icon:'fas fa-globe', placeholder:'https://...', group:'Platformalar' },
+  { key:'notion', label:'Notion', icon:'fas fa-book', placeholder:'https://notion.so/...', group:'Platformalar' },
+  { key:'figma', label:'Figma', icon:'fab fa-figma', placeholder:'https://figma.com/@...', group:'Platformalar' },
+  { key:'medium', label:'Medium', icon:'fab fa-medium', placeholder:'https://medium.com/@...', group:'Platformalar' },
+  { key:'spotify', label:'Spotify', icon:'fab fa-spotify', placeholder:'https://open.spotify.com/...', group:'Platformalar' }
 ];
 
 function initSocials() {
@@ -1503,11 +1514,23 @@ function toggleSocialsMenu() {
   var existing = data.contact.socials.map(function(s){ return s.key; });
   var available = SOCIAL_OPTIONS.filter(function(o){ return existing.indexOf(o.key) === -1; });
   if (!available.length) { showToast('Barcha tarmoqlar qo\'shilgan', 'warning'); return; }
-  menu.innerHTML = available.map(function(o) {
-    return '<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:6px;cursor:pointer;transition:background 0.15s" onmouseover="this.style.background=\'rgba(181,245,66,0.1)\'" onmouseout="this.style.background=\'\'" onclick="addSocial(\'' + o.key + '\')">'
-      + '<i class="' + o.icon + '" style="width:18px;text-align:center;color:var(--accent)"></i>'
-      + '<span style="font-size:0.82rem">' + o.label + '</span></div>';
-  }).join('');
+  // Guruhlar bo'yicha ajratish
+  var groups = {};
+  available.forEach(function(o) {
+    var g = o.group || 'Boshqa';
+    if (!groups[g]) groups[g] = [];
+    groups[g].push(o);
+  });
+  var html = '';
+  Object.keys(groups).forEach(function(g) {
+    html += '<div style="font-size:0.65rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;padding:6px 10px 3px;margin-top:2px">' + g + '</div>';
+    groups[g].forEach(function(o) {
+      html += '<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:6px;cursor:pointer;transition:background 0.15s" onmouseover="this.style.background=\'rgba(181,245,66,0.1)\'" onmouseout="this.style.background=\'\'" onclick="addSocial(\'' + o.key + '\')">'
+        + '<i class="' + o.icon + '" style="width:18px;text-align:center;color:var(--accent)"></i>'
+        + '<span style="font-size:0.82rem">' + o.label + '</span></div>';
+    });
+  });
+  menu.innerHTML = html;
   menu.style.display = 'block';
   // Scroll hodisasi sahifaga tarqalmasligi uchun
   menu.onwheel = function(e) { e.stopPropagation(); e.preventDefault(); menu.scrollTop += e.deltaY; };
@@ -3598,8 +3621,14 @@ function injectDataIntoHtml(html, cleanData) {
   // Eskisini olib tashlash
   html = html.replace(/<script id="admin-injected-data"[^>]*>[\s\S]*?<\/script>\n?/g, '');
 
-  // </body> dan oldin qo'shish
-  html = html.replace(/<\/body>/, dataTag + '<' + '/body>');
+  // <body> dan keyin (eng tepaga) qo'shish — INIT scriptdan oldin bo'lishi kerak
+  var bodyMatch = html.match(/<body[^>]*>/);
+  if (bodyMatch) {
+    var bodyTag = bodyMatch[0];
+    html = html.replace(bodyTag, bodyTag + dataTag);
+  } else {
+    html = html.replace(/<\/body>/, dataTag + '<' + '/body>');
+  }
 
   return html;
 }
