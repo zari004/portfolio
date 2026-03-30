@@ -836,6 +836,20 @@
       .hero-btns { flex-direction: column; gap: 10px; }
       .btn-primary, .btn-outline { justify-content: center; }
     }
+    /* Suzuvchi CV tugma — faqat mobil */
+    .cv-float {
+      display: none; position: fixed; bottom: 20px; right: 16px; z-index: 900;
+      align-items: center; gap: 8px;
+      padding: 12px 20px; border-radius: 50px;
+      background: var(--accent); color: #0a0a0a;
+      font-size: 13px; font-weight: 700; font-family: 'Space Grotesk', sans-serif;
+      text-decoration: none; cursor: pointer; border: none;
+      box-shadow: 0 4px 20px rgba(181,245,66,0.3);
+      transition: all 0.3s; animation: cvFloat 0.5s ease-out;
+    }
+    .cv-float:hover { transform: translateY(-3px); box-shadow: 0 8px 30px rgba(181,245,66,0.4); }
+    .cv-float i { font-size: 14px; }
+    @keyframes cvFloat { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     @media (max-width: 500px) {
       .hero h1 { font-size: 36px !important; letter-spacing: -1.5px; }
       .process-steps { grid-template-columns: 1fr; }
@@ -2245,6 +2259,40 @@ window.addEventListener('storage', function(e) {
 })();
 </script>
 
+<!-- Suzuvchi CV tugma (faqat mobil) -->
+<a class="cv-float" id="cv-float-btn" href="#" onclick="downloadCV(event)">
+  <span id="cv-float-text">CV olish</span> <i class="fas fa-file-pdf"></i>
+</a>
+<script>
+// Faqat mobil (900px dan kichik) ekranda ko'rsatish
+(function() {
+  var fb = document.getElementById('cv-float-btn');
+  if (!fb) return;
+  function checkMobile() {
+    if (window.innerWidth <= 900) {
+      var cvBtn = document.getElementById('cv-btn');
+      if (cvBtn && cvBtn.dataset.cvurl) {
+        fb.dataset.cvurl = cvBtn.dataset.cvurl;
+        fb.style.display = 'flex';
+        // Label ni sinxronlash
+        var mainText = document.getElementById('cv-btn-text');
+        var floatText = document.getElementById('cv-float-text');
+        if (mainText && floatText) floatText.textContent = mainText.textContent;
+      }
+    } else {
+      fb.style.display = 'none';
+    }
+  }
+  // downloadCV cv-float-btn uchun ham ishlashi uchun
+  fb.addEventListener('click', function(e) {
+    e.preventDefault();
+    var cvBtn = document.getElementById('cv-btn');
+    if (cvBtn) cvBtn.click();
+  });
+  setTimeout(checkMobile, 500);
+  window.addEventListener('resize', checkMobile);
+})();
+</script>
 
 </body>
 </html>
