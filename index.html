@@ -75,16 +75,25 @@
       align-items: center; justify-content: center;
       transition: all 0.3s;
     }
-    .menu-toggle .menu-icon { display: flex; flex-direction: column; gap: 5px; align-items: center; }
-    .menu-toggle .menu-icon span {
-      display: block; width: 20px; height: 2px; background: var(--text);
-      border-radius: 2px; transition: all 0.3s;
+    .menu-toggle .menu-icon {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 4px;
+      width: 18px; height: 18px;
     }
-    .menu-toggle .menu-icon span:nth-child(2) { width: 14px; margin-left: auto; }
+    .menu-toggle .menu-icon span {
+      display: block; width: 7px; height: 7px;
+      background: var(--text); border-radius: 2px;
+      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .menu-toggle .menu-icon span:nth-child(1) { border-radius: 2px 2px 2px 50%; }
+    .menu-toggle .menu-icon span:nth-child(2) { border-radius: 2px 2px 50% 2px; }
+    .menu-toggle .menu-icon span:nth-child(3) { border-radius: 2px 50% 2px 2px; }
+    .menu-toggle .menu-icon span:nth-child(4) { border-radius: 50% 2px 2px 2px; }
     nav.mobile-open .menu-toggle { border-color: var(--accent); }
-    nav.mobile-open .menu-toggle .menu-icon span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
-    nav.mobile-open .menu-toggle .menu-icon span:nth-child(2) { opacity: 0; width: 0; }
-    nav.mobile-open .menu-toggle .menu-icon span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+    nav.mobile-open .menu-toggle .menu-icon span { background: var(--accent); border-radius: 50%; }
+    nav.mobile-open .menu-toggle .menu-icon span:nth-child(1) { transform: translate(5.5px, 5.5px) scale(0.7); }
+    nav.mobile-open .menu-toggle .menu-icon span:nth-child(2) { transform: translate(-5.5px, 5.5px) scale(0.7); }
+    nav.mobile-open .menu-toggle .menu-icon span:nth-child(3) { transform: translate(5.5px, -5.5px) scale(0.7); }
+    nav.mobile-open .menu-toggle .menu-icon span:nth-child(4) { transform: translate(-5.5px, -5.5px) scale(0.7); }
 
     /* ===== HERO ===== */
     .hero {
@@ -811,8 +820,8 @@
       .about-img-badge { right: -10px; bottom: -10px; padding: 10px 14px; }
       .contact-wrapper { flex-direction: column; gap: 32px; padding: 24px 16px; }
       .contact-info h2 { font-size: 26px; }
-      .contact-form { max-width: 100%; }
-      .cf-group input, .cf-group textarea { width: 100%; box-sizing: border-box; font-size: 13px; }
+      .contact-form { max-width: 100%; width: 100%; }
+      .cf-group input, .cf-group textarea { width: 100%; box-sizing: border-box; font-size: 14px; }
       footer { padding: 24px 20px; flex-direction: column; align-items: flex-start; }
       .cf-row { grid-template-columns: 1fr; }
       .company-item { padding: 0 16px; }
@@ -857,7 +866,7 @@
     </a>
     <a href="#contact" class="nav-cta">Bog'lanish</a>
   </div>
-  <button class="menu-toggle" onclick="document.querySelector('nav').classList.toggle('mobile-open')"><div class="menu-icon"><span></span><span></span><span></span></div></button>
+  <button class="menu-toggle" onclick="document.querySelector('nav').classList.toggle('mobile-open')"><div class="menu-icon"><span></span><span></span><span></span><span></span></div></button>
 </nav>
 
 <!-- HERO -->
@@ -1709,6 +1718,11 @@ function initVideoObserver() {
   }, { threshold: 0.3 });
   document.querySelectorAll('.portfolio-thumb video').forEach(v => {
     v.pause();
+    // Uzluksiz loop — gap bo'lmasdan
+    v.addEventListener('ended', function() {
+      this.currentTime = 0;
+      this.play().catch(function(){});
+    });
     videoObs.observe(v);
   });
 }
