@@ -3440,58 +3440,50 @@ async function pushToGitHub() {
   ghLog('Ma\'lumotlar tayyorlanmoqda...');
 
   try {
-    // ======= Git Data API orqali push =======
     var dataClone = JSON.parse(JSON.stringify(data));
 
-    // Rasmlarni web uchun optimizatsiya (push uchun yengillashtirish)
-    // Admin panelda to'liq sifat saqlanadi, faqat GitHub ga yengil versiya ketadi
-    function compressForWeb(base64str) {
-      return new Promise(function(resolve) {
-        if (!base64str || base64str.indexOf('data:image/') !== 0) { resolve(base64str); return; }
-        var img = new Image();
-        img.onload = function() {
-          var maxW = 800, maxH = 800;
-          var w = img.width, h = img.height;
-          if (w > maxW || h > maxH) {
-            var ratio = Math.min(maxW / w, maxH / h);
-            w = Math.round(w * ratio);
-            h = Math.round(h * ratio);
-          }
-          var canvas = document.createElement('canvas');
-          canvas.width = w; canvas.height = h;
-          var ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, w, h);
-          resolve(canvas.toDataURL('image/jpeg', 0.65));
-        };
-        img.onerror = function() { resolve(base64str); };
-        img.src = base64str;
-      });
+    // ======= Rasmlarni ajratish =======
+    // Base64 rasmlarni topish va ro'yxatga olish
+    var imageFiles = []; // {path, base64data}
+    var imgCounter = 0;
+
+    function hashCode(s) {
+      var h = 0;
+      for (var i = 0; i < Math.min(s.length, 200); i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0;
+      return Math.abs(h).toString(36);
     }
 
-    async function compressAllImages(obj) {
+    function extractImages(obj) {
       if (!obj || typeof obj !== 'object') return;
       var keys = Array.isArray(obj) ? obj.map(function(_, i) { return i; }) : Object.keys(obj);
       for (var k = 0; k < keys.length; k++) {
         var key = keys[k];
         var val = obj[key];
-        if (typeof val === 'string' && val.indexOf('data:image/') === 0 && val.length > 5000) {
-          obj[key] = await compressForWeb(val);
+        if (typeof val === 'string' && val.indexOf('data:image/') === 0 && val.length > 500) {
+          imgCounter++;
+          var ext = 'jpg';
+          var m = val.match(/data:image\/(\w+)/);
+          if (m) ext = m[1] === 'jpeg' ? 'jpg' : m[1];
+          var fname = 'assets/img_' + hashCode(val + imgCounter) + '_' + imgCounter + '.' + ext;
+          var rawB64 = val.split(',')[1] || '';
+          imageFiles.push({ path: fname, data: rawB64 });
+          // URL bilan almashtirish
+          obj[key] = 'https://raw.githubusercontent.com/' + cfg.owner + '/' + cfg.repo + '/' + cfg.branch + '/' + fname;
         } else if (val && typeof val === 'object') {
-          await compressAllImages(val);
+          extractImages(val);
         }
       }
     }
 
-    var origSize = JSON.stringify(dataClone).length;
-    ghLog('Asl hajm: ' + (origSize / 1048576).toFixed(1) + ' MB');
-    ghLog('Rasmlar web uchun optimizatsiya qilinmoqda...', 'warn');
-    await compressAllImages(dataClone);
+    extractImages(dataClone);
+    ghLog('Ma\'lumot hajmi: ' + (JSON.stringify(data).length / 1048576).toFixed(1) + ' MB');
+    ghLog('Topilgan rasmlar: ' + imageFiles.length + ' ta');
 
     var jsonStr = JSON.stringify(dataClone);
-    var jsonSizeMB = (jsonStr.length / 1048576).toFixed(1);
-    ghLog('Optimizatsiya: ' + (origSize / 1048576).toFixed(1) + ' MB → ' + jsonSizeMB + ' MB', 'ok');
+    var jsonSizeKB = (jsonStr.length / 1024).toFixed(0);
+    ghLog('data.json (rasmlarsiz): ' + jsonSizeKB + ' KB', 'ok');
 
-    // Base64 encode helper
+    // Base64 encode helper (UTF-8 uchun)
     function encodeToBase64(str) {
       var bytes = new TextEncoder().encode(str);
       var bin = '';
@@ -3509,26 +3501,48 @@ async function pushToGitHub() {
       return json;
     }
 
-    // 1-qadam: Joriy branch ref ni olish
+    // 1-qadam: Branch ref
     ghLog('Branch ma\'lumoti olinmoqda...', 'warn');
     var refData = await ghFetch(repoBase + '/git/ref/heads/' + cfg.branch, { headers: ghHeaders });
     var latestCommitSha = refData.object.sha;
     ghLog('Joriy commit: ' + latestCommitSha.substring(0, 7), 'ok');
 
-    // 2-qadam: Joriy commit ning tree sini olish
+    // 2-qadam: Joriy tree
     var commitData = await ghFetch(repoBase + '/git/commits/' + latestCommitSha, { headers: ghHeaders });
     var baseTreeSha = commitData.tree.sha;
 
-    // 3-qadam: data.json uchun blob yaratish
-    ghLog('data.json blob yaratilmoqda (' + jsonSizeMB + ' MB)...', 'warn');
+    // 3-qadam: Rasmlar uchun bloblar yaratish (5 tadan parallel)
+    var treeItems = [];
+    if (imageFiles.length > 0) {
+      ghLog(imageFiles.length + ' ta rasm yuklanmoqda...', 'warn');
+      var batchSize = 5;
+      for (var bi = 0; bi < imageFiles.length; bi += batchSize) {
+        var batch = imageFiles.slice(bi, bi + batchSize);
+        var batchResults = await Promise.all(batch.map(function(img) {
+          return ghFetch(repoBase + '/git/blobs', {
+            method: 'POST',
+            headers: Object.assign({}, ghHeaders, { 'Content-Type': 'application/json' }),
+            body: JSON.stringify({ content: img.data, encoding: 'base64' })
+          }).then(function(r) { return { path: img.path, sha: r.sha }; });
+        }));
+        batchResults.forEach(function(r) {
+          treeItems.push({ path: r.path, mode: '100644', type: 'blob', sha: r.sha });
+        });
+        ghLog((bi + batch.length) + '/' + imageFiles.length + ' rasm yuklandi', 'ok');
+      }
+    }
+
+    // 4-qadam: data.json blob
+    ghLog('data.json blob yaratilmoqda (' + jsonSizeKB + ' KB)...', 'warn');
     var blobData = await ghFetch(repoBase + '/git/blobs', {
       method: 'POST',
       headers: Object.assign({}, ghHeaders, { 'Content-Type': 'application/json' }),
       body: JSON.stringify({ content: encodeToBase64(jsonStr), encoding: 'base64' })
     });
-    ghLog('data.json blob tayyor: ' + blobData.sha.substring(0, 7), 'ok');
+    treeItems.push({ path: 'data.json', mode: '100644', type: 'blob', sha: blobData.sha });
+    ghLog('data.json tayyor', 'ok');
 
-    // 4-qadam: index.html ni tekshirish va yangilash
+    // 5-qadam: index.html tekshirish
     ghLog('index.html yuklanmoqda...', 'warn');
     var htmlResp = await fetch(repoBase + '/contents/' + cfg.path + '?ref=' + cfg.branch, { headers: ghHeaders });
     var htmlFileData = await htmlResp.json();
@@ -3543,24 +3557,16 @@ async function pushToGitHub() {
       htmlContent = new TextDecoder('utf-8').decode(bArr);
     }
 
-    // Eski inject datani tozalash
-    var cleanHtml = htmlContent.replace(/<script id="admin-injected-data"[^>]*>[\s\S]*?<\/script>\n?/g, '');
-
-    // Eski loader script ni ham tozalash (agar mavjud bo'lsa)
+    var cleanHtml = htmlContent;
+    cleanHtml = cleanHtml.replace(/<script id="admin-injected-data"[^>]*>[\s\S]*?<\/script>\n?/g, '');
     cleanHtml = cleanHtml.replace(/<script id="__DATA_JSON_LOADER__"[^>]*>[\s\S]*?<\/script>\n?/g, '');
     var htmlChanged = cleanHtml !== htmlContent;
 
-    // Site title
     var s = dataClone.settings || {};
     if (s.siteTitle) {
       var newHtml = cleanHtml.replace(/<title>[^<]*<\/title>/, '<title>' + s.siteTitle + '<' + '/title>');
       if (newHtml !== cleanHtml) { cleanHtml = newHtml; htmlChanged = true; }
     }
-
-    // 5-qadam: Yangi tree yaratish
-    var treeItems = [
-      { path: 'data.json', mode: '100644', type: 'blob', sha: blobData.sha }
-    ];
 
     if (htmlChanged) {
       ghLog('index.html ham yangilanmoqda...', 'warn');
@@ -3572,28 +3578,29 @@ async function pushToGitHub() {
       treeItems.push({ path: cfg.path, mode: '100644', type: 'blob', sha: htmlBlobData.sha });
     }
 
-    ghLog('Git tree yaratilmoqda...', 'warn');
+    // 6-qadam: Tree yaratish
+    ghLog('Git tree yaratilmoqda (' + treeItems.length + ' fayl)...', 'warn');
     var treeData = await ghFetch(repoBase + '/git/trees', {
       method: 'POST',
       headers: Object.assign({}, ghHeaders, { 'Content-Type': 'application/json' }),
       body: JSON.stringify({ base_tree: baseTreeSha, tree: treeItems })
     });
-    ghLog('Tree tayyor: ' + treeData.sha.substring(0, 7), 'ok');
+    ghLog('Tree tayyor', 'ok');
 
-    // 6-qadam: Commit yaratish
+    // 7-qadam: Commit
     ghLog('Commit yaratilmoqda...', 'warn');
     var newCommit = await ghFetch(repoBase + '/git/commits', {
       method: 'POST',
       headers: Object.assign({}, ghHeaders, { 'Content-Type': 'application/json' }),
       body: JSON.stringify({
-        message: 'Admin: portfolio yangilandi',
+        message: 'Admin: portfolio yangilandi (' + imageFiles.length + ' rasm)',
         tree: treeData.sha,
         parents: [latestCommitSha]
       })
     });
     ghLog('Commit: ' + newCommit.sha.substring(0, 7), 'ok');
 
-    // 7-qadam: Branch ref yangilash
+    // 8-qadam: Branch ref yangilash
     ghLog('Branch yangilanmoqda...', 'warn');
     await ghFetch(repoBase + '/git/refs/heads/' + cfg.branch, {
       method: 'PATCH',
