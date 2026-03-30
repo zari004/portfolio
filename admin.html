@@ -3546,21 +3546,9 @@ async function pushToGitHub() {
     // Eski inject datani tozalash
     var cleanHtml = htmlContent.replace(/<script id="admin-injected-data"[^>]*>[\s\S]*?<\/script>\n?/g, '');
 
-    // data.json loader qo'shish
-    var htmlChanged = false;
-    if (cleanHtml.indexOf('__DATA_JSON_LOADER__') === -1) {
-      ghLog('data.json loader kodi qo\'shilmoqda...', 'warn');
-      var loaderScript = '\n<script id="__DATA_JSON_LOADER__">\n' +
-        '(function(){try{var x=new XMLHttpRequest();x.open("GET","data.json?v="+Date.now(),false);x.send();' +
-        'if(x.status===200){window.__PORTFOLIO_DATA__=JSON.parse(x.responseText);}}catch(e){console.error("[SITE] data.json:",e);}})();\n' +
-        '</' + 'script>\n';
-      var getDataPos = cleanHtml.indexOf('function getData()');
-      if (getDataPos > -1) {
-        cleanHtml = cleanHtml.substring(0, getDataPos) + loaderScript + cleanHtml.substring(getDataPos);
-        htmlChanged = true;
-      }
-    }
-    if (cleanHtml !== htmlContent) htmlChanged = true;
+    // Eski loader script ni ham tozalash (agar mavjud bo'lsa)
+    cleanHtml = cleanHtml.replace(/<script id="__DATA_JSON_LOADER__"[^>]*>[\s\S]*?<\/script>\n?/g, '');
+    var htmlChanged = cleanHtml !== htmlContent;
 
     // Site title
     var s = dataClone.settings || {};
