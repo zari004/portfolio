@@ -3633,6 +3633,46 @@ async function pushToGitHub() {
       body: JSON.stringify({ sha: newCommit.sha })
     });
 
+    // Lokal datadagi base64 rasmlarni URL ga almashtirish
+    // Shunda keyingi push tezroq bo'ladi
+    if (imageFiles.length > 0) {
+      ghLog('Lokal ma\'lumot yangilanmoqda...', 'warn');
+      function updateLocalData(obj) {
+        if (!obj || typeof obj !== 'object') return;
+        var keys = Array.isArray(obj) ? obj.map(function(_, i) { return i; }) : Object.keys(obj);
+        for (var k = 0; k < keys.length; k++) {
+          var key = keys[k];
+          var val = obj[key];
+          if (typeof val === 'string' && val.indexOf('data:image/') === 0 && val.length > 500) {
+            // dataClone da bu rasm URL ga almashtirilgan — shu URL ni olish
+            var cloneVal = getNestedValue(dataClone, getPath(obj, key));
+            if (cloneVal && cloneVal.indexOf('https://') === 0) {
+              obj[key] = cloneVal;
+            }
+          } else if (val && typeof val === 'object') {
+            updateLocalData(val);
+          }
+        }
+      }
+      // Oddiyroq yondashuv: dataClone dagi URL larni to'g'ridan-to'g'ri data ga ko'chirish
+      function syncUrls(src, dst) {
+        if (!src || !dst || typeof src !== 'object' || typeof dst !== 'object') return;
+        var keys = Array.isArray(src) ? src.map(function(_, i) { return i; }) : Object.keys(src);
+        for (var k = 0; k < keys.length; k++) {
+          var key = keys[k];
+          if (typeof src[key] === 'string' && src[key].indexOf('https://raw.githubusercontent.com/') === 0 &&
+              typeof dst[key] === 'string' && dst[key].indexOf('data:image/') === 0) {
+            dst[key] = src[key];
+          } else if (src[key] && typeof src[key] === 'object' && dst[key]) {
+            syncUrls(src[key], dst[key]);
+          }
+        }
+      }
+      syncUrls(dataClone, data);
+      saveToStorage();
+      ghLog('Lokal rasmlar URL ga almashtirildi', 'ok');
+    }
+
     ghLog('Muvaffaqiyatli push qilindi!', 'ok');
     ghDone(true);
 
