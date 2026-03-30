@@ -3487,9 +3487,22 @@ async function pushToGitHub() {
       }
     }
 
+    // Allaqachon URL bo'lgan rasmlar sonini hisoblash
+    var existingUrls = 0;
+    function countUrls(obj) {
+      if (!obj || typeof obj !== 'object') return;
+      var keys = Array.isArray(obj) ? obj.map(function(_, i) { return i; }) : Object.keys(obj);
+      for (var k = 0; k < keys.length; k++) {
+        var val = obj[keys[k]];
+        if (typeof val === 'string' && val.indexOf('https://raw.githubusercontent.com/') === 0) existingUrls++;
+        else if (val && typeof val === 'object') countUrls(val);
+      }
+    }
+    countUrls(data);
+
     extractImages(dataClone);
-    ghLog('Ma\'lumot hajmi: ' + (JSON.stringify(data).length / 1048576).toFixed(1) + ' MB');
-    ghLog('Topilgan rasmlar: ' + imageFiles.length + ' ta');
+    ghLog('Mavjud rasmlar: ' + existingUrls + ' ta (o\'tkazib yuboriladi)');
+    ghLog('Yangi rasmlar: ' + imageFiles.length + ' ta (yuklanadi)');
 
     var jsonStr = JSON.stringify(dataClone);
     var jsonSizeKB = (jsonStr.length / 1024).toFixed(0);
