@@ -2238,8 +2238,8 @@ window.addEventListener('storage', function(e) {
   d.visits.push(v);
   save(d);
   // Geo ma'lumotlarini olish
-  fetch('https://ipapi.co/json/').then(function(r){return r.json();}).then(function(g){
-    v.ip=g.ip||null;v.country=g.country_name||null;v.city=g.city||null;v.region=g.region||null;
+  fetch('https://ip-api.com/json/?fields=query,country,city,regionName').then(function(r){return r.json();}).then(function(g){
+    v.ip=g.query||null;v.country=g.country||null;v.city=g.city||null;v.region=g.regionName||null;
     save(d);
   }).catch(function(){});
 })();
