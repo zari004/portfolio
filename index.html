@@ -645,14 +645,15 @@
       margin-bottom: 20px; letter-spacing: -0.5px;
     }
     .pd-gallery {
-      columns: 2; column-gap: 12px;
-      margin-bottom: 48px;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+      margin-bottom: 48px; align-items: start;
     }
+    .pd-gallery.single-col { grid-template-columns: 1fr; max-width: 600px; }
     .pd-gallery-item {
       border-radius: 12px; overflow: hidden;
       border: 1px solid var(--border);
       cursor: pointer; transition: all 0.25s;
-      break-inside: avoid; margin-bottom: 12px;
+      width: 100%;
     }
     .pd-gallery-item:hover {
       border-color: rgba(181,245,66,0.25);
@@ -774,7 +775,7 @@
       .pd-hero-content { padding: 24px 20px 32px; }
       .pd-body { padding: 32px 20px 60px; }
       .pd-info-grid { grid-template-columns: 1fr 1fr; }
-      .pd-gallery { columns: 1; }
+      .pd-gallery { grid-template-columns: 1fr; }
       .project-detail-back { top: 12px; left: 12px; padding: 8px 14px; font-size: 12px; }
       .pd-block-title { font-size: 24px; margin: 32px 0 12px; }
       .pd-block-subtitle { font-size: 18px; margin: 24px 0 10px; }
@@ -1800,30 +1801,44 @@ function initCvLabelRotation(labels) {
 }
 
 // ============ CV DOWNLOAD ============
+var _cvDownloadCount = 0;
 function downloadCV(e) {
   e.preventDefault();
   var btn = document.getElementById('cv-btn');
   var url = btn ? btn.dataset.cvurl : '';
   if (!url) return;
 
-  // Google Drive fayl havolasi — rasmni PDF ga aylantirish
+  var cvName = 'CV';
+  try { var _d = getData(); if (_d.settings && _d.settings.cvName) cvName = _d.settings.cvName.replace(/[^a-zA-Z0-9_\-\s\.]/g, '').trim(); else if (_d.hero && _d.hero.line1) cvName = 'CV ' + _d.hero.line1.replace(/[^a-zA-Z0-9_\-\s]/g, '').trim(); } catch(ex) {}
+
+  _cvDownloadCount++;
+  var finalName = _cvDownloadCount > 1 ? cvName + ' (' + _cvDownloadCount + ')' : cvName;
+
+  function resetCvBtn() {
+    btn.innerHTML = '<span id="cv-btn-text">CV olish</span> <i class="fas fa-file-pdf"></i>';
+    try { var _d2 = getData(); initCvLabelRotation(_d2.settings.cvLabels || []); } catch(e2) {}
+    btn.style.pointerEvents = '';
+  }
+
+  function silentDownload(blobUrl, fname) {
+    var a = document.createElement('a');
+    a.href = blobUrl;
+    a.download = fname;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function() { document.body.removeChild(a); URL.revokeObjectURL(blobUrl); }, 1000);
+  }
+
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Yuklanmoqda...';
+  btn.style.pointerEvents = 'none';
+
+  // Google Drive fayl havolasi
   var driveMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
   if (driveMatch) {
     var fileId = driveMatch[1];
-    var downloadUrl = 'https://drive.google.com/uc?export=download&confirm=t&id=' + fileId;
-    var cvName = 'CV';
-    try { var _d = getData(); if (_d.settings && _d.settings.cvName) cvName = _d.settings.cvName.replace(/[^a-zA-Z0-9_\-\s]/g, '').trim().replace(/\s+/g, '_'); else if (_d.hero && _d.hero.line1) cvName = 'CV_' + _d.hero.line1.replace(/[^a-zA-Z0-9_\-\s]/g, '').trim().replace(/\s+/g, '_'); } catch(e) {}
 
-    function resetCvBtn() {
-      btn.innerHTML = '<span id="cv-btn-text">CV olish</span> <i class="fas fa-file-pdf"></i>';
-      try { var _d2 = getData(); initCvLabelRotation(_d2.settings.cvLabels || []); } catch(e2) {}
-      btn.style.pointerEvents = '';
-    }
-
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Yuklanmoqda...';
-    btn.style.pointerEvents = 'none';
-
-    // Rasmni yuklashga harakat qilish (PDF ga aylantirish uchun)
+    // Rasmni PDF ga aylantirish
     var imgDone = false;
     var img = new Image();
     img.crossOrigin = 'anonymous';
@@ -1838,22 +1853,22 @@ function downloadCV(e) {
         else { pdfH = pageH; pdfW = pageH * imgRatio; }
         var doc = new jsPDF(pdfW > pdfH ? 'landscape' : 'portrait', 'mm', [pdfW, pdfH]);
         doc.addImage(img, 'PNG', 0, 0, pdfW, pdfH);
-        doc.save(cvName + '.pdf');
+        doc.save(finalName + '.pdf');
       } catch(err) {
-        window.open(downloadUrl, '_blank');
+        // Fallback: fetch blob
+        fetchAndDownload('https://drive.google.com/uc?export=download&confirm=t&id=' + fileId, finalName + '.pdf');
       }
       resetCvBtn();
     };
     img.onerror = function() {
       if (imgDone) return; imgDone = true;
-      window.open(downloadUrl, '_blank');
+      fetchAndDownload('https://drive.google.com/uc?export=download&confirm=t&id=' + fileId, finalName + '.pdf');
       resetCvBtn();
     };
-    // 8 soniyada javob bo'lmasa — to'g'ridan-to'g'ri yuklab olish
     setTimeout(function() {
       if (imgDone) return; imgDone = true;
       img.src = '';
-      window.open(downloadUrl, '_blank');
+      fetchAndDownload('https://drive.google.com/uc?export=download&confirm=t&id=' + fileId, finalName + '.pdf');
       resetCvBtn();
     }, 8000);
     img.src = 'https://drive.google.com/uc?export=view&id=' + fileId;
@@ -1867,7 +1882,35 @@ function downloadCV(e) {
              .replace(/\/preview.*$/, '/export?format=pdf');
   }
 
-  window.location.href = url;
+  fetchAndDownload(url, finalName + '.pdf');
+  resetCvBtn();
+}
+
+function fetchAndDownload(url, fname) {
+  fetch(url, { mode: 'cors' }).then(function(r) {
+    if (!r.ok) throw new Error('fetch failed');
+    return r.blob();
+  }).then(function(blob) {
+    var blobUrl = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = blobUrl;
+    a.download = fname;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function() { document.body.removeChild(a); URL.revokeObjectURL(blobUrl); }, 1000);
+  }).catch(function() {
+    // CORS muammo bo'lsa, <a download> bilan to'g'ridan-to'g'ri
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = fname;
+    a.target = '_blank';
+    a.rel = 'noopener';
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function() { document.body.removeChild(a); }, 500);
+  });
 }
 
 // ============ AURORA ANIMATION ============
@@ -2081,7 +2124,9 @@ function openProjectDetail(idx) {
     const galleryImages = p.gallery || [];
     const galleryVideoUrls = p.galleryVideos ? p.galleryVideos.split(',').map(v => v.trim()).filter(v => v) : [];
     if (galleryImages.length || galleryVideoUrls.length) {
-      galleryHTML += '<div class="pd-section-title">Galereya</div><div class="pd-gallery">';
+      var totalItems = galleryImages.length + galleryVideoUrls.length;
+      var galClass = totalItems === 1 ? 'pd-gallery single-col' : 'pd-gallery';
+      galleryHTML += '<div class="pd-section-title">Galereya</div><div class="' + galClass + '">';
       galleryImages.forEach(function(img, i) {
         galleryHTML += '<div class="pd-gallery-item" onclick="openLightbox(\'' + img.replace(/'/g, "\\'") + '\')"><img src="' + img + '" alt="Gallery ' + (i+1) + '"/></div>';
       });

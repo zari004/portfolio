@@ -184,6 +184,21 @@ input, textarea, select, button { font-family: inherit; }
   border-radius: 20px; font-size: 0.72rem; font-weight: 600; align-items: center; gap: 5px;
 }
 .unsaved-badge.active { display: inline-flex; }
+.unpushed-badge {
+  display: none; padding: 4px 12px; background: rgba(66,200,245,0.12); color: var(--accent2);
+  border-radius: 20px; font-size: 0.72rem; font-weight: 600; align-items: center; gap: 5px;
+  cursor: pointer; transition: all .15s;
+}
+.unpushed-badge:hover { background: rgba(66,200,245,0.2); }
+.unpushed-badge.active { display: inline-flex; }
+.unpushed-badge .pulse-dot {
+  width: 6px; height: 6px; border-radius: 50%; background: var(--accent2);
+  animation: pulseDot 2s ease-in-out infinite;
+}
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.7); }
+}
 .save-shortcut {
   font-size: 0.7rem; color: var(--muted); font-family: 'JetBrains Mono', monospace;
 }
@@ -192,6 +207,13 @@ input, textarea, select, button { font-family: inherit; }
   font-size: 0.82rem; font-weight: 700; cursor: pointer; transition: all .15s;
 }
 .topbar-save-btn:hover { background: #c8ff5a; }
+.topbar-preview-link {
+  padding: 8px 14px; background: transparent; border: 1px solid var(--border); border-radius: 8px;
+  color: var(--sub); font-size: 0.82rem; font-weight: 600; text-decoration: none;
+  display: inline-flex; align-items: center; gap: 6px; transition: all .15s; font-family: inherit;
+  white-space: nowrap; flex-shrink: 0;
+}
+.topbar-preview-link:hover { border-color: var(--accent); color: var(--accent); }
 
 /* Panels */
 .panels-container { flex: 1; padding: 28px; padding-top: calc(var(--topbar-h) + 28px); overflow-x: hidden; max-width: 100%; min-width: 0; }
@@ -455,9 +477,16 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
   .mobile-toggle { display: flex; }
   .form-row { grid-template-columns: 1fr; }
   .form-row.three { grid-template-columns: 1fr; }
-  .topbar { padding: 0 16px; left: 0; }
+  .topbar { padding: 0 12px; left: 0; gap: 8px; }
+  .topbar-right { gap: 8px; flex-shrink: 1; min-width: 0; }
+  .topbar-right .save-shortcut { display: none; }
+  .topbar-preview-link { padding: 8px; font-size: 0.85rem; }
+  .topbar-preview-link span { display: none; }
+  .topbar-save-btn { padding: 8px; font-size: 0.85rem; }
+  .topbar-save-btn span { display: none; }
+  .unpushed-badge, .unsaved-badge { font-size: 0.65rem; padding: 3px 8px; }
   .panels-container { padding: 16px; padding-top: calc(var(--topbar-h) + 16px); }
-  .list-item { gap: 10px; padding: 12px; flex-wrap: wrap; }
+  .list-item { gap: 10px; padding: 12px; flex-wrap: nowrap; }
   .list-item .item-img { width: 40px; height: 40px; border-radius: 6px; flex-shrink: 0; }
   .list-item .item-info { flex: 1; min-width: 0; }
   .list-item .item-title { font-size: 0.82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -470,22 +499,78 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
   .form-card { padding: 16px; border-radius: 10px; }
   .form-card-title { font-size: 0.82rem; flex-wrap: wrap; gap: 8px; }
   .modal { width: 95vw; max-height: 90vh; padding: 0; }
+  .modal-overlay { padding: 10px; }
+  .modal-header { padding: 16px; }
+  .modal-header h3 { font-size: 0.95rem; }
+  .modal-body { padding: 16px; }
+  .modal-footer { padding: 12px 16px; flex-wrap: wrap; }
   .toggle-wrap { flex-wrap: wrap; }
+  .add-tag-row { flex-wrap: wrap; }
+  .add-tag-row input { min-width: 0; }
+  .color-pair { flex-wrap: wrap; }
+  .img-upload-zone { padding: 20px 12px; }
+  .img-upload-zone i { font-size: 1.4rem; }
+  .img-upload-zone p { font-size: 0.75rem; }
+  .sidebar-brand { padding: 16px 20px; }
+  .sidebar-footer { padding: 12px; }
+  .sidebar-nav .nav-item { padding: 10px 12px; font-size: 0.82rem; }
 }
 @media (max-width: 500px) {
-  .login-card { padding: 32px 24px; }
-  .stats-grid { grid-template-columns: 1fr; }
-  .modal { border-radius: 12px; padding: 0; }
+  :root { --topbar-h: 52px; }
+  .login-card { padding: 32px 20px; width: 100%; max-width: 100vw; border-radius: 12px; }
+  .login-card h1 { font-size: 1.3rem; }
+  .login-field .input-wrap input { padding: 11px 12px 11px 38px; font-size: 0.88rem; }
+  .stats-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .stat-card { padding: 12px; }
+  .stat-card .stat-num { font-size: 1.2rem; }
+  .stat-card .stat-label { font-size: 0.65rem; }
+  .modal { border-radius: 12px; padding: 0; width: 100vw; max-height: 85vh; }
+  .modal-body { padding: 14px; }
+  .modal-footer { gap: 8px; }
+  .modal-footer .btn { flex: 1; justify-content: center; font-size: 0.78rem; padding: 8px 12px; }
   .panels-container { padding: 10px; padding-top: calc(var(--topbar-h) + 10px); }
+  .panel-header { margin-bottom: 16px; }
+  .panel-header h2 { font-size: 1.05rem; }
+  .panel-header p { font-size: 0.7rem; }
   .list-item { gap: 8px; padding: 10px; }
   .list-item .item-img { width: 36px; height: 36px; }
-  .list-item .item-title { font-size: 0.78rem; max-width: 140px; }
+  .list-item .item-title { font-size: 0.78rem; max-width: 120px; }
+  .list-item .item-sub { font-size: 0.65rem; }
+  .list-item .item-actions { gap: 3px; }
   .list-item .item-actions .btn-icon { width: 28px; height: 28px; font-size: 0.65rem; }
-  .form-card { padding: 12px; }
+  .form-card { padding: 12px; margin-bottom: 12px; }
   .form-card-title { font-size: 0.78rem; }
-  .topbar h3 { font-size: 0.85rem; }
-  .topbar .save-hint { display: none; }
+  .form-group { margin-bottom: 12px; }
+  .form-group label { font-size: 0.7rem; }
+  .form-input { padding: 9px 12px; font-size: 0.85rem; }
+  textarea.form-input { min-height: 60px; }
+  .form-hint { font-size: 0.65rem; }
+  .topbar { padding: 0 10px; }
+  .topbar-title { font-size: 0.9rem; }
+  .topbar-preview-link { display: none !important; }
+  .topbar-save-btn { padding: 6px 12px; font-size: 0.75rem; }
+  .unpushed-badge { font-size: 0.6rem; padding: 3px 7px; }
+  .unsaved-badge { font-size: 0.6rem; padding: 3px 7px; }
+  .btn { padding: 8px 14px; font-size: 0.8rem; }
   .btn-sm { padding: 6px 10px; font-size: 0.7rem; }
+  .tag { padding: 4px 10px; font-size: 0.72rem; }
+  .tags-wrap { gap: 6px; }
+  .add-tag-row { gap: 6px; }
+  .empty-state { padding: 24px; }
+  .empty-state i { font-size: 1.5rem; }
+  .empty-state p { font-size: 0.78rem; }
+  .img-preview img { max-width: 150px; max-height: 100px; }
+  .icon-picker-grid { grid-template-columns: repeat(auto-fill, minmax(34px, 1fr)); gap: 3px; }
+  .icon-pick-item { width: 34px; height: 34px; font-size: 0.8rem; }
+}
+@media (max-width: 360px) {
+  .topbar-save-btn span { display: none; }
+  .topbar-title { font-size: 0.82rem; max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .panels-container { padding: 8px; padding-top: calc(var(--topbar-h) + 8px); }
+  .form-card { padding: 10px; border-radius: 8px; }
+  .list-item .item-title { max-width: 100px; }
+  .unpushed-badge span:not(.pulse-dot) { display: none; }
+  .unsaved-badge span { display: none; }
 }
 /* Block menu items */
 .block-menu-item {
@@ -589,10 +674,11 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
         <div class="topbar-title" id="topbarTitle">Hero</div>
       </div>
       <div class="topbar-right">
-        <a href="index.html" target="_blank" style="padding:8px 14px;background:transparent;border:1px solid var(--border);border-radius:8px;color:var(--sub);font-size:0.82rem;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:6px;transition:all .15s;font-family:inherit" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--sub)'"><i class="fas fa-external-link-alt"></i> Saytni ko'rish</a>
+        <a href="index.html" target="_blank" class="topbar-preview-link"><i class="fas fa-external-link-alt"></i> <span>Saytni ko'rish</span></a>
+        <div class="unpushed-badge" id="unpushedBadge" onclick="document.querySelector('[data-panel=github]').click()" title="Push qilinmagan o'zgarishlar bor"><span class="pulse-dot"></span> Push kutmoqda</div>
         <div class="unsaved-badge" id="unsavedBadge"><i class="fas fa-circle" style="font-size:0.45rem"></i> Saqlanmagan</div>
         <span class="save-shortcut">Ctrl+S</span>
-        <button class="topbar-save-btn" onclick="saveAll()"><i class="fas fa-save"></i> Saqlash</button>
+        <button class="topbar-save-btn" onclick="saveAll()"><i class="fas fa-save"></i> <span>Saqlash</span></button>
       </div>
     </div>
     <div class="panels-container">
@@ -989,7 +1075,7 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
             <div class="dot no"></div>
             <span>Sozlanmagan</span>
           </div>
-          <div style="margin-top:16px; display:flex; gap:10px">
+          <div style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap">
             <button class="btn btn-secondary" onclick="saveGitHubConfig()"><i class="fas fa-save"></i> Konfigni saqlash</button>
             <button class="btn btn-primary" id="ghPushBtn" onclick="pushToGitHub()"><i class="fas fa-cloud-upload-alt"></i> GitHub'ga Push</button>
           </div>
@@ -1212,8 +1298,26 @@ function showToast(msg, type = 'success') {
    ============================================================ */
 var _saveTimeout = null;
 var _autoPushTimeout = null;
+var _needsPush = false;
+function setNeedsPush(val) {
+  _needsPush = val;
+  var pb = document.getElementById('unpushedBadge');
+  if (pb) {
+    if (val) pb.classList.add('active');
+    else pb.classList.remove('active');
+  }
+  if (val) localStorage.setItem('_needsPush', '1');
+  else localStorage.removeItem('_needsPush');
+}
+// Sahifa yuklanganda tekshirish
+(function() {
+  if (localStorage.getItem('_needsPush') === '1') {
+    setTimeout(function() { setNeedsPush(true); }, 500);
+  }
+})();
 function markDirty() {
   isDirty = true;
+  setNeedsPush(true);
   const badge = document.getElementById('unsavedBadge');
   if (badge) badge.classList.add('active');
   // Collect form data before saving (with safety check for initialization)
@@ -1870,6 +1974,10 @@ function enterApp(user) {
   document.getElementById('userRole').textContent = user.role === 'admin' ? 'Administrator' : 'Editor';
   document.getElementById('userAvatar').textContent = user.username.charAt(0).toUpperCase();
   fillAllForms();
+  // Push kutmoqda belgisini tekshirish
+  if (localStorage.getItem('_needsPush') === '1') {
+    setNeedsPush(true);
+  }
 }
 
 function logout() {
@@ -3627,11 +3735,33 @@ async function pushToGitHub() {
 
     // 8-qadam: Branch ref yangilash
     ghLog('Branch yangilanmoqda...', 'warn');
-    await ghFetch(repoBase + '/git/refs/heads/' + cfg.branch, {
+    var refUpdateResp = await fetch(repoBase + '/git/refs/heads/' + cfg.branch, {
       method: 'PATCH',
       headers: Object.assign({}, ghHeaders, { 'Content-Type': 'application/json' }),
-      body: JSON.stringify({ sha: newCommit.sha })
+      body: JSON.stringify({ sha: newCommit.sha, force: true })
     });
+    if (!refUpdateResp.ok) {
+      // Agar PATCH ishlamasa, avval eng yangi ref ni olib, qayta commit yaratamiz
+      ghLog('Ref yangilash qayta urinilmoqda...', 'warn');
+      var latestRef = await ghFetch(repoBase + '/git/ref/heads/' + cfg.branch, { headers: ghHeaders });
+      var latestSha = latestRef.object.sha;
+      // Yangi commit yaratish (yangi parent bilan)
+      var retryCommit = await ghFetch(repoBase + '/git/commits', {
+        method: 'POST',
+        headers: Object.assign({}, ghHeaders, { 'Content-Type': 'application/json' }),
+        body: JSON.stringify({
+          message: 'Admin: portfolio yangilandi',
+          tree: treeData.sha,
+          parents: [latestSha]
+        })
+      });
+      ghLog('Yangi commit: ' + retryCommit.sha.substring(0, 7), 'ok');
+      await ghFetch(repoBase + '/git/refs/heads/' + cfg.branch, {
+        method: 'PATCH',
+        headers: Object.assign({}, ghHeaders, { 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ sha: retryCommit.sha, force: true })
+      });
+    }
 
     // Lokal datadagi base64 rasmlarni URL ga almashtirish
     // Shunda keyingi push tezroq bo'ladi
@@ -3674,6 +3804,7 @@ async function pushToGitHub() {
     }
 
     ghLog('Muvaffaqiyatli push qilindi!', 'ok');
+    setNeedsPush(false);
     ghDone(true);
 
   } catch (err) {
