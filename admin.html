@@ -1211,6 +1211,7 @@ function showToast(msg, type = 'success') {
    DIRTY STATE
    ============================================================ */
 var _saveTimeout = null;
+var _autoPushTimeout = null;
 function markDirty() {
   isDirty = true;
   const badge = document.getElementById('unsavedBadge');
@@ -1227,6 +1228,17 @@ function markDirty() {
     saveToStorage();
     _saveTimeout = null;
   }, 1000);
+  // Avtomatik push — oxirgi o'zgarishdan 30 soniya keyin
+  if (_autoPushTimeout) clearTimeout(_autoPushTimeout);
+  _autoPushTimeout = setTimeout(function() {
+    _autoPushTimeout = null;
+    var cfg;
+    try { cfg = JSON.parse(localStorage.getItem('github_config')); } catch(e) { cfg = null; }
+    if (cfg && cfg.token && cfg.owner && cfg.repo) {
+      console.log('[AUTO-PUSH] Avtomatik push boshlanmoqda...');
+      pushToGitHub();
+    }
+  }, 30000);
 }
 
 function clearDirty() {
