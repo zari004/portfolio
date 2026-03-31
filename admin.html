@@ -1382,38 +1382,81 @@ function loadFromStorage() {
     const rawU = localStorage.getItem('admin_users');
     users = rawU ? JSON.parse(rawU) : deepClone(DEFAULT_USERS);
   } catch { users = deepClone(DEFAULT_USERS); }
+
   // IndexedDB dan to'liq ma'lumotni yuklash ([IDB] placeholder larni almashtirish)
+  var hasLocalData = !!localStorage.getItem('portfolio_admin_data');
   loadFromIDB().then(function(idbData) {
-    if (!idbData) return;
-    var needsRefresh = false;
-    // IDB dan to'liq rasmlarni olish
-    if (idbData.portfolio && data.portfolio) {
-      data.portfolio.forEach(function(p, i) {
-        var idbP = idbData.portfolio.find(function(ip) { return ip.id === p.id; });
-        if (!idbP) return;
-        if (p.img === '[IDB]' || (!p.img && idbP.img)) { p.img = idbP.img; needsRefresh = true; }
-        if (p.blocks && idbP.blocks) {
-          p.blocks.forEach(function(b, bi) {
-            if (bi < idbP.blocks.length && b.type === 'image') {
-              if (b.content === '[IDB]' || (Array.isArray(b.content) && b.content.indexOf('[IDB]') >= 0)) {
-                b.content = idbP.blocks[bi].content;
-                needsRefresh = true;
+    if (idbData) {
+      var needsRefresh = false;
+      if (idbData.portfolio && data.portfolio) {
+        data.portfolio.forEach(function(p, i) {
+          var idbP = idbData.portfolio.find(function(ip) { return ip.id === p.id; });
+          if (!idbP) return;
+          if (p.img === '[IDB]' || (!p.img && idbP.img)) { p.img = idbP.img; needsRefresh = true; }
+          if (p.blocks && idbP.blocks) {
+            p.blocks.forEach(function(b, bi) {
+              if (bi < idbP.blocks.length && b.type === 'image') {
+                if (b.content === '[IDB]' || (Array.isArray(b.content) && b.content.indexOf('[IDB]') >= 0)) {
+                  b.content = idbP.blocks[bi].content;
+                  needsRefresh = true;
+                }
               }
-            }
-          });
-        }
-      });
+            });
+          }
+        });
+      }
+      if (idbData.about && data.about && (data.about.img === '[IDB]' || (!data.about.img && idbData.about.img))) {
+        data.about.img = idbData.about.img;
+        needsRefresh = true;
+      }
+      if (needsRefresh) {
+        console.log('[IDB] Rasmlar IndexedDB dan yuklandi');
+        fillAllForms();
+      }
+      return; // IDB data bor — GitHub dan yuklash shart emas
     }
-    if (idbData.about && data.about && (data.about.img === '[IDB]' || (!data.about.img && idbData.about.img))) {
-      data.about.img = idbData.about.img;
-      needsRefresh = true;
-    }
-    if (needsRefresh) {
-      console.log('[IDB] Rasmlar IndexedDB dan yuklandi');
-      fillAllForms();
+
+    // IDB ham bo'sh bo'lsa — data.json dan yuklash (boshqa qurilma)
+    if (!hasLocalData) {
+      fetchDataFromGitHub();
     }
   }).catch(function(err) {
     console.warn('[IDB] Yuklashda xatolik:', err);
+    if (!hasLocalData) {
+      fetchDataFromGitHub();
+    }
+  });
+}
+
+// GitHub dagi data.json ni yuklash (boshqa qurilmadan kirganida)
+function fetchDataFromGitHub() {
+  // Avval GitHub config tekshirish
+  var cfg;
+  try { cfg = JSON.parse(localStorage.getItem('github_config')); } catch(e) { cfg = null; }
+
+  // data.json ni fetch qilish
+  var jsonUrl = 'data.json?v=' + Date.now();
+  if (cfg && cfg.owner && cfg.repo && cfg.branch) {
+    jsonUrl = 'https://raw.githubusercontent.com/' + cfg.owner + '/' + cfg.repo + '/' + cfg.branch + '/data.json?v=' + Date.now();
+  }
+  fetch(jsonUrl, { cache: 'no-store' }).then(function(r) {
+    if (!r.ok) throw new Error('not found');
+    return r.json();
+  }).then(function(remoteData) {
+    if (!remoteData || !remoteData.hero) return;
+    console.log('[REMOTE] data.json dan ma\'lumot yuklandi');
+    data = Object.assign({}, DEFAULT_DATA, remoteData);
+    for (var key in DEFAULT_DATA) {
+      if (typeof DEFAULT_DATA[key] === 'object' && !Array.isArray(DEFAULT_DATA[key])) {
+        data[key] = Object.assign({}, DEFAULT_DATA[key], remoteData[key] || {});
+      }
+    }
+    if (remoteData.portfolio) data.portfolio = remoteData.portfolio;
+    saveToStorage();
+    fillAllForms();
+    showToast('GitHub dan ma\'lumot yuklandi', 'success');
+  }).catch(function(err) {
+    console.warn('[REMOTE] data.json yuklanmadi:', err);
   });
 }
 
