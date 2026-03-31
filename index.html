@@ -1837,41 +1837,10 @@ function downloadCV(e) {
   var driveMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
   if (driveMatch) {
     var fileId = driveMatch[1];
-
-    // Rasmni PDF ga aylantirish
-    var imgDone = false;
-    var img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = function() {
-      if (imgDone) return; imgDone = true;
-      try {
-        var jsPDF = window.jspdf.jsPDF;
-        var pageW = 210, pageH = 297;
-        var imgRatio = img.width / img.height;
-        var pdfW, pdfH;
-        if (imgRatio > pageW / pageH) { pdfW = pageW; pdfH = pageW / imgRatio; }
-        else { pdfH = pageH; pdfW = pageH * imgRatio; }
-        var doc = new jsPDF(pdfW > pdfH ? 'landscape' : 'portrait', 'mm', [pdfW, pdfH]);
-        doc.addImage(img, 'PNG', 0, 0, pdfW, pdfH);
-        doc.save(finalName + '.pdf');
-      } catch(err) {
-        // Fallback: fetch blob
-        fetchAndDownload('https://drive.google.com/uc?export=download&confirm=t&id=' + fileId, finalName + '.pdf');
-      }
-      resetCvBtn();
-    };
-    img.onerror = function() {
-      if (imgDone) return; imgDone = true;
-      fetchAndDownload('https://drive.google.com/uc?export=download&confirm=t&id=' + fileId, finalName + '.pdf');
-      resetCvBtn();
-    };
-    setTimeout(function() {
-      if (imgDone) return; imgDone = true;
-      img.src = '';
-      fetchAndDownload('https://drive.google.com/uc?export=download&confirm=t&id=' + fileId, finalName + '.pdf');
-      resetCvBtn();
-    }, 8000);
-    img.src = 'https://drive.google.com/uc?export=view&id=' + fileId;
+    var downloadUrl = 'https://drive.google.com/uc?export=download&confirm=t&id=' + fileId;
+    // Google Drive CORS bloklaydi, shuning uchun yangi oynada ochish
+    window.open(downloadUrl, '_blank');
+    resetCvBtn();
     return;
   }
 
@@ -2089,7 +2058,7 @@ function openProjectDetail(idx) {
         }
         // Multiple images — grid layout
         // 4 ta rasm = 2 ustun, qolganlar = 3 ustun
-        var colClass = images.length === 4 ? 'cols-2' : 'cols-3';
+        var colClass = images.length <= 2 || images.length === 4 ? 'cols-2' : 'cols-3';
         return '<div class="pd-block-images-grid ' + colClass + '">'
           + images.map(function(src) {
             return '<div class="pd-grid-img"><img src="' + src + '" onclick="openPdLightbox(this.src)" alt=""></div>';
