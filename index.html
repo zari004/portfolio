@@ -1702,6 +1702,70 @@ function initMarqueeEffect() {
   const track = document.getElementById('marquee-track');
   if (!wrapper || !track) return;
 
+  // Drag-to-scroll: sichqoncha bilan sudrab scroll qilish
+  var isDragging = false;
+  var startX = 0;
+  var scrollOffset = 0; // drag paytidagi qo'shimcha offset
+  var dragOffset = 0;
+  var wasDragging = false;
+
+  wrapper.style.cursor = 'grab';
+
+  wrapper.addEventListener('mousedown', function(e) {
+    isDragging = true;
+    wasDragging = false;
+    startX = e.clientX;
+    dragOffset = 0;
+    wrapper.style.cursor = 'grabbing';
+    track.style.animationPlayState = 'paused';
+    e.preventDefault();
+  });
+
+  document.addEventListener('mousemove', function(e) {
+    if (!isDragging) return;
+    wasDragging = true;
+    var dx = e.clientX - startX;
+    dragOffset = dx;
+    // CSS transform qo'shish — hozirgi animation transform ustiga
+    var computedTransform = getComputedStyle(track).transform;
+    if (!track._pausedMatrix) {
+      track._pausedMatrix = computedTransform;
+    }
+    track.style.transform = track._pausedMatrix + ' translateX(' + dragOffset + 'px)';
+  });
+
+  document.addEventListener('mouseup', function() {
+    if (!isDragging) return;
+    isDragging = false;
+    wrapper.style.cursor = 'grab';
+    track._pausedMatrix = null;
+    track.style.transform = '';
+    track.style.animationPlayState = '';
+  });
+
+  // Touch uchun ham (mobil)
+  wrapper.addEventListener('touchstart', function(e) {
+    isDragging = true;
+    startX = e.touches[0].clientX;
+    dragOffset = 0;
+    track.style.animationPlayState = 'paused';
+    track._pausedMatrix = getComputedStyle(track).transform;
+  }, { passive: true });
+
+  wrapper.addEventListener('touchmove', function(e) {
+    if (!isDragging) return;
+    var dx = e.touches[0].clientX - startX;
+    dragOffset = dx;
+    track.style.transform = track._pausedMatrix + ' translateX(' + dragOffset + 'px)';
+  }, { passive: true });
+
+  wrapper.addEventListener('touchend', function() {
+    isDragging = false;
+    track._pausedMatrix = null;
+    track.style.transform = '';
+    track.style.animationPlayState = '';
+  });
+
   function updateItems() {
     const items = track.querySelectorAll('.company-item');
     const wRect = wrapper.getBoundingClientRect();
