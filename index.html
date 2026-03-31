@@ -1782,7 +1782,7 @@ function initMarqueeEffect() {
       if (txt) { var r = Math.round(255 * br); txt.style.color = 'rgb(' + r + ',' + r + ',' + r + ')'; }
     }
 
-    if (!document.hidden) requestAnimationFrame(animate);
+    requestAnimationFrame(animate);
   }
   requestAnimationFrame(animate);
 }
