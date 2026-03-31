@@ -286,8 +286,8 @@
     .company-logo-img {
       height: 50px; width: auto; max-width: 200px; min-width: 40px;
       object-fit: contain;
-      filter: brightness(0) invert(1);
-      opacity: 0.35;
+      filter: grayscale(1) brightness(0.7);
+      opacity: 0.5;
       transition: all 0.3s ease;
       will-change: opacity, transform;
     }
@@ -303,7 +303,7 @@
       color: var(--accent) !important;
     }
     .company-item:hover .company-logo-img {
-      filter: brightness(0) invert(0.76) sepia(1) saturate(50) hue-rotate(35deg) brightness(1.05) !important;
+      filter: grayscale(0) brightness(1);
       opacity: 1 !important;
     }
     .company-item:hover {

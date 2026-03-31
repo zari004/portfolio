@@ -3363,7 +3363,11 @@ async function previewImg(event, previewId, hiddenId) {
   if (!file.type.startsWith('image/')) { showToast('Faqat rasm fayllarini yuklang', 'error'); return; }
   try {
     showToast('Rasm siqilmoqda...', 'warning');
-    const compressed = await compressImage(file, 1200, 0.8);
+    // Kompaniya logolari uchun kichikroq o'lcham
+    var isLogoUpload = (hiddenId === 'm-comp-logo-data');
+    var mw = isLogoUpload ? 400 : 1200;
+    var q = isLogoUpload ? 0.9 : 0.8;
+    const compressed = await compressImage(file, mw, q);
     document.getElementById(hiddenId).value = compressed;
     document.getElementById(previewId).innerHTML =
       '<img src="' + compressed + '" alt="Preview">'
