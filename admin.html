@@ -1262,8 +1262,16 @@ function compressImage(file, maxWidth = 1200, quality = 0.8) {
         canvas.width = w;
         canvas.height = h;
         const ctx = canvas.getContext('2d');
+        // PNG/shaffof rasm uchun fonni tozalab qo'yish
+        var isPng = file.type === 'image/png' || file.name.toLowerCase().endsWith('.png');
+        var isSvg = file.type === 'image/svg+xml' || file.name.toLowerCase().endsWith('.svg');
+        if (!isPng && !isSvg) {
+          ctx.fillStyle = '#fff';
+          ctx.fillRect(0, 0, w, h);
+        }
         ctx.drawImage(img, 0, 0, w, h);
-        const compressed = canvas.toDataURL('image/jpeg', quality);
+        var format = (isPng || isSvg) ? 'image/png' : 'image/jpeg';
+        var compressed = canvas.toDataURL(format, quality);
         resolve(compressed);
       };
       img.onerror = reject;
