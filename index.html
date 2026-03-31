@@ -303,7 +303,7 @@
       color: var(--accent) !important;
     }
     .company-item:hover .company-logo-img {
-      filter: brightness(0) invert(0.78) sepia(1) saturate(20) hue-rotate(45deg) brightness(1.1);
+      filter: url(#accent-color-filter);
       opacity: 1 !important;
     }
     .company-item:hover {
@@ -894,6 +894,11 @@
   </style>
 </head>
 <body>
+<svg style="position:absolute;width:0;height:0;overflow:hidden">
+  <filter id="accent-color-filter">
+    <feColorMatrix type="matrix" values="0 0 0 0 0.71 0 0 0 0 0.96 0 0 0 0 0.26 0 0 0 1 0"/>
+  </filter>
+</svg>
 
 <!-- NAV -->
 <nav>
@@ -1801,7 +1806,7 @@ function initMarqueeEffect() {
       var txt = item.querySelector('.company-logo-text');
       var isHovered = item.matches(':hover');
       if (img) {
-        img.style.filter = isHovered ? 'brightness(0) invert(0.78) sepia(1) saturate(20) hue-rotate(45deg) brightness(1.1)' : 'brightness(0) invert(1)';
+        img.style.filter = isHovered ? 'url(#accent-color-filter)' : 'brightness(0) invert(1)';
         img.style.opacity = isHovered ? '1' : br.toFixed(3);
       }
       if (txt) {
