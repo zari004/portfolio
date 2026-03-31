@@ -1799,8 +1799,16 @@ function initMarqueeEffect() {
 
       var img = item.querySelector('.company-logo-img');
       var txt = item.querySelector('.company-logo-text');
-      if (img) { img.style.filter = 'brightness(0) invert(1)'; img.style.opacity = br.toFixed(3); }
-      if (txt) { var r = Math.round(255 * br); txt.style.color = 'rgb(' + r + ',' + r + ',' + r + ')'; }
+      var isHovered = item.matches(':hover');
+      if (img) {
+        img.style.filter = isHovered ? 'brightness(0) invert(0.78) sepia(1) saturate(20) hue-rotate(45deg) brightness(1.1)' : 'brightness(0) invert(1)';
+        img.style.opacity = isHovered ? '1' : br.toFixed(3);
+      }
+      if (txt) {
+        if (isHovered) { txt.style.color = 'var(--accent)'; }
+        else { var r = Math.round(255 * br); txt.style.color = 'rgb(' + r + ',' + r + ',' + r + ')'; }
+      }
+      if (isHovered) { item.style.opacity = '1'; }
     }
 
     requestAnimationFrame(animate);
