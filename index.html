@@ -1709,8 +1709,29 @@ function initMarqueeEffect() {
   var dragStartPos = 0;
   var halfWidth = 0;
 
-  function getHalfWidth() { halfWidth = track.scrollWidth / 2; }
-  setTimeout(getHalfWidth, 100);
+  function getHalfWidth() {
+    // Birinchi nusxadagi barcha itemlar kengligini hisoblash
+    var items = track.querySelectorAll('.company-item');
+    var count = items.length / 2; // 2 nusxa bor
+    if (count <= 0) { halfWidth = track.scrollWidth / 2; return; }
+    var total = 0;
+    for (var i = 0; i < count; i++) {
+      total += items[i].offsetWidth;
+    }
+    // gap qo'shish
+    var gap = parseFloat(getComputedStyle(track).gap) || 40;
+    halfWidth = total + gap * count;
+  }
+  // Rasmlar yuklanganidan keyin qayta hisoblash
+  setTimeout(getHalfWidth, 200);
+  setTimeout(getHalfWidth, 1000);
+  setTimeout(getHalfWidth, 3000);
+  var trackImgs = track.querySelectorAll('img');
+  var imgLoaded = 0;
+  trackImgs.forEach(function(img) {
+    if (img.complete) { imgLoaded++; if (imgLoaded >= trackImgs.length) getHalfWidth(); }
+    else img.addEventListener('load', function() { imgLoaded++; if (imgLoaded >= trackImgs.length) getHalfWidth(); });
+  });
   window.addEventListener('resize', getHalfWidth);
 
   wrapper.style.cursor = 'grab';
@@ -1778,7 +1799,7 @@ function initMarqueeEffect() {
 
       var img = item.querySelector('.company-logo-img');
       var txt = item.querySelector('.company-logo-text');
-      if (img) { img.style.filter = 'brightness(0) invert(1)'; img.style.opacity = br.toFixed(3); }
+      if (img) { img.style.filter = 'grayscale(1) brightness(' + (0.4 + br * 0.6).toFixed(3) + ')'; img.style.opacity = br.toFixed(3); }
       if (txt) { var r = Math.round(255 * br); txt.style.color = 'rgb(' + r + ',' + r + ',' + r + ')'; }
     }
 
