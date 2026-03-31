@@ -2229,13 +2229,29 @@ function renderCompaniesList() {
   initDragDrop('companiesList', 'drag-company-item', function(){ return data.companies.items; }, function(a){ data.companies.items = a; }, renderCompaniesList);
 }
 
+function companyLogoFormHTML(existingLogo) {
+  var preview = '';
+  var val = '';
+  if (existingLogo) {
+    preview = '<img src="' + sanitize(existingLogo) + '"><button class="remove-img" onclick="document.getElementById(\'m-comp-logo-data\').value=\'\';this.parentElement.innerHTML=\'\'"><i class="fas fa-times"></i></button>';
+    val = sanitize(existingLogo);
+  }
+  return '<div class="form-group"><label>Logo</label>'
+    + '<div style="display:flex;gap:8px;margin-bottom:8px">'
+    + '<button type="button" class="btn btn-sm" onclick="document.getElementById(\'comp-logo-file\').style.display=\'block\';document.getElementById(\'comp-logo-url\').style.display=\'none\'" style="font-size:0.75rem"><i class="fas fa-upload"></i> Fayl</button>'
+    + '<button type="button" class="btn btn-sm" onclick="document.getElementById(\'comp-logo-file\').style.display=\'none\';document.getElementById(\'comp-logo-url\').style.display=\'block\'" style="font-size:0.75rem"><i class="fas fa-link"></i> URL</button>'
+    + '</div>'
+    + '<div id="comp-logo-file"><div class="img-upload-zone"><i class="fas fa-cloud-upload-alt"></i><p>Logo yuklash (PNG, JPG, SVG)</p><div class="size-note">Avtomatik siqiladi</div>'
+    + '<input type="file" accept="image/*,.svg" onchange="previewImg(event,\'m-comp-logo-preview\',\'m-comp-logo-data\')"></div></div>'
+    + '<div id="comp-logo-url" style="display:none"><input class="form-input" placeholder="https://example.com/logo.png" onchange="document.getElementById(\'m-comp-logo-data\').value=this.value;document.getElementById(\'m-comp-logo-preview\').innerHTML=this.value?\'<img src=&quot;\'+this.value+\'&quot;><button class=&quot;remove-img&quot; onclick=&quot;document.getElementById(\\\'m-comp-logo-data\\\').value=\\\'\\\';document.getElementById(\\\'m-comp-logo-preview\\\').innerHTML=\\\'\\\';this.parentElement.querySelector(\\\'input\\\').value=\\\'\\\'&quot;><i class=&quot;fas fa-times&quot;></i></button>\':\'\'"></div>'
+    + '<div class="img-preview" id="m-comp-logo-preview">' + preview + '</div>'
+    + '<input type="hidden" id="m-comp-logo-data" value="' + val + '"></div>';
+}
+
 function openAddCompany() {
   openModal('Kompaniya qo\'shish',
     '<div class="form-group"><label>Nomi</label><input class="form-input" id="m-comp-name" placeholder="Kompaniya nomi"></div>'
-    + '<div class="form-group"><label>Logo (rasm)</label>'
-    + '<div class="img-upload-zone"><i class="fas fa-cloud-upload-alt"></i><p>Logo yuklash</p><div class="size-note">Avtomatik siqiladi</div>'
-    + '<input type="file" accept="image/*" onchange="previewImg(event,\'m-comp-logo-preview\',\'m-comp-logo-data\')"></div>'
-    + '<div class="img-preview" id="m-comp-logo-preview"></div><input type="hidden" id="m-comp-logo-data"></div>',
+    + companyLogoFormHTML(''),
     '<button class="btn btn-secondary" onclick="closeModal()">Bekor qilish</button><button class="btn btn-primary" onclick="saveCompanyItem()">Saqlash</button>',
     null
   );
@@ -2246,11 +2262,7 @@ function editCompany(id) {
   if (!c) return;
   openModal('Kompaniyani tahrirlash',
     '<div class="form-group"><label>Nomi</label><input class="form-input" id="m-comp-name" value="' + sanitize(c.name) + '"></div>'
-    + '<div class="form-group"><label>Logo (rasm)</label>'
-    + '<div class="img-upload-zone"><i class="fas fa-cloud-upload-alt"></i><p>Logo yuklash</p><div class="size-note">Avtomatik siqiladi</div>'
-    + '<input type="file" accept="image/*" onchange="previewImg(event,\'m-comp-logo-preview\',\'m-comp-logo-data\')"></div>'
-    + '<div class="img-preview" id="m-comp-logo-preview">' + (c.logo ? '<img src="' + sanitize(c.logo) + '"><button class="remove-img" onclick="document.getElementById(\'m-comp-logo-data\').value=\'\';this.parentElement.innerHTML=\'\'"><i class="fas fa-times"></i></button>' : '') + '</div>'
-    + '<input type="hidden" id="m-comp-logo-data" value="' + sanitize(c.logo) + '"></div>',
+    + companyLogoFormHTML(c.logo || ''),
     '<button class="btn btn-secondary" onclick="closeModal()">Bekor qilish</button><button class="btn btn-primary" onclick="saveCompanyItem(' + id + ')">Saqlash</button>',
     null
   );
