@@ -1772,51 +1772,73 @@ function initReveal() {
 var _videoBlobCache = {};
 var _videoCacheName = 'portfolio-videos-v1';
 
+function loadVideoBlob(src) {
+  // Cache dan yoki fetch dan blob olish
+  return new Promise(function(resolve, reject) {
+    if (_videoBlobCache[src]) { resolve(_videoBlobCache[src]); return; }
+    var doFetch = function() {
+      return fetch(src).then(function(resp) {
+        if (!resp.ok) throw new Error('fetch failed');
+        // Cache ga saqlash
+        if ('caches' in window) {
+          var respClone = resp.clone();
+          caches.open(_videoCacheName).then(function(c) { c.put(src, respClone); }).catch(function(){});
+        }
+        return resp.blob();
+      });
+    };
+    if ('caches' in window) {
+      caches.open(_videoCacheName).then(function(c) { return c.match(src); }).then(function(cached) {
+        if (cached) return cached.blob();
+        return doFetch();
+      }).then(function(blob) {
+        var blobUrl = URL.createObjectURL(blob);
+        _videoBlobCache[src] = blobUrl;
+        resolve(blobUrl);
+      }).catch(reject);
+    } else {
+      doFetch().then(function(blob) {
+        var blobUrl = URL.createObjectURL(blob);
+        _videoBlobCache[src] = blobUrl;
+        resolve(blobUrl);
+      }).catch(reject);
+    }
+  });
+}
+
 function bufferVideo(video) {
   var src = video.dataset.src || video.src;
   if (!src || src.startsWith('blob:')) return;
 
-  // Avval Cache API dan tekshirish
-  if ('caches' in window) {
-    caches.open(_videoCacheName).then(function(cache) {
-      return cache.match(src);
-    }).then(function(cachedResp) {
-      if (cachedResp) {
-        // Cache dan olish — tez
-        return cachedResp.blob();
-      }
-      // Yangi yuklash
-      return fetch(src).then(function(resp) {
-        if (!resp.ok) throw new Error('fetch failed');
-        // Cache ga saqlash
-        var respClone = resp.clone();
-        caches.open(_videoCacheName).then(function(cache) {
-          cache.put(src, respClone);
-        });
-        return resp.blob();
-      });
-    }).then(function(blob) {
-      if (!blob) return;
-      var blobUrl = URL.createObjectURL(blob);
-      _videoBlobCache[src] = blobUrl;
-      var wasPlaying = !video.paused;
-      var curTime = video.currentTime;
-      video.src = blobUrl;
-      video.currentTime = curTime;
-      if (wasPlaying) video.play().catch(function(){});
-    }).catch(function(err) {
-      console.warn('[VIDEO] Cache xatolik:', err);
-    });
-  } else {
-    // Cache API yo'q — oddiy fetch blob
-    fetch(src).then(function(r) { return r.blob(); }).then(function(blob) {
-      var blobUrl = URL.createObjectURL(blob);
-      _videoBlobCache[src] = blobUrl;
-      var wasPlaying = !video.paused;
-      video.src = blobUrl;
-      if (wasPlaying) video.play().catch(function(){});
-    }).catch(function(){});
-  }
+  loadVideoBlob(src).then(function(blobUrl) {
+    // Yangi video element yaratib, eskini almashtirish — qotishsiz
+    var newVid = document.createElement('video');
+    newVid.src = blobUrl;
+    newVid.loop = true;
+    newVid.muted = true;
+    newVid.playsInline = true;
+    newVid.autoplay = video.autoplay;
+    newVid._buffered = true;
+    newVid.dataset.src = src;
+    // Stilni nusxalash
+    newVid.style.cssText = video.style.cssText;
+    newVid.className = video.className;
+    if (video.hasAttribute('controls')) newVid.setAttribute('controls', '');
+    // Video tayyor bo'lganda almashtirish
+    newVid.addEventListener('canplaythrough', function onReady() {
+      newVid.removeEventListener('canplaythrough', onReady);
+      var parent = video.parentNode;
+      if (!parent) return;
+      var wasVisible = !video.paused;
+      parent.replaceChild(newVid, video);
+      if (wasVisible) newVid.play().catch(function(){});
+      // Observer ga qo'shish
+      if (video._obs) video._obs.observe(newVid);
+    }, { once: true });
+    newVid.load();
+  }).catch(function(err) {
+    console.warn('[VIDEO] Buffer xatolik:', err);
+  });
 }
 
 function initVideoObserver() {
@@ -1825,10 +1847,11 @@ function initVideoObserver() {
       const video = e.target;
       if (e.isIntersecting) {
         video.play().catch(() => {});
-        // Birinchi ko'ringanida blob ga yuklash
+        // Birinchi ko'ringanida orqa fonda blob ga yuklash
         if (!video._buffered) {
           video._buffered = true;
           video.dataset.src = video.src;
+          video._obs = videoObs;
           bufferVideo(video);
         }
       } else {
@@ -1837,8 +1860,9 @@ function initVideoObserver() {
     });
   }, { threshold: 0.3 });
   document.querySelectorAll('.portfolio-thumb video').forEach(v => {
-    v.pause();
-    v.loop = true; // HTML loop attribute — eng silliq usul
+    v.loop = true;
+    v.muted = true;
+    v.playsInline = true;
     videoObs.observe(v);
   });
 }
