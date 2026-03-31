@@ -271,13 +271,8 @@
     }
     .marquee-track {
       display: flex; gap: 0;
-      animation: marquee 30s linear infinite;
       width: max-content;
-    }
-    .marquee-track:hover { animation-play-state: paused; }
-    @keyframes marquee {
-      from { transform: translateX(0); }
-      to   { transform: translateX(-50%); }
+      will-change: transform;
     }
     .company-item {
       display: flex; align-items: center; justify-content: center;
@@ -1697,124 +1692,96 @@ function renderMarquee(items) {
   initMarqueeEffect();
 }
 
+
 function initMarqueeEffect() {
-  const wrapper = document.querySelector('.marquee-wrapper');
-  const track = document.getElementById('marquee-track');
+  var wrapper = document.querySelector('.marquee-wrapper');
+  var track = document.getElementById('marquee-track');
   if (!wrapper || !track) return;
 
-  // Drag-to-scroll: sichqoncha bilan sudrab scroll qilish
+  var pos = 0;
+  var speed = 0.8;
   var isDragging = false;
+  var isHovering = false;
   var startX = 0;
-  var scrollOffset = 0; // drag paytidagi qo'shimcha offset
-  var dragOffset = 0;
-  var wasDragging = false;
+  var dragStartPos = 0;
+  var halfWidth = 0;
+
+  function getHalfWidth() { halfWidth = track.scrollWidth / 2; }
+  setTimeout(getHalfWidth, 100);
+  window.addEventListener('resize', getHalfWidth);
 
   wrapper.style.cursor = 'grab';
 
+  wrapper.addEventListener('mouseenter', function() { isHovering = true; });
+  wrapper.addEventListener('mouseleave', function() { isHovering = false; });
+
   wrapper.addEventListener('mousedown', function(e) {
     isDragging = true;
-    wasDragging = false;
     startX = e.clientX;
-    dragOffset = 0;
+    dragStartPos = pos;
     wrapper.style.cursor = 'grabbing';
-    track.style.animationPlayState = 'paused';
     e.preventDefault();
   });
-
   document.addEventListener('mousemove', function(e) {
     if (!isDragging) return;
-    wasDragging = true;
-    var dx = e.clientX - startX;
-    dragOffset = dx;
-    // CSS transform qo'shish — hozirgi animation transform ustiga
-    var computedTransform = getComputedStyle(track).transform;
-    if (!track._pausedMatrix) {
-      track._pausedMatrix = computedTransform;
-    }
-    track.style.transform = track._pausedMatrix + ' translateX(' + dragOffset + 'px)';
+    pos = dragStartPos - (e.clientX - startX);
+    if (halfWidth > 0) { pos = ((pos % halfWidth) + halfWidth) % halfWidth; }
   });
-
   document.addEventListener('mouseup', function() {
     if (!isDragging) return;
     isDragging = false;
     wrapper.style.cursor = 'grab';
-    track._pausedMatrix = null;
-    track.style.transform = '';
-    track.style.animationPlayState = '';
   });
 
-  // Touch uchun ham (mobil)
   wrapper.addEventListener('touchstart', function(e) {
-    isDragging = true;
+    isDragging = true; isHovering = true;
     startX = e.touches[0].clientX;
-    dragOffset = 0;
-    track.style.animationPlayState = 'paused';
-    track._pausedMatrix = getComputedStyle(track).transform;
+    dragStartPos = pos;
   }, { passive: true });
-
   wrapper.addEventListener('touchmove', function(e) {
     if (!isDragging) return;
-    var dx = e.touches[0].clientX - startX;
-    dragOffset = dx;
-    track.style.transform = track._pausedMatrix + ' translateX(' + dragOffset + 'px)';
+    pos = dragStartPos - (e.touches[0].clientX - startX);
+    if (halfWidth > 0) { pos = ((pos % halfWidth) + halfWidth) % halfWidth; }
   }, { passive: true });
-
   wrapper.addEventListener('touchend', function() {
-    isDragging = false;
-    track._pausedMatrix = null;
-    track.style.transform = '';
-    track.style.animationPlayState = '';
+    isDragging = false; isHovering = false;
   });
 
-  function updateItems() {
-    const items = track.querySelectorAll('.company-item');
-    const wRect = wrapper.getBoundingClientRect();
-    const wLeft = wRect.left;
-    const wRight = wRect.right;
-    const wWidth = wRect.width;
-    const center = wLeft + wWidth / 2;
-    const fadeZone = wWidth * 0.35; // chetdan o'rtaga qancha masofada o'zgaradi
+  function animate() {
+    if (!isDragging && !isHovering) {
+      pos += speed;
+      if (halfWidth > 0 && pos >= halfWidth) pos -= halfWidth;
+    }
+    track.style.transform = 'translateX(' + (-pos) + 'px)';
 
-    items.forEach(item => {
-      const iRect = item.getBoundingClientRect();
-      const iCenter = iRect.left + iRect.width / 2;
-      const distFromCenter = Math.abs(iCenter - center);
-      const maxDist = wWidth / 2;
+    var items = track.querySelectorAll('.company-item');
+    var wRect = wrapper.getBoundingClientRect();
+    var wWidth = wRect.width;
+    var center = wRect.left + wWidth / 2;
+    var maxDist = wWidth / 2;
 
-      // 0 = o'rtada, 1 = chetda
-      const t = Math.min(distFromCenter / maxDist, 1);
+    for (var i = 0; i < items.length; i++) {
+      var item = items[i];
+      var iRect = item.getBoundingClientRect();
+      var iCenter = iRect.left + iRect.width / 2;
+      var t = Math.min(Math.abs(iCenter - center) / maxDist, 1);
+      var sc = 1.0 - t * 0.28;
+      var br = 1.0 - t * 0.8;
 
-      // scale: 1.0 (o'rtada) Ã¢ÂÂ 0.72 (chetda)
-      const scale = 1.0 - t * 0.28;
-      // opacity: 1.0 (o'rtada) Ã¢ÂÂ 0.18 (chetda)
-      const opacity = 1.0 - t * 0.82;
-      // brightness: 1.0 (o'rtada) Ã¢ÂÂ 0.2 (chetda)
-      const brightness = 1.0 - t * 0.8;
-      // grayscale: 0 (o'rtada) Ã¢ÂÂ 1 (chetda)
-      const grayscale = t;
+      item.style.transform = 'scale(' + sc + ')';
+      item.style.opacity = (1.0 - t * 0.82);
 
-      item.style.transform = `scale(${scale})`;
-      item.style.opacity = opacity;
+      var img = item.querySelector('.company-logo-img');
+      var txt = item.querySelector('.company-logo-text');
+      if (img) { img.style.filter = 'brightness(0) invert(1)'; img.style.opacity = br.toFixed(3); }
+      if (txt) { var r = Math.round(255 * br); txt.style.color = 'rgb(' + r + ',' + r + ',' + r + ')'; }
+    }
 
-      const img = item.querySelector('.company-logo-img');
-      const txt = item.querySelector('.company-logo-text');
-      if (img) {
-        // brightness(0) invert(1) = oq rang, opacity matn bilan bir xil
-        img.style.filter = `brightness(0) invert(1)`;
-        img.style.opacity = brightness.toFixed(3);
-      }
-      if (txt) {
-        const r = Math.round(255 * brightness);
-        txt.style.color = `rgb(${r},${r},${r})`;
-      }
-    });
-
-    if (!document.hidden) requestAnimationFrame(updateItems);
+    if (!document.hidden) requestAnimationFrame(animate);
   }
-
-  requestAnimationFrame(updateItems);
+  requestAnimationFrame(animate);
   document.addEventListener('visibilitychange', function() {
-    if (!document.hidden) requestAnimationFrame(updateItems);
+    if (!document.hidden) requestAnimationFrame(animate);
   });
 }
 
