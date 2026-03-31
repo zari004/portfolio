@@ -1768,12 +1768,69 @@ function initReveal() {
 }
 
 // ============ VIDEO AUTOPLAY ON SCROLL ============
+// Video cache — blob URL lar
+var _videoBlobCache = {};
+var _videoCacheName = 'portfolio-videos-v1';
+
+function bufferVideo(video) {
+  var src = video.dataset.src || video.src;
+  if (!src || src.startsWith('blob:')) return;
+
+  // Avval Cache API dan tekshirish
+  if ('caches' in window) {
+    caches.open(_videoCacheName).then(function(cache) {
+      return cache.match(src);
+    }).then(function(cachedResp) {
+      if (cachedResp) {
+        // Cache dan olish — tez
+        return cachedResp.blob();
+      }
+      // Yangi yuklash
+      return fetch(src).then(function(resp) {
+        if (!resp.ok) throw new Error('fetch failed');
+        // Cache ga saqlash
+        var respClone = resp.clone();
+        caches.open(_videoCacheName).then(function(cache) {
+          cache.put(src, respClone);
+        });
+        return resp.blob();
+      });
+    }).then(function(blob) {
+      if (!blob) return;
+      var blobUrl = URL.createObjectURL(blob);
+      _videoBlobCache[src] = blobUrl;
+      var wasPlaying = !video.paused;
+      var curTime = video.currentTime;
+      video.src = blobUrl;
+      video.currentTime = curTime;
+      if (wasPlaying) video.play().catch(function(){});
+    }).catch(function(err) {
+      console.warn('[VIDEO] Cache xatolik:', err);
+    });
+  } else {
+    // Cache API yo'q — oddiy fetch blob
+    fetch(src).then(function(r) { return r.blob(); }).then(function(blob) {
+      var blobUrl = URL.createObjectURL(blob);
+      _videoBlobCache[src] = blobUrl;
+      var wasPlaying = !video.paused;
+      video.src = blobUrl;
+      if (wasPlaying) video.play().catch(function(){});
+    }).catch(function(){});
+  }
+}
+
 function initVideoObserver() {
   const videoObs = new IntersectionObserver((entries) => {
     entries.forEach(e => {
       const video = e.target;
       if (e.isIntersecting) {
         video.play().catch(() => {});
+        // Birinchi ko'ringanida blob ga yuklash
+        if (!video._buffered) {
+          video._buffered = true;
+          video.dataset.src = video.src;
+          bufferVideo(video);
+        }
       } else {
         video.pause();
       }
@@ -1781,14 +1838,17 @@ function initVideoObserver() {
   }, { threshold: 0.3 });
   document.querySelectorAll('.portfolio-thumb video').forEach(v => {
     v.pause();
-    // Uzluksiz loop — gap bo'lmasdan
-    v.addEventListener('ended', function() {
-      this.currentTime = 0;
-      this.play().catch(function(){});
-    });
+    v.loop = true; // HTML loop attribute — eng silliq usul
     videoObs.observe(v);
   });
 }
+
+// Sahifadan chiqishda blob URL larni tozalash
+window.addEventListener('beforeunload', function() {
+  Object.keys(_videoBlobCache).forEach(function(key) {
+    try { URL.revokeObjectURL(_videoBlobCache[key]); } catch(e) {}
+  });
+});
 
 // ============ CV LABEL ============
 function initCvLabelRotation(labels) {
@@ -2133,6 +2193,17 @@ function openProjectDetail(idx) {
   detail.classList.add('active');
   backBtn.classList.add('active');
   document.body.style.overflow = 'hidden';
+
+  // Detail ichidagi videolarni blob cache qilish
+  setTimeout(function() {
+    detail.querySelectorAll('.pd-block-video video, .pd-gallery-item video').forEach(function(v) {
+      if (!v._buffered && v.src && !v.src.startsWith('blob:')) {
+        v._buffered = true;
+        v.dataset.src = v.src;
+        bufferVideo(v);
+      }
+    });
+  }, 300);
 }
 
 function closeProjectDetail(skipHistory) {
