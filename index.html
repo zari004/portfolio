@@ -286,7 +286,7 @@
     .company-logo-img {
       height: 50px; width: auto; max-width: 200px; min-width: 40px;
       object-fit: contain;
-      filter: grayscale(1) brightness(0.7);
+      filter: brightness(0) invert(1);
       opacity: 0.5;
       transition: all 0.3s ease;
       will-change: opacity, transform;
@@ -303,7 +303,7 @@
       color: var(--accent) !important;
     }
     .company-item:hover .company-logo-img {
-      filter: grayscale(0) brightness(1);
+      filter: brightness(0) invert(1);
       opacity: 1 !important;
     }
     .company-item:hover {
@@ -1799,7 +1799,7 @@ function initMarqueeEffect() {
 
       var img = item.querySelector('.company-logo-img');
       var txt = item.querySelector('.company-logo-text');
-      if (img) { img.style.filter = 'grayscale(1) brightness(' + (0.4 + br * 0.6).toFixed(3) + ')'; img.style.opacity = br.toFixed(3); }
+      if (img) { img.style.filter = 'brightness(0) invert(1)'; img.style.opacity = br.toFixed(3); }
       if (txt) { var r = Math.round(255 * br); txt.style.color = 'rgb(' + r + ',' + r + ',' + r + ')'; }
     }
 
