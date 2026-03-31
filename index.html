@@ -1693,10 +1693,13 @@ function renderMarquee(items) {
 }
 
 
+var _marqueeAnimId = 0;
 function initMarqueeEffect() {
   var wrapper = document.querySelector('.marquee-wrapper');
   var track = document.getElementById('marquee-track');
   if (!wrapper || !track) return;
+  // Oldingi animatsiyani to'xtatish
+  _marqueeAnimId++;
 
   var pos = 0;
   var speed = 0.8;
@@ -1747,7 +1750,9 @@ function initMarqueeEffect() {
     isDragging = false; isHovering = false;
   });
 
+  var myId = _marqueeAnimId;
   function animate() {
+    if (myId !== _marqueeAnimId) return; // eski loop to'xtaydi
     if (!isDragging && !isHovering) {
       pos += speed;
       if (halfWidth > 0 && pos >= halfWidth) pos -= halfWidth;
@@ -1780,9 +1785,6 @@ function initMarqueeEffect() {
     if (!document.hidden) requestAnimationFrame(animate);
   }
   requestAnimationFrame(animate);
-  document.addEventListener('visibilitychange', function() {
-    if (!document.hidden) requestAnimationFrame(animate);
-  });
 }
 
 // ============ SCROLL REVEAL ============
