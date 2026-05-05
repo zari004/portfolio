@@ -580,6 +580,51 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
   color: var(--text); transition: background 0.15s;
 }
 .block-menu-item:hover { background: var(--card); }
+
+/* ============ TELEGRAM BOT ============ */
+.tg-nav-dot { width:7px;height:7px;border-radius:50%;background:#22c55e;margin-left:auto;box-shadow:0 0 6px rgba(34,197,94,0.6);display:none; }
+.tg-nav-dot.active { display:inline-block; }
+.tg-header { display:flex;align-items:center;gap:12px;margin-bottom:24px;padding:20px;background:linear-gradient(135deg,rgba(0,136,204,0.12),rgba(0,136,204,0.04));border:1px solid rgba(0,136,204,0.2);border-radius:14px; }
+.tg-header-icon { width:48px;height:48px;border-radius:12px;background:rgba(0,136,204,0.15);display:flex;align-items:center;justify-content:center;font-size:1.4rem;color:#0088cc;flex-shrink:0; }
+.tg-header-info { flex:1; }
+.tg-header-title { font-size:1rem;font-weight:700;color:var(--text); }
+.tg-header-sub { font-size:0.75rem;color:var(--muted);margin-top:2px; }
+.tg-header-status { display:flex;align-items:center;gap:6px;font-size:0.72rem; }
+.tg-dot { width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0; }
+.tg-dot.online { background:#22c55e;box-shadow:0 0 6px rgba(34,197,94,0.5); }
+.tg-dot.offline { background:var(--red); }
+.tg-stats { display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px; }
+.tg-stat { background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center; }
+.tg-stat-num { font-size:1.6rem;font-weight:800;color:var(--text);line-height:1; }
+.tg-stat-label { font-size:0.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-top:4px; }
+.tg-actions { display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap; }
+.tg-btn-post { background:#0088cc;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:0.82rem;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:7px;transition:all 0.2s; }
+.tg-btn-post:hover { background:#006ba3; }
+.tg-btn-post:disabled { opacity:0.5;cursor:not-allowed; }
+.tg-toggle-wrap { display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 16px; }
+.tg-toggle { position:relative;width:40px;height:22px;flex-shrink:0; }
+.tg-toggle input { opacity:0;width:0;height:0; }
+.tg-toggle-slider { position:absolute;inset:0;background:var(--border);border-radius:11px;cursor:pointer;transition:0.3s; }
+.tg-toggle-slider:before { content:'';position:absolute;height:16px;width:16px;left:3px;bottom:3px;background:white;border-radius:50%;transition:0.3s; }
+.tg-toggle input:checked + .tg-toggle-slider { background:#22c55e; }
+.tg-toggle input:checked + .tg-toggle-slider:before { transform:translateX(18px); }
+.tg-section { background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:16px; }
+.tg-section-title { font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin-bottom:14px;display:flex;align-items:center;gap:6px; }
+.tg-history-item { display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border); }
+.tg-history-item:last-child { border-bottom:none; }
+.tg-history-thumb { width:48px;height:48px;border-radius:8px;object-fit:cover;flex-shrink:0;background:var(--bg); }
+.tg-history-info { flex:1;min-width:0; }
+.tg-history-caption { font-size:0.78rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text); }
+.tg-history-meta { font-size:0.65rem;color:var(--muted);margin-top:2px; }
+.tg-history-status { font-size:0.65rem;padding:2px 8px;border-radius:20px;background:rgba(34,197,94,0.12);color:#22c55e;flex-shrink:0; }
+.tg-history-status.err { background:rgba(239,68,68,0.12);color:var(--red); }
+.tg-empty { text-align:center;padding:32px;color:var(--muted);font-size:0.8rem; }
+.tg-log { background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;max-height:200px;overflow-y:auto;font-family:'JetBrains Mono',monospace;font-size:0.72rem;line-height:1.7;display:none; }
+.tg-log.show { display:block; }
+.tg-log .ok { color:#22c55e; }
+.tg-log .err { color:var(--red); }
+.tg-log .warn { color:#f59e0b; }
+@media(max-width:600px){.tg-stats{grid-template-columns:1fr 1fr}.tg-actions{flex-direction:column}}
 </style>
 </head>
 <body>
@@ -653,6 +698,11 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
       </div>
       <div class="nav-item" data-panel="github" onclick="showPanel('github', this)">
         <i class="fab fa-github"></i> GitHub Push
+      </div>
+      <div class="nav-section">Telegram</div>
+      <div class="nav-item" data-panel="telegram" onclick="showPanel('telegram', this)" id="nav-telegram">
+        <i class="fab fa-telegram"></i> Telegram Bot
+        <span class="tg-nav-dot" id="tgNavDot"></span>
       </div>
     </nav>
     <div class="sidebar-footer">
@@ -1085,6 +1135,108 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
             <div style="font-size:0.8rem;font-weight:600;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px">Push Jarayoni</div>
             <div id="ghPushLogContent" style="font-family:'JetBrains Mono',monospace;font-size:0.78rem;line-height:1.6"></div>
           </div>
+        </div>
+      </div>
+
+      <!-- TELEGRAM PANEL -->
+      <div class="panel" id="panel-telegram">
+        <div class="panel-header">
+          <h2>Telegram Bot</h2>
+          <p>Avtomatik dizayn postlari va kanalga yuborish</p>
+        </div>
+
+        <!-- Header status -->
+        <div class="tg-header">
+          <div class="tg-header-icon"><i class="fab fa-telegram"></i></div>
+          <div class="tg-header-info">
+            <div class="tg-header-title">@deardsgn kanali</div>
+            <div class="tg-header-sub" id="tgBotStatus">Bot ulanish tekshirilmoqda...</div>
+          </div>
+          <div class="tg-header-status">
+            <span class="tg-dot" id="tgStatusDot"></span>
+            <span id="tgStatusText">...</span>
+          </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="tg-stats">
+          <div class="tg-stat">
+            <div class="tg-stat-num" id="tgTodayCount">—</div>
+            <div class="tg-stat-label">Bugun</div>
+          </div>
+          <div class="tg-stat">
+            <div class="tg-stat-num" id="tgTotalCount">—</div>
+            <div class="tg-stat-label">Jami post</div>
+          </div>
+          <div class="tg-stat">
+            <div class="tg-stat-num" id="tgLastPost">—</div>
+            <div class="tg-stat-label">Oxirgi post</div>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="tg-actions">
+          <button class="tg-btn-post" id="tgPostNowBtn" onclick="tgPostNow()">
+            <i class="fab fa-telegram"></i> Hozir yuborish
+          </button>
+          <div class="tg-toggle-wrap">
+            <label class="tg-toggle"><input type="checkbox" id="tgScheduleEnabled" onchange="tgSaveSchedule()"><span class="tg-toggle-slider"></span></label>
+            <span style="font-size:0.8rem;font-weight:600;color:var(--text)">Avtomatik</span>
+            <span style="font-size:0.72rem;color:var(--muted)" id="tgScheduleInfo">har kuni 10:00</span>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="tgRefreshHistory()"><i class="fas fa-sync-alt"></i> Yangilash</button>
+        </div>
+
+        <!-- Log -->
+        <div class="tg-log" id="tgLog"></div>
+
+        <!-- Schedule config -->
+        <div class="tg-section">
+          <div class="tg-section-title"><i class="fas fa-clock"></i> Jadval sozlamalari</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Kategoriya</label>
+              <select class="form-input" id="tgCategory" onchange="tgSaveSchedule()">
+                <option value="logo">Logo dizayn</option>
+                <option value="poster">Poster</option>
+                <option value="social">Social media</option>
+                <option value="business_card">Vizitka</option>
+                <option value="branding">Brending</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Til</label>
+              <select class="form-input" id="tgLanguage" onchange="tgSaveSchedule()">
+                <option value="uz">O'zbek</option>
+                <option value="en">English</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Vaqt (Toshkent)</label>
+              <input type="time" class="form-input" id="tgTime" value="10:00" onchange="tgSaveSchedule()">
+            </div>
+          </div>
+        </div>
+
+        <!-- Config -->
+        <div class="tg-section">
+          <div class="tg-section-title"><i class="fas fa-key"></i> API sozlamalari</div>
+          <div class="form-group">
+            <label>Leonardo.ai API Key</label>
+            <input type="password" class="form-input" id="tgLeonardoKey" placeholder="Kiriting..." oninput="tgSaveConfig()">
+            <div class="form-hint">leonardo.ai → Profile → API Keys (bepul)</div>
+          </div>
+          <div class="form-group">
+            <label>GitHub Actions trigger</label>
+            <div class="form-hint" style="margin-top:0">GitHub token va repo sozlamalar → GitHub Push bo'limidan olinadi</div>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="tgCheckBot()"><i class="fas fa-plug"></i> Botni tekshirish</button>
+        </div>
+
+        <!-- History -->
+        <div class="tg-section">
+          <div class="tg-section-title"><i class="fas fa-history"></i> Post tarixi</div>
+          <div id="tgHistoryList"><div class="tg-empty"><i class="fab fa-telegram" style="font-size:2rem;display:block;margin-bottom:8px;opacity:0.3"></i>Hali post yo'q</div></div>
         </div>
       </div>
 
@@ -3971,6 +4123,244 @@ function importAllData() {
   };
   input.click();
 }
+
+/* ============================================================
+   TELEGRAM BOT — alohida modul, portfolio bilan aloqasi yo'q
+   ============================================================ */
+var TG = (function() {
+  var BOT_TOKEN = '8602784339:AAGUCoGpwefmlClZNFG4r9n1svrw38T2CJM';
+  var CHANNEL   = '@deardsgn';
+  var CFG_KEY   = 'tg_config_v1';
+  var SCHED_KEY = 'tg_schedule_v1';
+
+  function getCfg() {
+    try { return JSON.parse(localStorage.getItem(CFG_KEY)) || {}; } catch(e) { return {}; }
+  }
+  function saveCfg(o) { localStorage.setItem(CFG_KEY, JSON.stringify(o)); }
+  function getSched() {
+    try { return JSON.parse(localStorage.getItem(SCHED_KEY)) || {}; } catch(e) { return {}; }
+  }
+  function saveSched(o) { localStorage.setItem(SCHED_KEY, JSON.stringify(o)); }
+
+  function log(msg, type) {
+    var el = document.getElementById('tgLog');
+    if (!el) return;
+    el.classList.add('show');
+    var line = document.createElement('div');
+    line.className = type || '';
+    var ts = new Date().toLocaleTimeString('uz-UZ');
+    line.textContent = '[' + ts + '] ' + msg;
+    el.appendChild(line);
+    el.scrollTop = el.scrollHeight;
+  }
+
+  function ghCfg() {
+    try { return JSON.parse(localStorage.getItem('github_config')) || {}; } catch(e) { return {}; }
+  }
+
+  // Bot tekshirish
+  async function checkBot() {
+    var dot = document.getElementById('tgStatusDot');
+    var txt = document.getElementById('tgStatusText');
+    var sub = document.getElementById('tgBotStatus');
+    if (dot) dot.className = 'tg-dot';
+    if (txt) txt.textContent = 'Tekshirilmoqda...';
+    try {
+      var r = await fetch('https://api.telegram.org/bot' + BOT_TOKEN + '/getMe');
+      var d = await r.json();
+      if (d.ok) {
+        if (dot) { dot.className = 'tg-dot online'; }
+        if (txt) txt.textContent = 'Ulangan';
+        if (sub) sub.textContent = '@' + d.result.username + ' — ' + CHANNEL + ' kanali';
+        var navDot = document.getElementById('tgNavDot');
+        if (navDot) navDot.classList.add('active');
+        log('Bot ulandi: @' + d.result.username, 'ok');
+      } else throw new Error(d.description);
+    } catch(e) {
+      if (dot) dot.className = 'tg-dot offline';
+      if (txt) txt.textContent = 'Xato';
+      if (sub) sub.textContent = 'Bot ulanmadi: ' + e.message;
+      log('Bot xatosi: ' + e.message, 'err');
+    }
+  }
+
+  // Tarix yuklash (GitHub dan)
+  async function loadHistory() {
+    var cfg = ghCfg();
+    if (!cfg.token || !cfg.owner || !cfg.repo) {
+      renderHistory([]);
+      return;
+    }
+    try {
+      var url = 'https://api.github.com/repos/' + cfg.owner + '/' + cfg.repo + '/contents/telegram_bot/history.json';
+      var r = await fetch(url, { headers: { 'Authorization': 'token ' + cfg.token } });
+      if (!r.ok) { renderHistory([]); return; }
+      var d = await r.json();
+      var content = JSON.parse(atob(d.content.replace(/\n/g,'')));
+      renderHistory(Array.isArray(content) ? content : []);
+      updateStats(Array.isArray(content) ? content : []);
+    } catch(e) {
+      renderHistory([]);
+    }
+  }
+
+  function renderHistory(items) {
+    var el = document.getElementById('tgHistoryList');
+    if (!el) return;
+    if (!items.length) {
+      el.innerHTML = '<div class="tg-empty"><i class="fab fa-telegram" style="font-size:2rem;display:block;margin-bottom:8px;opacity:0.3"></i>Hali post yo\'q</div>';
+      return;
+    }
+    el.innerHTML = items.slice(0, 20).map(function(p) {
+      var dt = p.timestamp ? new Date(p.timestamp).toLocaleString('uz-UZ') : '—';
+      var cat = {logo:'Logo',poster:'Poster',social:'Social',business_card:'Vizitka',branding:'Brending'}[p.category] || p.category || '';
+      return '<div class="tg-history-item">'
+        + (p.image ? '<img class="tg-history-thumb" src="' + p.image + '" onerror="this.style.display=\'none\'">' : '<div class="tg-history-thumb" style="display:flex;align-items:center;justify-content:center;font-size:1.2rem;opacity:0.3"><i class="fas fa-image"></i></div>')
+        + '<div class="tg-history-info">'
+        + '<div class="tg-history-caption">' + (p.caption || '—') + '</div>'
+        + '<div class="tg-history-meta">' + dt + (cat ? ' · ' + cat : '') + '</div>'
+        + '</div>'
+        + '<span class="tg-history-status' + (p.status === 'sent' ? '' : ' err') + '">' + (p.status === 'sent' ? 'Yuborildi' : 'Xato') + '</span>'
+        + '</div>';
+    }).join('');
+  }
+
+  function updateStats(items) {
+    var today = new Date().toDateString();
+    var todayCount = items.filter(function(p) {
+      return p.timestamp && new Date(p.timestamp).toDateString() === today;
+    }).length;
+    var el1 = document.getElementById('tgTodayCount');
+    var el2 = document.getElementById('tgTotalCount');
+    var el3 = document.getElementById('tgLastPost');
+    if (el1) el1.textContent = todayCount;
+    if (el2) el2.textContent = items.length;
+    if (el3 && items[0]) {
+      var diff = Math.round((Date.now() - new Date(items[0].timestamp)) / 60000);
+      el3.textContent = diff < 60 ? diff + 'm' : (diff < 1440 ? Math.round(diff/60) + 'h' : Math.round(diff/1440) + 'k');
+    }
+  }
+
+  // Jadval GitHub ga saqlash
+  async function saveScheduleToGitHub(sched) {
+    var cfg = ghCfg();
+    if (!cfg.token || !cfg.owner || !cfg.repo) return;
+    try {
+      var url = 'https://api.github.com/repos/' + cfg.owner + '/' + cfg.repo + '/contents/telegram_bot/schedule.json';
+      // SHA olish
+      var getR = await fetch(url, { headers: { 'Authorization': 'token ' + cfg.token } });
+      var sha = null;
+      if (getR.ok) { var gd = await getR.json(); sha = gd.sha; }
+      // Yuklash
+      var body = { message: 'Telegram: jadval yangilandi', content: btoa(JSON.stringify(sched, null, 2)) };
+      if (sha) body.sha = sha;
+      await fetch(url, { method: 'PUT', headers: { 'Authorization': 'token ' + cfg.token, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      log('Jadval GitHub ga saqlandi', 'ok');
+    } catch(e) {
+      log('Jadval saqlashda xato: ' + e.message, 'err');
+    }
+  }
+
+  // GitHub Actions orqali manual post trigger
+  async function postNow() {
+    var btn = document.getElementById('tgPostNowBtn');
+    var cfg = ghCfg();
+    if (!cfg.token || !cfg.owner || !cfg.repo) {
+      log('GitHub token sozlanmagan! GitHub Push bo\'limiga o\'ting', 'err');
+      showToast('GitHub token kerak — GitHub Push bo\'limiga o\'ting', 'error');
+      return;
+    }
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Yuklanmoqda...'; }
+    log('GitHub Actions ishga tushirilmoqda...', 'warn');
+    try {
+      var r = await fetch('https://api.github.com/repos/' + cfg.owner + '/' + cfg.repo + '/dispatches', {
+        method: 'POST',
+        headers: { 'Authorization': 'token ' + cfg.token, 'Content-Type': 'application/json', 'Accept': 'application/vnd.github.v3+json' },
+        body: JSON.stringify({ event_type: 'telegram-post', client_payload: { category: document.getElementById('tgCategory').value } })
+      });
+      if (r.ok || r.status === 204) {
+        log('GitHub Actions ishga tushdi! 2-3 daqiqada post yuboriladi', 'ok');
+        showToast('Post jarayoni boshlandi — 2-3 daqiqada yuboriladi', 'success');
+        setTimeout(function() { loadHistory(); }, 180000);
+      } else {
+        var err = await r.json().catch(function(){return {};});
+        throw new Error(err.message || r.status);
+      }
+    } catch(e) {
+      log('Xato: ' + e.message, 'err');
+      showToast('Xato: ' + e.message, 'error');
+    }
+    setTimeout(function() {
+      if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fab fa-telegram"></i> Hozir yuborish'; }
+    }, 5000);
+  }
+
+  // UI load
+  function loadUI() {
+    var cfg = getCfg();
+    var sched = getSched();
+    var lk = document.getElementById('tgLeonardoKey');
+    var sc = document.getElementById('tgScheduleEnabled');
+    var cat = document.getElementById('tgCategory');
+    var lang = document.getElementById('tgLanguage');
+    var time = document.getElementById('tgTime');
+    if (lk) lk.value = cfg.leonardoKey || '';
+    if (sc) sc.checked = !!sched.enabled;
+    if (cat) cat.value = sched.category || 'logo';
+    if (lang) lang.value = sched.language || 'uz';
+    if (time) time.value = sched.time || '10:00';
+    updateScheduleInfo(sched);
+  }
+
+  function updateScheduleInfo(sched) {
+    var el = document.getElementById('tgScheduleInfo');
+    if (el) el.textContent = 'har kuni ' + (sched.time || '10:00') + ' (Toshkent)';
+  }
+
+  function saveConfig() {
+    var cfg = getCfg();
+    var lk = document.getElementById('tgLeonardoKey');
+    if (lk) cfg.leonardoKey = lk.value;
+    saveCfg(cfg);
+  }
+
+  function saveSchedule() {
+    var sched = {
+      enabled: document.getElementById('tgScheduleEnabled') ? document.getElementById('tgScheduleEnabled').checked : false,
+      category: document.getElementById('tgCategory') ? document.getElementById('tgCategory').value : 'logo',
+      language: document.getElementById('tgLanguage') ? document.getElementById('tgLanguage').value : 'uz',
+      time: document.getElementById('tgTime') ? document.getElementById('tgTime').value : '10:00',
+    };
+    saveSched(sched);
+    updateScheduleInfo(sched);
+    saveScheduleToGitHub(sched);
+  }
+
+  function init() {
+    loadUI();
+    checkBot();
+    loadHistory();
+  }
+
+  return { init:init, checkBot:checkBot, postNow:postNow, saveConfig:saveConfig, saveSchedule:saveSchedule, loadHistory:loadHistory };
+})();
+
+function tgCheckBot() { TG.checkBot(); }
+function tgPostNow() { TG.postNow(); }
+function tgSaveConfig() { TG.saveConfig(); }
+function tgSaveSchedule() { TG.saveSchedule(); }
+function tgRefreshHistory() { TG.loadHistory(); }
+
+// Telegram paneli ochilganda init
+var _tgInited = false;
+var _origShowPanel = null;
+document.addEventListener('DOMContentLoaded', function() {
+  var orig = window.showPanel;
+  window.showPanel = function(id, el) {
+    orig(id, el);
+    if (id === 'telegram' && !_tgInited) { _tgInited = true; TG.init(); }
+  };
+});
 
 /* ============================================================
    KEYBOARD SHORTCUTS

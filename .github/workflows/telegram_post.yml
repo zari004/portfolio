@@ -1,0 +1,41 @@
+name: Telegram Design Post
+
+on:
+  schedule:
+    - cron: '0 5 * * *'   # har kuni 10:00 Toshkent (UTC+5)
+  workflow_dispatch:
+    inputs:
+      category:
+        description: 'Dizayn kategoriyasi'
+        required: false
+        default: 'logo'
+        type: choice
+        options: [logo, poster, social, business_card, branding]
+  repository_dispatch:
+    types: [telegram-post]
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Python setup
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Run bot
+        run: python telegram_bot/post.py
+        env:
+          TG_BOT_TOKEN:      ${{ secrets.TG_BOT_TOKEN }}
+          TG_CHANNEL_ID:     '@deardsgn'
+          LEONARDO_API_KEY:  ${{ secrets.LEONARDO_API_KEY }}
+          GITHUB_TOKEN:      ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPO:       ${{ github.repository }}
