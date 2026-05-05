@@ -6,12 +6,6 @@
       "time": "08:00",
       "category": "trend",
       "enabled": true
-    },
-    {
-      "day": "mon",
-      "time": "10:00",
-      "category": "tip",
-      "enabled": true
     }
   ]
 }
