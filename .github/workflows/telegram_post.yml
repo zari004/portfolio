@@ -42,3 +42,4 @@ jobs:
           GITHUB_TOKEN:       ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPO:        ${{ github.repository }}
           MANUAL_CATEGORY:    ${{ github.event.inputs.category || github.event.client_payload.category || '' }}
+          MANUAL_TRIGGER:     ${{ github.event_name == 'repository_dispatch' || github.event_name == 'workflow_dispatch' }}

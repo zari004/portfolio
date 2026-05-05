@@ -582,9 +582,11 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
 .block-menu-item:hover { background: var(--card); }
 
 /* ============ TELEGRAM BOT ============ */
+/* Nav dot */
 .tg-nav-dot { width:7px;height:7px;border-radius:50%;background:#22c55e;margin-left:auto;box-shadow:0 0 6px rgba(34,197,94,0.6);display:none; }
 .tg-nav-dot.active { display:inline-block; }
-.tg-header { display:flex;align-items:center;gap:12px;margin-bottom:24px;padding:20px;background:linear-gradient(135deg,rgba(0,136,204,0.12),rgba(0,136,204,0.04));border:1px solid rgba(0,136,204,0.2);border-radius:14px; }
+/* Header */
+.tg-header { display:flex;align-items:center;gap:12px;margin-bottom:20px;padding:18px 20px;background:linear-gradient(135deg,rgba(0,136,204,0.12),rgba(0,136,204,0.04));border:1px solid rgba(0,136,204,0.2);border-radius:14px; }
 .tg-header-icon { width:48px;height:48px;border-radius:12px;background:rgba(0,136,204,0.15);display:flex;align-items:center;justify-content:center;font-size:1.4rem;color:#0088cc;flex-shrink:0; }
 .tg-header-info { flex:1; }
 .tg-header-title { font-size:1rem;font-weight:700;color:var(--text); }
@@ -593,37 +595,66 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
 .tg-dot { width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0; }
 .tg-dot.online { background:#22c55e;box-shadow:0 0 6px rgba(34,197,94,0.5); }
 .tg-dot.offline { background:var(--red); }
-.tg-stats { display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px; }
-.tg-stat { background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center; }
-.tg-stat-num { font-size:1.6rem;font-weight:800;color:var(--text);line-height:1; }
-.tg-stat-label { font-size:0.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-top:4px; }
-.tg-actions { display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap; }
+/* Sub-nav tabs */
+.tg-subnav { display:flex;gap:4px;margin-bottom:20px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:5px;overflow-x:auto;flex-wrap:nowrap; }
+.tg-subnav::-webkit-scrollbar { height:3px; }
+.tg-tab-btn { flex-shrink:0;background:none;border:none;color:var(--muted);font-family:inherit;font-size:0.76rem;font-weight:600;padding:7px 14px;border-radius:8px;cursor:pointer;transition:all 0.18s;display:flex;align-items:center;gap:6px;white-space:nowrap; }
+.tg-tab-btn:hover { color:var(--text);background:var(--bg); }
+.tg-tab-btn.active { background:#0088cc;color:#fff; }
+/* Tab panes */
+.tg-pane { display:none; }
+.tg-pane.active { display:block; }
+/* Stat cards */
+.tg-stats { display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px; }
+.tg-stat { background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center; }
+.tg-stat-num { font-size:1.5rem;font-weight:800;color:var(--text);line-height:1; }
+.tg-stat-label { font-size:0.66rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-top:4px; }
+/* Actions row */
+.tg-actions { display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center; }
 .tg-btn-post { background:#0088cc;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:0.82rem;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:7px;transition:all 0.2s; }
 .tg-btn-post:hover { background:#006ba3; }
 .tg-btn-post:disabled { opacity:0.5;cursor:not-allowed; }
-.tg-toggle-wrap { display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 16px; }
+/* Toggle */
+.tg-toggle-wrap { display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:9px 14px; }
 .tg-toggle { position:relative;width:40px;height:22px;flex-shrink:0; }
 .tg-toggle input { opacity:0;width:0;height:0; }
 .tg-toggle-slider { position:absolute;inset:0;background:var(--border);border-radius:11px;cursor:pointer;transition:0.3s; }
 .tg-toggle-slider:before { content:'';position:absolute;height:16px;width:16px;left:3px;bottom:3px;background:white;border-radius:50%;transition:0.3s; }
 .tg-toggle input:checked + .tg-toggle-slider { background:#22c55e; }
 .tg-toggle input:checked + .tg-toggle-slider:before { transform:translateX(18px); }
-.tg-section { background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:16px; }
-.tg-section-title { font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin-bottom:14px;display:flex;align-items:center;gap:6px; }
+/* Section card */
+.tg-section { background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:14px; }
+.tg-section-title { font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin-bottom:14px;display:flex;align-items:center;gap:6px; }
+/* Log */
+.tg-log { background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;max-height:180px;overflow-y:auto;font-family:'JetBrains Mono',monospace;font-size:0.72rem;line-height:1.7;display:none;margin-bottom:14px; }
+.tg-log.show { display:block; }
+.tg-log .ok { color:#22c55e; }
+.tg-log .err { color:var(--red); }
+.tg-log .warn { color:#f59e0b; }
+/* Post previews */
+.tg-previews { display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px; }
+.tg-preview-card { background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden; }
+.tg-preview-img { width:100%;aspect-ratio:1;object-fit:cover;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:1.5rem;color:var(--muted); }
+.tg-preview-img img { width:100%;height:100%;object-fit:cover; }
+.tg-preview-body { padding:10px; }
+.tg-preview-cat { font-size:0.62rem;text-transform:uppercase;letter-spacing:0.7px;color:#0088cc;font-weight:700;margin-bottom:4px; }
+.tg-preview-text { font-size:0.72rem;color:var(--sub);line-height:1.4;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden; }
+.tg-preview-time { font-size:0.62rem;color:var(--muted);margin-top:6px; }
+/* History */
+.tg-history-filter { display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap; }
+.tg-hist-filter-btn { background:var(--bg);border:1px solid var(--border);color:var(--muted);font-family:inherit;font-size:0.7rem;font-weight:600;padding:4px 12px;border-radius:20px;cursor:pointer;transition:all 0.15s; }
+.tg-hist-filter-btn:hover,.tg-hist-filter-btn.active { background:#0088cc;border-color:#0088cc;color:#fff; }
 .tg-history-item { display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border); }
 .tg-history-item:last-child { border-bottom:none; }
-.tg-history-thumb { width:48px;height:48px;border-radius:8px;object-fit:cover;flex-shrink:0;background:var(--bg); }
+.tg-history-thumb { width:52px;height:52px;border-radius:8px;object-fit:cover;flex-shrink:0;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:1.1rem;color:var(--muted); }
 .tg-history-info { flex:1;min-width:0; }
 .tg-history-caption { font-size:0.78rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text); }
 .tg-history-meta { font-size:0.65rem;color:var(--muted);margin-top:2px; }
 .tg-history-status { font-size:0.65rem;padding:2px 8px;border-radius:20px;background:rgba(34,197,94,0.12);color:#22c55e;flex-shrink:0; }
 .tg-history-status.err { background:rgba(239,68,68,0.12);color:var(--red); }
+/* Empty state */
 .tg-empty { text-align:center;padding:32px;color:var(--muted);font-size:0.8rem; }
-.tg-log { background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;max-height:200px;overflow-y:auto;font-family:'JetBrains Mono',monospace;font-size:0.72rem;line-height:1.7;display:none; }
-.tg-log.show { display:block; }
-.tg-log .ok { color:#22c55e; }
-.tg-log .err { color:var(--red); }
-.tg-log .warn { color:#f59e0b; }
+/* Schedule */
 .tg-day-block { margin-bottom:10px; }
 .tg-day-header { display:flex;align-items:center;gap:8px;margin-bottom:6px; }
 .tg-day-name { font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);min-width:100px; }
@@ -631,7 +662,39 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
 .tg-add-slot:hover { background:rgba(0,136,204,0.2); }
 .tg-slots { display:flex;flex-direction:column;gap:6px;padding-left:8px; }
 .tg-slot-row { display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:6px 10px; }
-@media(max-width:600px){.tg-stats{grid-template-columns:1fr 1fr}.tg-actions{flex-direction:column}.tg-slot-time{width:75px!important}}
+.tg-sched-summary { font-size:0.75rem;color:var(--accent);font-weight:600;margin-bottom:12px; }
+/* API status badge */
+.tg-api-badge { display:inline-flex;align-items:center;gap:5px;font-size:0.7rem;padding:3px 10px;border-radius:20px;font-weight:600; }
+.tg-api-badge.ok { background:rgba(34,197,94,0.12);color:#22c55e; }
+.tg-api-badge.err { background:rgba(239,68,68,0.12);color:var(--red); }
+.tg-api-badge.loading { background:rgba(245,158,11,0.12);color:#f59e0b; }
+/* Rubric editor */
+.tg-rubric-list { display:flex;flex-direction:column;gap:8px; }
+.tg-rubric-row { background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:8px; }
+.tg-rubric-header { display:flex;align-items:center;gap:8px; }
+.tg-rubric-emoji { font-size:1.1rem; }
+.tg-rubric-name { font-size:0.82rem;font-weight:700;color:var(--text);flex:1; }
+/* Source list */
+.tg-source-list { display:flex;flex-direction:column;gap:6px; }
+.tg-source-item { display:flex;align-items:center;gap:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 12px; }
+.tg-source-item a { color:var(--accent);font-size:0.78rem;text-decoration:none;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+.tg-source-item a:hover { text-decoration:underline; }
+.tg-source-del { background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.75rem;padding:2px 6px;transition:color 0.15s; }
+.tg-source-del:hover { color:var(--red); }
+/* Password field */
+.tg-pass-wrap { position:relative; }
+.tg-pass-wrap input { padding-right:42px;width:100%; }
+.tg-pass-eye { position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.82rem;padding:4px; }
+/* Responsive */
+@media(max-width:700px){
+  .tg-stats{grid-template-columns:1fr 1fr}
+  .tg-previews{grid-template-columns:1fr}
+  .tg-actions{flex-direction:column}
+  .tg-slot-row{flex-wrap:wrap}
+  .tg-slot-time{width:75px!important}
+  .tg-subnav{gap:2px}
+  .tg-tab-btn{font-size:0.68rem;padding:6px 10px}
+}
 </style>
 </head>
 <body>
@@ -1165,65 +1228,209 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
           </div>
         </div>
 
-        <!-- Stats -->
-        <div class="tg-stats">
-          <div class="tg-stat">
-            <div class="tg-stat-num" id="tgTodayCount">—</div>
-            <div class="tg-stat-label">Bugun</div>
-          </div>
-          <div class="tg-stat">
-            <div class="tg-stat-num" id="tgTotalCount">—</div>
-            <div class="tg-stat-label">Jami post</div>
-          </div>
-          <div class="tg-stat">
-            <div class="tg-stat-num" id="tgLastPost">—</div>
-            <div class="tg-stat-label">Oxirgi post</div>
-          </div>
+        <!-- Sub navigation -->
+        <div class="tg-subnav" id="tgSubnav">
+          <button class="tg-tab-btn active" data-tab="tg-pane-dashboard" onclick="TG.switchTab(this)"><i class="fas fa-chart-pie"></i> Dashboard</button>
+          <button class="tg-tab-btn" data-tab="tg-pane-text" onclick="TG.switchTab(this)"><i class="fas fa-pen-nib"></i> Matn Agenti</button>
+          <button class="tg-tab-btn" data-tab="tg-pane-image" onclick="TG.switchTab(this)"><i class="fas fa-image"></i> Rasm Agenti</button>
+          <button class="tg-tab-btn" data-tab="tg-pane-sources" onclick="TG.switchTab(this)"><i class="fas fa-globe"></i> Manbalar</button>
+          <button class="tg-tab-btn" data-tab="tg-pane-schedule" onclick="TG.switchTab(this)"><i class="fas fa-calendar-week"></i> Jadval</button>
+          <button class="tg-tab-btn" data-tab="tg-pane-history" onclick="TG.switchTab(this)"><i class="fas fa-history"></i> Tarix</button>
+          <button class="tg-tab-btn" data-tab="tg-pane-settings" onclick="TG.switchTab(this)"><i class="fas fa-cog"></i> Sozlamalar</button>
         </div>
 
-        <!-- Actions -->
-        <div class="tg-actions">
-          <button class="tg-btn-post" id="tgPostNowBtn" onclick="tgPostNow()">
-            <i class="fab fa-telegram"></i> Hozir yuborish
-          </button>
-          <div class="tg-toggle-wrap">
-            <label class="tg-toggle"><input type="checkbox" id="tgScheduleEnabled" onchange="tgSaveSchedule()"><span class="tg-toggle-slider"></span></label>
-            <span style="font-size:0.8rem;font-weight:600;color:var(--text)">Avtomatik jadval</span>
-          </div>
-          <button class="btn btn-secondary btn-sm" onclick="tgRefreshHistory()"><i class="fas fa-sync-alt"></i></button>
-        </div>
-
-        <!-- Log -->
+        <!-- Log (global) -->
         <div class="tg-log" id="tgLog"></div>
 
-        <!-- Haftalik jadval -->
-        <div class="tg-section">
-          <div class="tg-section-title"><i class="fas fa-calendar-week"></i> Haftalik jadval
-            <span style="margin-left:auto;font-size:0.65rem;color:var(--muted);font-weight:400;text-transform:none">Vaqtlar Toshkent bo'yicha</span>
+        <!-- ===== TAB 1: DASHBOARD ===== -->
+        <div class="tg-pane active" id="tg-pane-dashboard">
+          <!-- Stats -->
+          <div class="tg-stats">
+            <div class="tg-stat">
+              <div class="tg-stat-num" id="tgTotalCount">—</div>
+              <div class="tg-stat-label">Jami post</div>
+            </div>
+            <div class="tg-stat">
+              <div class="tg-stat-num" id="tgTodayCount">—</div>
+              <div class="tg-stat-label">Bugun</div>
+            </div>
+            <div class="tg-stat">
+              <div class="tg-stat-num" id="tgLastPost">—</div>
+              <div class="tg-stat-label">Oxirgi post</div>
+            </div>
+            <div class="tg-stat">
+              <div class="tg-stat-num" id="tgNextPost">—</div>
+              <div class="tg-stat-label">Keyingi reja</div>
+            </div>
           </div>
-          <div id="tgWeekSchedule"></div>
+
+          <!-- Actions -->
+          <div class="tg-actions">
+            <button class="tg-btn-post" id="tgPostNowBtn" onclick="tgPostNow()">
+              <i class="fab fa-telegram"></i> Hozir yuborish
+            </button>
+            <div class="tg-toggle-wrap">
+              <label class="tg-toggle"><input type="checkbox" id="tgScheduleEnabled" onchange="tgSaveSchedule()"><span class="tg-toggle-slider"></span></label>
+              <span style="font-size:0.8rem;font-weight:600;color:var(--text)">Avtomatik jadval</span>
+            </div>
+            <button class="btn btn-secondary btn-sm" onclick="TG.loadHistory()" title="Yangilash"><i class="fas fa-sync-alt"></i></button>
+            <button class="btn btn-secondary btn-sm" onclick="tgCheckBot()" title="Botni tekshirish"><i class="fas fa-plug"></i></button>
+          </div>
+
+          <!-- Last 3 posts preview -->
+          <div class="tg-section">
+            <div class="tg-section-title"><i class="fas fa-images"></i> Oxirgi postlar</div>
+            <div class="tg-previews" id="tgRecentPreviews">
+              <div class="tg-empty" style="grid-column:1/-1">Tarix yuklanmoqda...</div>
+            </div>
+          </div>
         </div>
 
-        <!-- Config -->
-        <div class="tg-section">
-          <div class="tg-section-title"><i class="fas fa-key"></i> API sozlamalari</div>
-          <div class="form-group">
-            <label>Leonardo.ai API Key</label>
-            <input type="password" class="form-input" id="tgLeonardoKey" placeholder="Kiriting..." oninput="tgSaveConfig()">
-            <div class="form-hint">leonardo.ai → Profile → API Keys (bepul)</div>
+        <!-- ===== TAB 2: MATN AGENTI ===== -->
+        <div class="tg-pane" id="tg-pane-text">
+          <div class="tg-section">
+            <div class="tg-section-title"><i class="fas fa-robot"></i> Groq API holati
+              <span class="tg-api-badge loading" id="tgGroqBadge"><i class="fas fa-circle"></i> Tekshirilmoqda</span>
+            </div>
+            <div class="form-group">
+              <label>Yozish uslubi (System Prompt)</label>
+              <textarea class="form-input" id="tgSystemPrompt" rows="7" style="resize:vertical;font-family:'JetBrains Mono',monospace;font-size:0.75rem" oninput="TG.saveTextSettings()"></textarea>
+              <div class="form-hint">Bu prompt barcha rubrikalar uchun umumiy uslubni belgilaydi</div>
+            </div>
+            <button class="btn btn-secondary btn-sm" onclick="TG.testGroq()"><i class="fas fa-vial"></i> Test generatsiya</button>
+            <div id="tgGroqTestOut" style="margin-top:10px;display:none"></div>
           </div>
-          <div class="form-group">
-            <label>GitHub Actions trigger</label>
-            <div class="form-hint" style="margin-top:0">GitHub token va repo sozlamalar → GitHub Push bo'limidan olinadi</div>
+          <div class="tg-section">
+            <div class="tg-section-title"><i class="fas fa-list"></i> Rubrika promptlari</div>
+            <div class="tg-rubric-list" id="tgRubricTextList"></div>
+          </div>
+        </div>
+
+        <!-- ===== TAB 3: RASM AGENTI ===== -->
+        <div class="tg-pane" id="tg-pane-image">
+          <div class="tg-section">
+            <div class="tg-section-title"><i class="fas fa-paint-brush"></i> Leonardo.ai API holati
+              <span class="tg-api-badge loading" id="tgLeonardoBadge"><i class="fas fa-circle"></i> Tekshirilmoqda</span>
+              <span style="margin-left:8px;font-size:0.72rem;color:var(--sub)" id="tgLeonardoCredits"></span>
+            </div>
+            <div class="form-group" style="margin-bottom:0">
+              <label>Rasm uslublari ro'yxati</label>
+              <textarea class="form-input" id="tgImageStyles" rows="4" style="resize:vertical;font-family:'JetBrains Mono',monospace;font-size:0.74rem" placeholder="Har satriga bitta uslub" oninput="TG.saveImageSettings()"></textarea>
+              <div class="form-hint">Har qatorga bitta uslub. Random tanlanadi.</div>
+            </div>
+          </div>
+          <div class="tg-section">
+            <div class="tg-section-title"><i class="fas fa-list-ul"></i> Rubrika rasm promptlari</div>
+            <div class="tg-rubric-list" id="tgRubricImageList"></div>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="TG.testLeonardo()"><i class="fas fa-vial"></i> Test generatsiya</button>
+          <div id="tgLeonardoTestOut" style="margin-top:10px;display:none"></div>
+        </div>
+
+        <!-- ===== TAB 4: MANBALAR ===== -->
+        <div class="tg-pane" id="tg-pane-sources">
+          <div class="tg-section">
+            <div class="tg-section-title"><i class="fas fa-link"></i> Dizayn saytlari va manbalar</div>
+            <div class="tg-source-list" id="tgSourceList"></div>
+            <div style="display:flex;gap:8px;margin-top:12px">
+              <input type="text" class="form-input" id="tgNewSourceName" placeholder="Nom (masalan: Behance)" style="flex:1">
+              <input type="url" class="form-input" id="tgNewSourceUrl" placeholder="https://..." style="flex:2">
+              <button class="btn btn-secondary btn-sm" onclick="TG.addSource()"><i class="fas fa-plus"></i></button>
+            </div>
+          </div>
+          <div class="tg-section">
+            <div class="tg-section-title"><i class="fas fa-fire"></i> Trend mavzular
+              <span style="margin-left:auto;font-size:0.65rem;font-weight:400;text-transform:none;color:var(--muted)">Har hafta yangilanadi</span>
+            </div>
+            <div class="tg-rubric-list" id="tgTrendTopics"></div>
+          </div>
+        </div>
+
+        <!-- ===== TAB 5: JADVAL ===== -->
+        <div class="tg-pane" id="tg-pane-schedule">
+          <div class="tg-section">
+            <div class="tg-section-title"><i class="fas fa-calendar-week"></i> Haftalik jadval
+              <span style="margin-left:auto;font-size:0.65rem;font-weight:400;text-transform:none;color:var(--muted)">Toshkent vaqti (UTC+5)</span>
+            </div>
+            <div class="tg-sched-summary" id="tgSchedSummary">— post/hafta</div>
+            <div class="tg-toggle-wrap" style="margin-bottom:14px">
+              <label class="tg-toggle"><input type="checkbox" id="tgScheduleEnabled2" onchange="TG.syncScheduleToggle(this)"><span class="tg-toggle-slider"></span></label>
+              <span style="font-size:0.8rem;font-weight:600;color:var(--text)">Avtomatik jadval yoqiq</span>
+            </div>
+            <div id="tgWeekSchedule"></div>
+          </div>
+        </div>
+
+        <!-- ===== TAB 6: TARIX ===== -->
+        <div class="tg-pane" id="tg-pane-history">
+          <div class="tg-section">
+            <div class="tg-section-title"><i class="fas fa-history"></i> Yuborilgan postlar
+              <button class="btn btn-secondary btn-sm" onclick="TG.loadHistory()" style="margin-left:auto;padding:3px 10px;font-size:0.7rem"><i class="fas fa-sync-alt"></i></button>
+            </div>
+            <div class="tg-history-filter" id="tgHistoryFilter">
+              <button class="tg-hist-filter-btn active" data-cat="" onclick="TG.filterHistory(this)">Barchasi</button>
+              <button class="tg-hist-filter-btn" data-cat="trend" onclick="TG.filterHistory(this)">📈 Trend</button>
+              <button class="tg-hist-filter-btn" data-cat="tip" onclick="TG.filterHistory(this)">💡 Maslahat</button>
+              <button class="tg-hist-filter-btn" data-cat="color" onclick="TG.filterHistory(this)">🎨 Rang</button>
+              <button class="tg-hist-filter-btn" data-cat="typography" onclick="TG.filterHistory(this)">✍️ Tipografiya</button>
+              <button class="tg-hist-filter-btn" data-cat="logo" onclick="TG.filterHistory(this)">⚡ Logo</button>
+              <button class="tg-hist-filter-btn" data-cat="inspiration" onclick="TG.filterHistory(this)">✨ Ilhom</button>
+              <button class="tg-hist-filter-btn" data-cat="tool" onclick="TG.filterHistory(this)">🛠 Vosita</button>
+              <button class="tg-hist-filter-btn" data-cat="mindset" onclick="TG.filterHistory(this)">🧠 Fikr</button>
+            </div>
+            <div id="tgHistoryList"><div class="tg-empty"><i class="fab fa-telegram" style="font-size:2rem;display:block;margin-bottom:8px;opacity:0.3"></i>Hali post yo'q</div></div>
+          </div>
+        </div>
+
+        <!-- ===== TAB 7: SOZLAMALAR ===== -->
+        <div class="tg-pane" id="tg-pane-settings">
+          <div class="tg-section">
+            <div class="tg-section-title"><i class="fas fa-robot"></i> Telegram Bot</div>
+            <div class="form-group">
+              <label>Bot Token</label>
+              <div class="tg-pass-wrap">
+                <input type="password" class="form-input" id="tgCfgBotToken" placeholder="123456:ABC-..." oninput="TG.saveSettings()">
+                <button class="tg-pass-eye" onclick="TG.togglePass('tgCfgBotToken',this)" tabindex="-1"><i class="fas fa-eye"></i></button>
+              </div>
+              <div class="form-hint">BotFather dan olinadi. Saqlanadi: localStorage (tg_settings)</div>
+            </div>
+            <div class="form-group">
+              <label>Channel ID</label>
+              <input type="text" class="form-input" id="tgCfgChannelId" placeholder="@deardsgn" oninput="TG.saveSettings()">
+            </div>
+          </div>
+          <div class="tg-section">
+            <div class="tg-section-title"><i class="fas fa-key"></i> API Kalitlar</div>
+            <div class="form-group">
+              <label>Groq API Key</label>
+              <div class="tg-pass-wrap">
+                <input type="password" class="form-input" id="tgCfgGroqKey" placeholder="gsk_..." oninput="TG.saveSettings()">
+                <button class="tg-pass-eye" onclick="TG.togglePass('tgCfgGroqKey',this)" tabindex="-1"><i class="fas fa-eye"></i></button>
+              </div>
+              <div class="form-hint">console.groq.com → API Keys</div>
+            </div>
+            <div class="form-group">
+              <label>Leonardo.ai API Key</label>
+              <div class="tg-pass-wrap">
+                <input type="password" class="form-input" id="tgCfgLeonardoKey" placeholder="..." oninput="TG.saveSettings()">
+                <button class="tg-pass-eye" onclick="TG.togglePass('tgCfgLeonardoKey',this)" tabindex="-1"><i class="fas fa-eye"></i></button>
+              </div>
+              <div class="form-hint">app.leonardo.ai → Profile → API Keys</div>
+            </div>
+          </div>
+          <div class="tg-section">
+            <div class="tg-section-title"><i class="fab fa-github"></i> GitHub</div>
+            <div class="form-hint" style="margin-bottom:12px">GitHub token va repo → "GitHub Push" bo'limidan olinadi</div>
+            <div class="form-group">
+              <label>Repository (ma'lumot)</label>
+              <input type="text" class="form-input" id="tgCfgRepoInfo" readonly placeholder="GitHub Push bo'limida sozlang" style="opacity:0.5">
+            </div>
           </div>
           <button class="btn btn-secondary btn-sm" onclick="tgCheckBot()"><i class="fas fa-plug"></i> Botni tekshirish</button>
+          <button class="btn btn-secondary btn-sm" style="margin-left:8px" onclick="TG.checkLeonardoCredits()"><i class="fas fa-coins"></i> Leonardo kredit</button>
+          <button class="btn btn-secondary btn-sm" style="margin-left:8px" onclick="TG.checkGroqStatus()"><i class="fas fa-robot"></i> Groq holati</button>
         </div>
 
-        <!-- History -->
-        <div class="tg-section">
-          <div class="tg-section-title"><i class="fas fa-history"></i> Post tarixi</div>
-          <div id="tgHistoryList"><div class="tg-empty"><i class="fab fa-telegram" style="font-size:2rem;display:block;margin-bottom:8px;opacity:0.3"></i>Hali post yo'q</div></div>
-        </div>
       </div>
 
     </div>
@@ -4114,10 +4321,15 @@ function importAllData() {
    TELEGRAM BOT — alohida modul, portfolio bilan aloqasi yo'q
    ============================================================ */
 var TG = (function() {
-  var BOT_TOKEN = '8602784339:AAGUCoGpwefmlClZNFG4r9n1svrw38T2CJM';
-  var CHANNEL   = '@deardsgn';
-  var CFG_KEY   = 'tg_config_v2';
-  var SCHED_KEY = 'tg_schedule_v2';
+  /* ── State keys (portfolio data bilan aralashmasin) ── */
+  var SETTINGS_KEY = 'tg_settings';   // bot token, api keys
+  var CFG_KEY      = 'tg_config';     // text/image settings, sources
+  var SCHED_KEY    = 'tg_schedule_v2';
+
+  /* ── Internal state ── */
+  var TG_STATE = { history: [], histFilter: '', currentTab: 'tg-pane-dashboard' };
+
+  var CHANNEL = '@deardsgn';
 
   var DAYS = [
     {key:'mon',label:'Dushanba'},{key:'tue',label:'Seshanba'},
@@ -4125,12 +4337,53 @@ var TG = (function() {
     {key:'fri',label:'Juma'},{key:'sat',label:'Shanba'},{key:'sun',label:'Yakshanba'}
   ];
   var RUBRICS = [
-    {key:'trend',label:'📈 Trend'},{key:'tip',label:'💡 Maslahat'},
-    {key:'color',label:'🎨 Rang'},{key:'typography',label:'✍️ Tipografiya'},
-    {key:'logo',label:'⚡ Logo'},{key:'inspiration',label:'✨ Ilhom'},
-    {key:'tool',label:'🛠 Vosita'},{key:'mindset',label:'🧠 Fikr'}
+    {key:'trend', label:'📈 Trend', emoji:'📈',
+      textPrompt:'2025 yildagi dizayn trendlari haqida qisqa, ilhomlantiruvchi post yozing.',
+      imagePrompt:'modern graphic design trend 2025, {style}, professional, editorial, minimalist composition, high quality'},
+    {key:'tip', label:'💡 Maslahat', emoji:'💡',
+      textPrompt:'Grafik dizayn bo\'yicha amaliy, qimmatli maslahat bering.',
+      imagePrompt:'clean graphic design educational poster, {style}, typography focused, professional layout'},
+    {key:'color', label:'🎨 Rang', emoji:'🎨',
+      textPrompt:'Rang psixologiyasi yoki rang kombinatsiyasi haqida post yozing.',
+      imagePrompt:'beautiful color palette design, {style}, harmonious colors, brand identity, professional'},
+    {key:'typography', label:'✍️ Tipografiya', emoji:'✍️',
+      textPrompt:'Shrift va tipografiya asoslari yoki qoidalari haqida post yozing.',
+      imagePrompt:'editorial typography design, {style}, font pairing, text layout, clean and modern'},
+    {key:'logo', label:'⚡ Logo', emoji:'⚡',
+      textPrompt:'Logo dizayn va brending bo\'yicha foydali fikr yoki maslahat yozing.',
+      imagePrompt:'minimalist logo design concept, {style}, vector style, professional brand identity'},
+    {key:'inspiration', label:'✨ Ilhom', emoji:'✨',
+      textPrompt:'Dizaynerlarni ilhomlantiruvchi, kreativlikni uyg\'otadigan post yozing.',
+      imagePrompt:'award winning graphic design portfolio piece, {style}, stunning visual composition, creative concept'},
+    {key:'tool', label:'🛠 Vosita', emoji:'🛠',
+      textPrompt:'Dizaynerlar uchun foydali vosita yoki resurs haqida post yozing.',
+      imagePrompt:'modern design workspace mockup, {style}, professional tools, creative setup'},
+    {key:'mindset', label:'🧠 Fikr', emoji:'🧠',
+      textPrompt:'Dizayn falsafasi yoki kreativlik haqida chuqur fikr ulashing.',
+      imagePrompt:'conceptual creative design, abstract minimalist art, {style}, thought provoking visual'}
   ];
 
+  var DEFAULT_SOURCES = [
+    {name:'Behance', url:'https://behance.net'},
+    {name:'Dribbble', url:'https://dribbble.com'},
+    {name:'Awwwards', url:'https://awwwards.com'},
+    {name:'Designspiration', url:'https://designspiration.com'},
+    {name:'Muzli', url:'https://muz.li'},
+    {name:'Godly', url:'https://godly.website'},
+  ];
+
+  var DEFAULT_SYSTEM_PROMPT = "Siz O'zbekistonning mashhur grafik dizayner va blogeriسiz.\nSizning Telegram kanalingiz (@deardsgn) bor va u yerda dizayn haqida post yozasiz.\n\nYOZISH USLUBI:\n- Oddiy, samimiy, do'stona — lekin professional\n- Qisqa va mazmunli — ortiqcha gap yo'q\n- O'zbek tilida yozing\n- 2-4 ta emoji ishlatish\n- Post 3-6 qatordan iborat bo'lsin\n\nQOIDALAR:\n- Salbiy yoki kamsituvchi narsa yozmang\n- Haqiqiy, jonli tuyg'u bilan yozing";
+
+  var DEFAULT_IMAGE_STYLES = [
+    'dark background', 'light minimal', 'vibrant colorful', 'black and white',
+    'gradient modern', 'flat design', 'premium luxury', 'bold and dynamic'
+  ];
+
+  /* ── Storage helpers ── */
+  function getSettings() {
+    try { return JSON.parse(localStorage.getItem(SETTINGS_KEY)) || {}; } catch(e) { return {}; }
+  }
+  function saveSettingsData(o) { localStorage.setItem(SETTINGS_KEY, JSON.stringify(o)); }
   function getCfg() {
     try { return JSON.parse(localStorage.getItem(CFG_KEY)) || {}; } catch(e) { return {}; }
   }
@@ -4139,7 +4392,16 @@ var TG = (function() {
     try { return JSON.parse(localStorage.getItem(SCHED_KEY)) || {}; } catch(e) { return {}; }
   }
   function saveSched(o) { localStorage.setItem(SCHED_KEY, JSON.stringify(o)); }
+  function ghCfg() {
+    try { return JSON.parse(localStorage.getItem('github_config')) || {}; } catch(e) { return {}; }
+  }
+  function getBotToken() {
+    var st = getSettings();
+    // Settings da token bo'lsa shu, yo'qsa hardcoded fallback
+    return st.botToken || '8602784339:AAGUCoGpwefmlClZNFG4r9n1svrw38T2CJM';
+  }
 
+  /* ── Log ── */
   function log(msg, type) {
     var el = document.getElementById('tgLog');
     if (!el) return;
@@ -4152,11 +4414,18 @@ var TG = (function() {
     el.scrollTop = el.scrollHeight;
   }
 
-  function ghCfg() {
-    try { return JSON.parse(localStorage.getItem('github_config')) || {}; } catch(e) { return {}; }
+  /* ── Tab switching ── */
+  function switchTab(btn) {
+    var tabId = btn.dataset.tab;
+    document.querySelectorAll('.tg-tab-btn').forEach(function(b) { b.classList.remove('active'); });
+    document.querySelectorAll('.tg-pane').forEach(function(p) { p.classList.remove('active'); });
+    btn.classList.add('active');
+    var pane = document.getElementById(tabId);
+    if (pane) pane.classList.add('active');
+    TG_STATE.currentTab = tabId;
   }
 
-  // Bot tekshirish
+  /* ── Bot check ── */
   async function checkBot() {
     var dot = document.getElementById('tgStatusDot');
     var txt = document.getElementById('tgStatusText');
@@ -4164,12 +4433,12 @@ var TG = (function() {
     if (dot) dot.className = 'tg-dot';
     if (txt) txt.textContent = 'Tekshirilmoqda...';
     try {
-      var r = await fetch('https://api.telegram.org/bot' + BOT_TOKEN + '/getMe');
+      var r = await fetch('https://api.telegram.org/bot' + getBotToken() + '/getMe');
       var d = await r.json();
       if (d.ok) {
-        if (dot) { dot.className = 'tg-dot online'; }
+        if (dot) dot.className = 'tg-dot online';
         if (txt) txt.textContent = 'Ulangan';
-        if (sub) sub.textContent = '@' + d.result.username + ' — ' + CHANNEL + ' kanali';
+        if (sub) sub.textContent = '@' + d.result.username + ' — ' + (getSettings().channelId || CHANNEL) + ' kanali';
         var navDot = document.getElementById('tgNavDot');
         if (navDot) navDot.classList.add('active');
         log('Bot ulandi: @' + d.result.username, 'ok');
@@ -4182,206 +4451,325 @@ var TG = (function() {
     }
   }
 
-  // Tarix yuklash (GitHub dan)
-  async function loadHistory() {
-    var cfg = ghCfg();
-    if (!cfg.token || !cfg.owner || !cfg.repo) {
-      renderHistory([]);
-      return;
+  /* ── Leonardo credits ── */
+  async function checkLeonardoCredits() {
+    var badge = document.getElementById('tgLeonardoBadge');
+    var credEl = document.getElementById('tgLeonardoCredits');
+    var st = getSettings();
+    var key = st.leonardoKey || getCfg().leonardoKey || '';
+    if (!key) {
+      if (badge) badge.className = 'tg-api-badge err';
+      if (badge) badge.innerHTML = '<i class="fas fa-circle"></i> Kalit yo\'q';
+      log('Leonardo API Key sozlanmagan', 'err'); return;
     }
+    if (badge) { badge.className = 'tg-api-badge loading'; badge.innerHTML = '<i class="fas fa-circle"></i> Tekshirilmoqda'; }
     try {
-      var url = 'https://api.github.com/repos/' + cfg.owner + '/' + cfg.repo + '/contents/telegram_bot/history.json';
-      var r = await fetch(url, { headers: { 'Authorization': 'token ' + cfg.token } });
-      if (!r.ok) { renderHistory([]); return; }
+      var r = await fetch('https://cloud.leonardo.ai/api/rest/v1/users/self', {
+        headers: { 'Authorization': 'Bearer ' + key, 'accept': 'application/json' }
+      });
       var d = await r.json();
-      var content = JSON.parse(atob(d.content.replace(/\n/g,'')));
-      renderHistory(Array.isArray(content) ? content : []);
-      updateStats(Array.isArray(content) ? content : []);
+      var user = (d.user_details && d.user_details[0]) || {};
+      var credits = user.apiConcurrencySlots || user.subscriptionTokens || '?';
+      if (badge) { badge.className = 'tg-api-badge ok'; badge.innerHTML = '<i class="fas fa-circle"></i> Ulangan'; }
+      if (credEl) credEl.textContent = 'Kredit: ' + credits;
+      log('Leonardo ulandi. Kredit: ' + credits, 'ok');
     } catch(e) {
-      renderHistory([]);
+      if (badge) { badge.className = 'tg-api-badge err'; badge.innerHTML = '<i class="fas fa-circle"></i> Xato'; }
+      log('Leonardo xato: ' + e.message, 'err');
     }
   }
 
+  /* ── Groq status ── */
+  async function checkGroqStatus() {
+    var badge = document.getElementById('tgGroqBadge');
+    var st = getSettings();
+    var key = st.groqKey || '';
+    if (!key) {
+      if (badge) { badge.className = 'tg-api-badge err'; badge.innerHTML = '<i class="fas fa-circle"></i> Kalit yo\'q'; }
+      log('Groq API Key sozlanmagan', 'err'); return;
+    }
+    if (badge) { badge.className = 'tg-api-badge loading'; badge.innerHTML = '<i class="fas fa-circle"></i> Tekshirilmoqda'; }
+    try {
+      var r = await fetch('https://api.groq.com/openai/v1/models', {
+        headers: { 'Authorization': 'Bearer ' + key }
+      });
+      if (r.ok) {
+        if (badge) { badge.className = 'tg-api-badge ok'; badge.innerHTML = '<i class="fas fa-circle"></i> Ulangan'; }
+        log('Groq API ulandi', 'ok');
+      } else throw new Error(r.status);
+    } catch(e) {
+      if (badge) { badge.className = 'tg-api-badge err'; badge.innerHTML = '<i class="fas fa-circle"></i> Xato'; }
+      log('Groq xato: ' + e.message, 'err');
+    }
+  }
+
+  /* ── Groq test ── */
+  async function testGroq() {
+    var out = document.getElementById('tgGroqTestOut');
+    var st = getSettings();
+    var cfg = getCfg();
+    var key = st.groqKey || '';
+    if (!key) { if (out) { out.style.display='block'; out.innerHTML='<div class="tg-empty">Groq API Key sozlanmagan (Sozlamalar tabida kiriting)</div>'; } return; }
+    if (out) { out.style.display='block'; out.textContent='Generatsiya qilinmoqda...'; }
+    var sysPrompt = cfg.systemPrompt || DEFAULT_SYSTEM_PROMPT;
+    var rubric = RUBRICS[Math.floor(Math.random()*RUBRICS.length)];
+    try {
+      var r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method:'POST',
+        headers: {'Authorization':'Bearer '+key,'Content-Type':'application/json'},
+        body: JSON.stringify({
+          model:'llama-3.3-70b-versatile',
+          messages:[{role:'system',content:sysPrompt},{role:'user',content:'Rubrika: '+rubric.emoji+' '+rubric.label+'\n\n'+rubric.textPrompt}],
+          max_tokens:300, temperature:0.85
+        })
+      });
+      var d = await r.json();
+      if (d.choices) {
+        var text = d.choices[0].message.content;
+        if (out) { out.style.display='block'; out.innerHTML='<div class="tg-section" style="margin-top:0"><div class="tg-section-title">'+rubric.emoji+' Test natija</div><p style="font-size:0.82rem;line-height:1.6;white-space:pre-wrap">'+text+'</p></div>'; }
+      } else throw new Error(JSON.stringify(d));
+    } catch(e) {
+      if (out) { out.style.display='block'; out.innerHTML='<div class="tg-empty" style="color:var(--red)">Xato: '+e.message+'</div>'; }
+    }
+  }
+
+  /* ── Leonardo test ── */
+  async function testLeonardo() {
+    var out = document.getElementById('tgLeonardoTestOut');
+    var st = getSettings();
+    var key = st.leonardoKey || getCfg().leonardoKey || '';
+    if (!key) { if (out) { out.style.display='block'; out.innerHTML='<div class="tg-empty">Leonardo API Key sozlanmagan</div>'; } return; }
+    if (out) { out.style.display='block'; out.textContent='Test so\'rov yuborilmoqda...'; }
+    log('Leonardo test so\'rovi yuborildi', 'warn');
+    if (out) { out.innerHTML='<div class="tg-empty">Leonardo test: kalit tekshirildi. Kredit ko\'rish uchun yuqoridagi "Leonardo kredit" tugmasini bosing.</div>'; }
+    checkLeonardoCredits();
+  }
+
+  /* ── History ── */
+  async function loadHistory() {
+    var gh = ghCfg();
+    if (!gh.token || !gh.owner || !gh.repo) { renderHistory([]); return; }
+    try {
+      var url = 'https://raw.githubusercontent.com/' + gh.owner + '/' + gh.repo + '/main/telegram_bot/history.json';
+      var r = await fetch(url + '?t=' + Date.now());
+      if (!r.ok) {
+        // Fallback: GitHub API
+        var r2 = await fetch('https://api.github.com/repos/' + gh.owner + '/' + gh.repo + '/contents/telegram_bot/history.json',
+          { headers: { 'Authorization': 'token ' + gh.token } });
+        if (!r2.ok) { renderHistory([]); return; }
+        var d2 = await r2.json();
+        var content2 = JSON.parse(atob(d2.content.replace(/\n/g,'')));
+        TG_STATE.history = Array.isArray(content2) ? content2 : [];
+      } else {
+        var json = await r.json();
+        TG_STATE.history = Array.isArray(json) ? json : [];
+      }
+    } catch(e) { TG_STATE.history = []; }
+    renderHistory(TG_STATE.history);
+    updateStats(TG_STATE.history);
+    renderPreviews(TG_STATE.history.slice(0,3));
+  }
+
   function renderHistory(items) {
+    var filtered = TG_STATE.histFilter
+      ? items.filter(function(p){ return p.rubric === TG_STATE.histFilter || p.category === TG_STATE.histFilter; })
+      : items;
     var el = document.getElementById('tgHistoryList');
     if (!el) return;
-    if (!items.length) {
-      el.innerHTML = '<div class="tg-empty"><i class="fab fa-telegram" style="font-size:2rem;display:block;margin-bottom:8px;opacity:0.3"></i>Hali post yo\'q</div>';
+    if (!filtered.length) {
+      el.innerHTML = '<div class="tg-empty"><i class="fab fa-telegram" style="font-size:2rem;display:block;margin-bottom:8px;opacity:0.3"></i>Post topilmadi</div>';
       return;
     }
-    el.innerHTML = items.slice(0, 20).map(function(p) {
+    var rubricLabels = {};
+    RUBRICS.forEach(function(r){ rubricLabels[r.key] = r.label; });
+    el.innerHTML = filtered.slice(0,40).map(function(p) {
       var dt = p.timestamp ? new Date(p.timestamp).toLocaleString('uz-UZ') : '—';
-      var cat = {logo:'Logo',poster:'Poster',social:'Social',business_card:'Vizitka',branding:'Brending'}[p.category] || p.category || '';
+      var cat = rubricLabels[p.rubric] || rubricLabels[p.category] || p.rubric_title || p.category || '';
       return '<div class="tg-history-item">'
-        + (p.image ? '<img class="tg-history-thumb" src="' + p.image + '" onerror="this.style.display=\'none\'">' : '<div class="tg-history-thumb" style="display:flex;align-items:center;justify-content:center;font-size:1.2rem;opacity:0.3"><i class="fas fa-image"></i></div>')
+        + (p.image
+          ? '<img class="tg-history-thumb" src="'+p.image+'" onerror="this.parentElement.querySelector(\'.tg-history-thumb\').style.background=\'var(--bg)\'">'
+          : '<div class="tg-history-thumb" style="display:flex;align-items:center;justify-content:center;font-size:1.2rem;opacity:0.3"><i class="fas fa-image"></i></div>')
         + '<div class="tg-history-info">'
-        + '<div class="tg-history-caption">' + (p.caption || '—') + '</div>'
-        + '<div class="tg-history-meta">' + dt + (cat ? ' · ' + cat : '') + '</div>'
+        + '<div class="tg-history-caption">'+(p.caption||'—')+'</div>'
+        + '<div class="tg-history-meta">'+dt+(cat?' · '+cat:'')+'</div>'
         + '</div>'
-        + '<span class="tg-history-status' + (p.status === 'sent' ? '' : ' err') + '">' + (p.status === 'sent' ? 'Yuborildi' : 'Xato') + '</span>'
+        + '<span class="tg-history-status'+(p.status==='sent'?'':' err')+'">'+(p.status==='sent'?'Yuborildi':'Xato')+'</span>'
         + '</div>';
     }).join('');
   }
 
+  function filterHistory(btn) {
+    document.querySelectorAll('.tg-hist-filter-btn').forEach(function(b){ b.classList.remove('active'); });
+    btn.classList.add('active');
+    TG_STATE.histFilter = btn.dataset.cat || '';
+    renderHistory(TG_STATE.history);
+  }
+
   function updateStats(items) {
     var today = new Date().toDateString();
-    var todayCount = items.filter(function(p) {
-      return p.timestamp && new Date(p.timestamp).toDateString() === today;
-    }).length;
-    var el1 = document.getElementById('tgTodayCount');
-    var el2 = document.getElementById('tgTotalCount');
-    var el3 = document.getElementById('tgLastPost');
-    if (el1) el1.textContent = todayCount;
-    if (el2) el2.textContent = items.length;
-    if (el3 && items[0]) {
-      var diff = Math.round((Date.now() - new Date(items[0].timestamp)) / 60000);
-      el3.textContent = diff < 60 ? diff + 'm' : (diff < 1440 ? Math.round(diff/60) + 'h' : Math.round(diff/1440) + 'k');
+    var todayCount = items.filter(function(p){ return p.timestamp && new Date(p.timestamp).toDateString()===today; }).length;
+    var e1=document.getElementById('tgTodayCount'), e2=document.getElementById('tgTotalCount'), e3=document.getElementById('tgLastPost'), e4=document.getElementById('tgNextPost');
+    if (e1) e1.textContent = todayCount;
+    if (e2) e2.textContent = items.length;
+    if (e3 && items[0] && items[0].timestamp) {
+      var diff = Math.round((Date.now() - new Date(items[0].timestamp))/60000);
+      e3.textContent = diff<60 ? diff+'m' : diff<1440 ? Math.round(diff/60)+'h' : Math.round(diff/1440)+'k';
+    }
+    if (e4) {
+      var sched = getSched();
+      var slots = (sched.slots||[]).filter(function(s){ return s.enabled!==false; });
+      e4.textContent = slots.length ? slots.length+'/h' : '—';
     }
   }
 
-  // Jadval GitHub ga saqlash
+  function renderPreviews(items) {
+    var el = document.getElementById('tgRecentPreviews');
+    if (!el) return;
+    if (!items.length) { el.innerHTML='<div class="tg-empty" style="grid-column:1/-1">Hali post yo\'q</div>'; return; }
+    var rubricLabels={};
+    RUBRICS.forEach(function(r){ rubricLabels[r.key]=r.label; });
+    el.innerHTML = items.map(function(p) {
+      var cat = rubricLabels[p.rubric]||rubricLabels[p.category]||p.rubric_title||'';
+      var dt = p.timestamp ? new Date(p.timestamp).toLocaleDateString('uz-UZ') : '';
+      return '<div class="tg-preview-card">'
+        + '<div class="tg-preview-img">'+(p.image?'<img src="'+p.image+'" alt="">':'<i class="fas fa-image"></i>')+'</div>'
+        + '<div class="tg-preview-body">'
+        + '<div class="tg-preview-cat">'+cat+'</div>'
+        + '<div class="tg-preview-text">'+(p.caption||'—')+'</div>'
+        + '<div class="tg-preview-time">'+dt+'</div>'
+        + '</div></div>';
+    }).join('');
+  }
+
+  /* ── Schedule to GitHub ── */
   async function saveScheduleToGitHub(sched) {
-    var cfg = ghCfg();
-    if (!cfg.token || !cfg.owner || !cfg.repo) return;
+    var gh = ghCfg();
+    if (!gh.token || !gh.owner || !gh.repo) return;
     try {
-      var url = 'https://api.github.com/repos/' + cfg.owner + '/' + cfg.repo + '/contents/telegram_bot/schedule.json';
-      // SHA olish
-      var getR = await fetch(url, { headers: { 'Authorization': 'token ' + cfg.token } });
+      var url = 'https://api.github.com/repos/'+gh.owner+'/'+gh.repo+'/contents/telegram_bot/schedule.json';
+      var getR = await fetch(url, {headers:{'Authorization':'token '+gh.token}});
       var sha = null;
       if (getR.ok) { var gd = await getR.json(); sha = gd.sha; }
-      // Yuklash
-      var body = { message: 'Telegram: jadval yangilandi', content: btoa(JSON.stringify(sched, null, 2)) };
+      var body = {message:'Telegram: jadval yangilandi', content: btoa(unescape(encodeURIComponent(JSON.stringify(sched,null,2))))};
       if (sha) body.sha = sha;
-      await fetch(url, { method: 'PUT', headers: { 'Authorization': 'token ' + cfg.token, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      await fetch(url, {method:'PUT', headers:{'Authorization':'token '+gh.token,'Content-Type':'application/json'}, body:JSON.stringify(body)});
       log('Jadval GitHub ga saqlandi', 'ok');
-    } catch(e) {
-      log('Jadval saqlashda xato: ' + e.message, 'err');
-    }
+    } catch(e) { log('Jadval saqlashda xato: '+e.message,'err'); }
   }
 
-  // GitHub Actions orqali manual post trigger
+  /* ── Post now ── */
   async function postNow() {
     var btn = document.getElementById('tgPostNowBtn');
-    var cfg = ghCfg();
-    if (!cfg.token || !cfg.owner || !cfg.repo) {
-      log('GitHub token sozlanmagan! GitHub Push bo\'limiga o\'ting', 'err');
-      showToast('GitHub token kerak — GitHub Push bo\'limiga o\'ting', 'error');
+    var gh = ghCfg();
+    if (!gh.token || !gh.owner || !gh.repo) {
+      log('GitHub token sozlanmagan! GitHub Push bo\'limiga o\'ting','err');
+      showToast('GitHub token kerak — GitHub Push bo\'limiga o\'ting','error');
       return;
     }
-    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Yuklanmoqda...'; }
-    log('GitHub Actions ishga tushirilmoqda...', 'warn');
+    if (btn) { btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Yuklanmoqda...'; }
+    log('GitHub Actions ishga tushirilmoqda...','warn');
     try {
-      var r = await fetch('https://api.github.com/repos/' + cfg.owner + '/' + cfg.repo + '/dispatches', {
-        method: 'POST',
-        headers: { 'Authorization': 'token ' + cfg.token, 'Content-Type': 'application/json', 'Accept': 'application/vnd.github.v3+json' },
-        body: JSON.stringify({ event_type: 'telegram-post', client_payload: { category: '' } })
+      var r = await fetch('https://api.github.com/repos/'+gh.owner+'/'+gh.repo+'/dispatches', {
+        method:'POST',
+        headers:{'Authorization':'token '+gh.token,'Content-Type':'application/json','Accept':'application/vnd.github.v3+json'},
+        body:JSON.stringify({event_type:'telegram-post', client_payload:{category:''}})
       });
-      if (r.ok || r.status === 204) {
-        log('GitHub Actions ishga tushdi! 2-3 daqiqada post yuboriladi', 'ok');
-        showToast('Post jarayoni boshlandi — 2-3 daqiqada yuboriladi', 'success');
-        setTimeout(function() { loadHistory(); }, 180000);
+      if (r.ok||r.status===204) {
+        log('GitHub Actions ishga tushdi! 2-3 daqiqada post yuboriladi','ok');
+        showToast('Post jarayoni boshlandi — 2-3 daqiqada yuboriladi','success');
+        setTimeout(function(){ loadHistory(); }, 180000);
       } else {
         var err = await r.json().catch(function(){return {};});
-        throw new Error(err.message || r.status);
+        throw new Error(err.message||r.status);
       }
     } catch(e) {
-      log('Xato: ' + e.message, 'err');
-      showToast('Xato: ' + e.message, 'error');
+      log('Xato: '+e.message,'err');
+      showToast('Xato: '+e.message,'error');
     }
-    setTimeout(function() {
-      if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fab fa-telegram"></i> Hozir yuborish'; }
-    }, 5000);
+    setTimeout(function(){ if(btn){btn.disabled=false;btn.innerHTML='<i class="fab fa-telegram"></i> Hozir yuborish';} },5000);
   }
 
-  // UI load
-  function loadUI() {
-    var cfg = getCfg();
-    var sched = getSched();
-    var lk = document.getElementById('tgLeonardoKey');
-    var sc = document.getElementById('tgScheduleEnabled');
-    if (lk) lk.value = cfg.leonardoKey || '';
-    if (sc) sc.checked = !!sched.enabled;
-    renderWeekSchedule(sched.slots || []);
-  }
-
-  function saveConfig() {
-    var cfg = getCfg();
-    var lk = document.getElementById('tgLeonardoKey');
-    if (lk) cfg.leonardoKey = lk.value;
-    saveCfg(cfg);
-  }
-
+  /* ── Schedule UI ── */
   function saveSchedule() {
     var sched = getSched();
-    sched.enabled = document.getElementById('tgScheduleEnabled') ? document.getElementById('tgScheduleEnabled').checked : false;
+    var sc1 = document.getElementById('tgScheduleEnabled');
+    var sc2 = document.getElementById('tgScheduleEnabled2');
+    sched.enabled = (sc1 && sc1.checked) || (sc2 && sc2.checked);
     sched.slots = collectSlots();
     saveSched(sched);
     saveScheduleToGitHub(sched);
+    updateSchedSummary(sched.slots);
+  }
+
+  function syncScheduleToggle(src) {
+    var other = src.id === 'tgScheduleEnabled' ? document.getElementById('tgScheduleEnabled2') : document.getElementById('tgScheduleEnabled');
+    if (other) other.checked = src.checked;
+    saveSchedule();
   }
 
   function collectSlots() {
     var slots = [];
-    document.querySelectorAll('.tg-slot-row').forEach(function(row) {
+    var rows = document.querySelectorAll('.tg-slot-row');
+    if (!rows) return slots;
+    rows.forEach(function(row) {
       var t = row.querySelector('.tg-slot-time');
       var c = row.querySelector('.tg-slot-cat');
       var e = row.querySelector('.tg-slot-enabled');
       slots.push({
         day: row.dataset.day || '',
         time: t ? t.value : '10:00',
-        category: c ? c.value : '',
+        category: c ? c.value : 'tip',
         enabled: e ? e.checked : true,
       });
     });
     return slots;
   }
 
-  // Haftalik jadval render
+  function updateSchedSummary(slots) {
+    var el = document.getElementById('tgSchedSummary');
+    if (!el) return;
+    var cnt = (slots||[]).filter(function(s){ return s.enabled!==false; }).length;
+    el.textContent = cnt + ' post/hafta rejalashtirilgan';
+  }
+
   function renderWeekSchedule(slots) {
     var el = document.getElementById('tgWeekSchedule');
     if (!el) return;
-
-    // Slotlarni kun bo'yicha guruhlash
     var byDay = {};
-    DAYS.forEach(function(d) { byDay[d.key] = []; });
-    slots.forEach(function(s) { if (byDay[s.day]) byDay[s.day].push(s); });
-
+    DAYS.forEach(function(d){ byDay[d.key]=[]; });
+    slots.forEach(function(s){ if(byDay[s.day]) byDay[s.day].push(s); });
     var html = '';
     DAYS.forEach(function(day) {
-      html += '<div class="tg-day-block" data-day="' + day.key + '">'
+      html += '<div class="tg-day-block" data-day="'+day.key+'">'
         + '<div class="tg-day-header">'
-        + '<span class="tg-day-name">' + day.label + '</span>'
-        + '<button type="button" class="tg-add-slot" onclick="TG.addSlot(\'' + day.key + '\')" title="Post qo\'shish"><i class="fas fa-plus"></i></button>'
+        + '<span class="tg-day-name">'+day.label+'</span>'
+        + '<button type="button" class="tg-add-slot" onclick="TG.addSlot(\''+day.key+'\')" title="Post qo\'shish"><i class="fas fa-plus"></i></button>'
         + '</div>'
-        + '<div class="tg-slots" id="tgSlots_' + day.key + '">';
-
-      byDay[day.key].forEach(function(slot, i) {
-        html += renderSlotRow(day.key, slot);
-      });
-
+        + '<div class="tg-slots" id="tgSlots_'+day.key+'">';
+      byDay[day.key].forEach(function(slot){ html += renderSlotRow(day.key, slot); });
       html += '</div></div>';
     });
-
     el.innerHTML = html;
+    updateSchedSummary(slots);
   }
 
   function renderSlotRow(dayKey, slot) {
-    var rubricsOpts = RUBRICS.map(function(r) {
-      return '<option value="' + r.key + '"' + (slot.category === r.key ? ' selected' : '') + '>' + r.label + '</option>';
+    var rubricsOpts = RUBRICS.map(function(r){
+      return '<option value="'+r.key+'"'+(slot.category===r.key?' selected':'')+'>'+r.label+'</option>';
     }).join('');
-
-    return '<div class="tg-slot-row" data-day="' + dayKey + '">'
-      + '<label class="tg-toggle" style="flex-shrink:0"><input type="checkbox" class="tg-slot-enabled" ' + (slot.enabled !== false ? 'checked' : '') + ' onchange="TG.saveSchedule()"><span class="tg-toggle-slider"></span></label>'
-      + '<input type="time" class="tg-slot-time form-input" value="' + (slot.time || '10:00') + '" onchange="TG.saveSchedule()" style="width:90px;padding:5px 8px;font-size:0.78rem">'
-      + '<select class="tg-slot-cat form-input" onchange="TG.saveSchedule()" style="flex:1;padding:5px 8px;font-size:0.78rem">' + rubricsOpts + '</select>'
+    return '<div class="tg-slot-row" data-day="'+dayKey+'">'
+      + '<label class="tg-toggle" style="flex-shrink:0"><input type="checkbox" class="tg-slot-enabled" '+(slot.enabled!==false?'checked':'')+' onchange="TG.saveSchedule()"><span class="tg-toggle-slider"></span></label>'
+      + '<input type="time" class="tg-slot-time form-input" value="'+(slot.time||'10:00')+'" onchange="TG.saveSchedule()" style="width:90px;padding:5px 8px;font-size:0.78rem">'
+      + '<select class="tg-slot-cat form-input" onchange="TG.saveSchedule()" style="flex:1;padding:5px 8px;font-size:0.78rem">'+rubricsOpts+'</select>'
       + '<button type="button" onclick="TG.removeSlot(this)" style="background:none;border:none;color:var(--muted);cursor:pointer;padding:4px;font-size:0.8rem;flex-shrink:0"><i class="fas fa-times"></i></button>'
       + '</div>';
   }
 
   function addSlot(dayKey) {
-    var container = document.getElementById('tgSlots_' + dayKey);
+    var container = document.getElementById('tgSlots_'+dayKey);
     if (!container) return;
     var div = document.createElement('div');
-    div.innerHTML = renderSlotRow(dayKey, {time:'10:00', category:'tip', enabled:true});
+    div.innerHTML = renderSlotRow(dayKey, {time:'10:00',category:'tip',enabled:true});
     container.appendChild(div.firstElementChild);
     saveSchedule();
   }
@@ -4391,13 +4779,198 @@ var TG = (function() {
     if (row) { row.remove(); saveSchedule(); }
   }
 
+  /* ── Rubric editors ── */
+  function renderRubricTextList() {
+    var cfg = getCfg();
+    var rubricPrompts = cfg.rubricTextPrompts || {};
+    var el = document.getElementById('tgRubricTextList');
+    if (!el) return;
+    el.innerHTML = RUBRICS.map(function(r, i) {
+      var prompt = rubricPrompts[r.key] || r.textPrompt;
+      return '<div class="tg-rubric-row">'
+        + '<div class="tg-rubric-header"><span class="tg-rubric-emoji">'+r.emoji+'</span><span class="tg-rubric-name">'+r.label+'</span></div>'
+        + '<textarea class="form-input" rows="2" style="resize:vertical;font-size:0.75rem" oninput="TG.saveRubricTextPrompt(\''+r.key+'\',this.value)">'+prompt+'</textarea>'
+        + '</div>';
+    }).join('');
+  }
+
+  function saveRubricTextPrompt(key, val) {
+    var cfg = getCfg();
+    if (!cfg.rubricTextPrompts) cfg.rubricTextPrompts = {};
+    cfg.rubricTextPrompts[key] = val;
+    saveCfg(cfg);
+  }
+
+  function renderRubricImageList() {
+    var cfg = getCfg();
+    var rubricPrompts = cfg.rubricImagePrompts || {};
+    var el = document.getElementById('tgRubricImageList');
+    if (!el) return;
+    el.innerHTML = RUBRICS.map(function(r) {
+      var prompt = rubricPrompts[r.key] || r.imagePrompt;
+      return '<div class="tg-rubric-row">'
+        + '<div class="tg-rubric-header"><span class="tg-rubric-emoji">'+r.emoji+'</span><span class="tg-rubric-name">'+r.label+'</span></div>'
+        + '<textarea class="form-input" rows="2" style="resize:vertical;font-size:0.75rem" oninput="TG.saveRubricImagePrompt(\''+r.key+'\',this.value)">'+prompt+'</textarea>'
+        + '</div>';
+    }).join('');
+  }
+
+  function saveRubricImagePrompt(key, val) {
+    var cfg = getCfg();
+    if (!cfg.rubricImagePrompts) cfg.rubricImagePrompts = {};
+    cfg.rubricImagePrompts[key] = val;
+    saveCfg(cfg);
+  }
+
+  /* ── Sources ── */
+  function renderSourceList() {
+    var cfg = getCfg();
+    var sources = cfg.sources || DEFAULT_SOURCES;
+    var el = document.getElementById('tgSourceList');
+    if (!el) return;
+    if (!sources.length) { el.innerHTML='<div class="tg-empty">Manbalar yo\'q</div>'; return; }
+    el.innerHTML = sources.map(function(s, i) {
+      return '<div class="tg-source-item">'
+        + '<a href="'+s.url+'" target="_blank" rel="noopener">'+s.name+' <span style="color:var(--muted);font-size:0.65rem">'+s.url+'</span></a>'
+        + '<button class="tg-source-del" onclick="TG.removeSource('+i+')"><i class="fas fa-times"></i></button>'
+        + '</div>';
+    }).join('');
+    // Trend mavzular (rubrikalar bo'yicha)
+    var trendEl = document.getElementById('tgTrendTopics');
+    if (trendEl) {
+      trendEl.innerHTML = RUBRICS.map(function(r) {
+        var topics = cfg.trendTopics && cfg.trendTopics[r.key] || '';
+        return '<div class="tg-rubric-row">'
+          + '<div class="tg-rubric-header"><span class="tg-rubric-emoji">'+r.emoji+'</span><span class="tg-rubric-name">'+r.label+'</span></div>'
+          + '<textarea class="form-input" rows="2" style="resize:vertical;font-size:0.75rem" placeholder="Trend mavzular (vergul bilan ajrating)" oninput="TG.saveTrendTopics(\''+r.key+'\',this.value)">'+topics+'</textarea>'
+          + '</div>';
+      }).join('');
+    }
+  }
+
+  function addSource() {
+    var nameEl = document.getElementById('tgNewSourceName');
+    var urlEl = document.getElementById('tgNewSourceUrl');
+    if (!nameEl||!urlEl) return;
+    var name = nameEl.value.trim();
+    var url = urlEl.value.trim();
+    if (!name||!url) { showToast('Nom va URL kiriting','warning'); return; }
+    var cfg = getCfg();
+    if (!cfg.sources) cfg.sources = DEFAULT_SOURCES.slice();
+    cfg.sources.push({name:name,url:url});
+    saveCfg(cfg);
+    nameEl.value=''; urlEl.value='';
+    renderSourceList();
+    log('Manba qo\'shildi: '+name,'ok');
+  }
+
+  function removeSource(idx) {
+    var cfg = getCfg();
+    if (!cfg.sources) cfg.sources = DEFAULT_SOURCES.slice();
+    cfg.sources.splice(idx,1);
+    saveCfg(cfg);
+    renderSourceList();
+  }
+
+  function saveTrendTopics(key, val) {
+    var cfg = getCfg();
+    if (!cfg.trendTopics) cfg.trendTopics = {};
+    cfg.trendTopics[key] = val;
+    saveCfg(cfg);
+  }
+
+  /* ── Text/Image settings ── */
+  function saveTextSettings() {
+    var cfg = getCfg();
+    var el = document.getElementById('tgSystemPrompt');
+    if (el) cfg.systemPrompt = el.value;
+    saveCfg(cfg);
+  }
+
+  function saveImageSettings() {
+    var cfg = getCfg();
+    var el = document.getElementById('tgImageStyles');
+    if (el) cfg.imageStyles = el.value.split('\n').map(function(s){return s.trim();}).filter(Boolean);
+    saveCfg(cfg);
+  }
+
+  /* ── Settings tab ── */
+  function loadSettingsTab() {
+    var st = getSettings();
+    var gh = ghCfg();
+    var el;
+    if ((el=document.getElementById('tgCfgBotToken'))) el.value = st.botToken||'';
+    if ((el=document.getElementById('tgCfgChannelId'))) el.value = st.channelId||'@deardsgn';
+    if ((el=document.getElementById('tgCfgGroqKey'))) el.value = st.groqKey||'';
+    if ((el=document.getElementById('tgCfgLeonardoKey'))) el.value = st.leonardoKey||'';
+    if ((el=document.getElementById('tgCfgRepoInfo'))) el.value = gh.owner&&gh.repo ? gh.owner+'/'+gh.repo : '';
+  }
+
+  function saveSettings() {
+    var st = getSettings();
+    var el;
+    if ((el=document.getElementById('tgCfgBotToken'))) st.botToken = el.value;
+    if ((el=document.getElementById('tgCfgChannelId'))) st.channelId = el.value;
+    if ((el=document.getElementById('tgCfgGroqKey'))) st.groqKey = el.value;
+    if ((el=document.getElementById('tgCfgLeonardoKey'))) st.leonardoKey = el.value;
+    saveSettingsData(st);
+  }
+
+  function togglePass(id, btn) {
+    var inp = document.getElementById(id);
+    if (!inp) return;
+    if (inp.type==='password') { inp.type='text'; btn.innerHTML='<i class="fas fa-eye-slash"></i>'; }
+    else { inp.type='password'; btn.innerHTML='<i class="fas fa-eye"></i>'; }
+  }
+
+  /* ── Legacy shim (eski tgLeonardoKey uchun) ── */
+  function saveConfig() {
+    var cfg = getCfg();
+    var lk = document.getElementById('tgLeonardoKey');
+    if (lk) cfg.leonardoKey = lk.value;
+    saveCfg(cfg);
+  }
+
+  /* ── Init ── */
+  function loadUI() {
+    var sched = getSched();
+    var cfg = getCfg();
+    var sc = document.getElementById('tgScheduleEnabled');
+    var sc2 = document.getElementById('tgScheduleEnabled2');
+    if (sc) sc.checked = !!sched.enabled;
+    if (sc2) sc2.checked = !!sched.enabled;
+    renderWeekSchedule(sched.slots||[]);
+    // Text agent
+    var sp = document.getElementById('tgSystemPrompt');
+    if (sp) sp.value = cfg.systemPrompt||DEFAULT_SYSTEM_PROMPT;
+    // Image agent
+    var is = document.getElementById('tgImageStyles');
+    if (is) is.value = (cfg.imageStyles||DEFAULT_IMAGE_STYLES).join('\n');
+    renderRubricTextList();
+    renderRubricImageList();
+    renderSourceList();
+    loadSettingsTab();
+  }
+
   function init() {
     loadUI();
     checkBot();
     loadHistory();
+    checkGroqStatus();
+    checkLeonardoCredits();
   }
 
-  return { init:init, checkBot:checkBot, postNow:postNow, saveConfig:saveConfig, saveSchedule:saveSchedule, loadHistory:loadHistory, addSlot:addSlot, removeSlot:removeSlot };
+  return {
+    init:init, checkBot:checkBot, postNow:postNow, saveConfig:saveConfig,
+    saveSchedule:saveSchedule, loadHistory:loadHistory, addSlot:addSlot, removeSlot:removeSlot,
+    switchTab:switchTab, filterHistory:filterHistory, syncScheduleToggle:syncScheduleToggle,
+    addSource:addSource, removeSource:removeSource, saveTrendTopics:saveTrendTopics,
+    saveTextSettings:saveTextSettings, saveImageSettings:saveImageSettings,
+    saveRubricTextPrompt:saveRubricTextPrompt, saveRubricImagePrompt:saveRubricImagePrompt,
+    saveSettings:saveSettings, togglePass:togglePass,
+    checkLeonardoCredits:checkLeonardoCredits, checkGroqStatus:checkGroqStatus,
+    testGroq:testGroq, testLeonardo:testLeonardo
+  };
 })();
 
 function tgCheckBot() { TG.checkBot(); }
@@ -4408,7 +4981,6 @@ function tgRefreshHistory() { TG.loadHistory(); }
 
 // Telegram paneli ochilganda init
 var _tgInited = false;
-var _origShowPanel = null;
 document.addEventListener('DOMContentLoaded', function() {
   var orig = window.showPanel;
   window.showPanel = function(id, el) {

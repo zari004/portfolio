@@ -316,8 +316,13 @@ def main():
 
   # Slot topish (yoki manual)
   slot = get_current_slot(schedule)
-  if not slot and not os.environ.get('MANUAL_CATEGORY'):
+  is_manual = os.environ.get('MANUAL_TRIGGER', 'false').lower() in ('true', '1')
+  if not slot and not is_manual:
     print('Bu vaqtda post yo\'q — jadval bo\'yicha emas'); return
+  if not slot and is_manual:
+    # Manual trigger bo'lsa, bugungi birinchi enabled slotdan oladi, yoki 'tip' ishlatadi
+    enabled_slots = [s for s in schedule.get('slots', []) if s.get('enabled', True)]
+    slot = enabled_slots[0] if enabled_slots else {'category': 'tip'}
 
   rubric_key = (slot or {}).get('category', 'tip')
   rubric = RUBRICS.get(rubric_key, RUBRICS['tip'])
