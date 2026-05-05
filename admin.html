@@ -585,6 +585,11 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
 /* Nav dot */
 .tg-nav-dot { width:7px;height:7px;border-radius:50%;background:#22c55e;margin-left:auto;box-shadow:0 0 6px rgba(34,197,94,0.6);display:none; }
 .tg-nav-dot.active { display:inline-block; }
+/* Mode switcher */
+.mode-switcher { display:flex;gap:6px;padding:8px 16px 12px;border-bottom:1px solid var(--border); }
+.mode-btn { flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:7px 10px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:inherit;font-size:0.75rem;font-weight:600;cursor:pointer;transition:all 0.2s; }
+.mode-btn:hover { border-color:var(--accent);color:var(--text); }
+.mode-btn.active { background:var(--accent);border-color:var(--accent);color:#0a0a0a; }
 /* Header */
 .tg-header { display:flex;align-items:center;gap:12px;margin-bottom:20px;padding:18px 20px;background:linear-gradient(135deg,rgba(0,136,204,0.12),rgba(0,136,204,0.04));border:1px solid rgba(0,136,204,0.2);border-radius:14px; }
 .tg-header-icon { width:48px;height:48px;border-radius:12px;background:rgba(0,136,204,0.15);display:flex;align-items:center;justify-content:center;font-size:1.4rem;color:#0088cc;flex-shrink:0; }
@@ -739,7 +744,18 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
       <div class="brand-icon" id="sidebar-brand-icon">D</div>
       <div class="brand-text" id="sidebar-brand-text">dizay<span>n.</span></div>
     </div>
-    <nav class="sidebar-nav">
+    <!-- Mode switcher -->
+    <div class="mode-switcher" id="modeSwitcher">
+      <button class="mode-btn active" id="modeBtnSite" onclick="switchMode('site')">
+        <i class="fas fa-globe"></i> Sayt
+      </button>
+      <button class="mode-btn" id="modeBtnBot" onclick="switchMode('bot')">
+        <i class="fab fa-telegram"></i> Bot
+        <span class="tg-nav-dot" id="tgNavDot" style="position:relative;top:0;right:0;margin-left:2px"></span>
+      </button>
+    </div>
+    <!-- SAYT nav -->
+    <nav class="sidebar-nav" id="siteNav">
       <div class="nav-section">Bo'limlar</div>
       <div class="nav-item active" data-panel="hero" onclick="showPanel('hero', this)">
         <i class="fas fa-home"></i> Hero
@@ -769,10 +785,31 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
       <div class="nav-item" data-panel="github" onclick="showPanel('github', this)">
         <i class="fab fa-github"></i> GitHub Push
       </div>
-      <div class="nav-section">Telegram</div>
-      <div class="nav-item" data-panel="telegram" onclick="showPanel('telegram', this)" id="nav-telegram">
-        <i class="fab fa-telegram"></i> Telegram Bot
-        <span class="tg-nav-dot" id="tgNavDot"></span>
+    </nav>
+    <!-- BOT nav -->
+    <nav class="sidebar-nav" id="botNav" style="display:none">
+      <div class="nav-section">Telegram Bot</div>
+      <div class="nav-item tg-nav active" onclick="switchTab('dashboard',this)">
+        <i class="fas fa-tachometer-alt"></i> Dashboard
+      </div>
+      <div class="nav-item tg-nav" onclick="switchTab('text',this)">
+        <i class="fas fa-pen-nib"></i> Matn Agenti
+      </div>
+      <div class="nav-item tg-nav" onclick="switchTab('image',this)">
+        <i class="fas fa-image"></i> Rasm Agenti
+      </div>
+      <div class="nav-item tg-nav" onclick="switchTab('sources',this)">
+        <i class="fas fa-newspaper"></i> Manbalar
+      </div>
+      <div class="nav-item tg-nav" onclick="switchTab('schedule',this)">
+        <i class="fas fa-calendar-alt"></i> Jadval
+      </div>
+      <div class="nav-item tg-nav" onclick="switchTab('history',this)">
+        <i class="fas fa-history"></i> Tarix
+      </div>
+      <div class="nav-section">Sozlamalar</div>
+      <div class="nav-item tg-nav" onclick="switchTab('settings',this)">
+        <i class="fas fa-cog"></i> Bot Sozlamalari
       </div>
     </nav>
     <div class="sidebar-footer">
@@ -1228,16 +1265,7 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
           </div>
         </div>
 
-        <!-- Sub navigation -->
-        <div class="tg-subnav" id="tgSubnav">
-          <button class="tg-tab-btn active" data-tab="tg-pane-dashboard" onclick="TG.switchTab(this)"><i class="fas fa-chart-pie"></i> Dashboard</button>
-          <button class="tg-tab-btn" data-tab="tg-pane-text" onclick="TG.switchTab(this)"><i class="fas fa-pen-nib"></i> Matn Agenti</button>
-          <button class="tg-tab-btn" data-tab="tg-pane-image" onclick="TG.switchTab(this)"><i class="fas fa-image"></i> Rasm Agenti</button>
-          <button class="tg-tab-btn" data-tab="tg-pane-sources" onclick="TG.switchTab(this)"><i class="fas fa-globe"></i> Manbalar</button>
-          <button class="tg-tab-btn" data-tab="tg-pane-schedule" onclick="TG.switchTab(this)"><i class="fas fa-calendar-week"></i> Jadval</button>
-          <button class="tg-tab-btn" data-tab="tg-pane-history" onclick="TG.switchTab(this)"><i class="fas fa-history"></i> Tarix</button>
-          <button class="tg-tab-btn" data-tab="tg-pane-settings" onclick="TG.switchTab(this)"><i class="fas fa-cog"></i> Sozlamalar</button>
-        </div>
+        <!-- Sub navigation olib tashlandi — sidebar orqali boshqariladi -->
 
         <!-- Log (global) -->
         <div class="tg-log" id="tgLog"></div>
@@ -4415,14 +4443,58 @@ var TG = (function() {
   }
 
   /* ── Tab switching ── */
-  function switchTab(btn) {
-    var tabId = btn.dataset.tab;
-    document.querySelectorAll('.tg-tab-btn').forEach(function(b) { b.classList.remove('active'); });
+  function switchTab(tabId, navEl) {
+    // Sidebar bot nav active
+    document.querySelectorAll('.tg-nav').forEach(function(n) { n.classList.remove('active'); });
+    if (navEl) navEl.classList.add('active');
+    // Pane
     document.querySelectorAll('.tg-pane').forEach(function(p) { p.classList.remove('active'); });
-    btn.classList.add('active');
-    var pane = document.getElementById(tabId);
+    var pane = document.getElementById('tg-pane-' + tabId);
     if (pane) pane.classList.add('active');
     TG_STATE.currentTab = tabId;
+    // Topbar title
+    var titles = { dashboard:'Dashboard', text:'Matn Agenti', image:'Rasm Agenti', sources:'Manbalar', schedule:'Jadval', history:'Tarix', settings:'Bot Sozlamalari' };
+    var ttl = document.getElementById('topbarTitle');
+    if (ttl) ttl.textContent = titles[tabId] || tabId;
+    if (tabId === 'dashboard') { checkBot(); tgLoadHistory(); }
+    if (tabId === 'history') tgLoadHistory();
+  }
+
+  function switchMode(mode) {
+    var siteNav = document.getElementById('siteNav');
+    var botNav  = document.getElementById('botNav');
+    var btnSite = document.getElementById('modeBtnSite');
+    var btnBot  = document.getElementById('modeBtnBot');
+    var panelsCont = document.querySelector('.panels-container');
+    if (mode === 'bot') {
+      siteNav.style.display = 'none';
+      botNav.style.display  = 'block';
+      btnSite.classList.remove('active');
+      btnBot.classList.add('active');
+      // Show telegram panel, hide others
+      document.querySelectorAll('.panel').forEach(function(p) { p.classList.remove('active'); });
+      var tgPanel = document.getElementById('panel-telegram');
+      if (tgPanel) tgPanel.classList.add('active');
+      var ttl = document.getElementById('topbarTitle');
+      if (ttl) ttl.textContent = 'Dashboard';
+      // Activate first tab
+      var firstNav = botNav.querySelector('.tg-nav');
+      switchTab('dashboard', firstNav);
+    } else {
+      siteNav.style.display = 'block';
+      botNav.style.display  = 'none';
+      btnSite.classList.add('active');
+      btnBot.classList.remove('active');
+      // Restore first site panel
+      document.querySelectorAll('.panel').forEach(function(p) { p.classList.remove('active'); });
+      var heroPanel = document.getElementById('panel-hero');
+      if (heroPanel) heroPanel.classList.add('active');
+      var firstNav = siteNav.querySelector('.nav-item');
+      document.querySelectorAll('#siteNav .nav-item').forEach(function(n) { n.classList.remove('active'); });
+      if (firstNav) firstNav.classList.add('active');
+      var ttl = document.getElementById('topbarTitle');
+      if (ttl) ttl.textContent = 'Hero';
+    }
   }
 
   /* ── Bot check ── */
