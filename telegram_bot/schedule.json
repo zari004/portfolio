@@ -1,7 +1,6 @@
 {
-  "enabled": false,
+  "enabled": true,
   "category": "logo",
   "language": "uz",
-  "time_utc": "05:00",
-  "frequency": "daily"
+  "time": "10:00"
 }
