@@ -4274,7 +4274,7 @@ var TG = (function() {
       var r = await fetch('https://api.github.com/repos/' + cfg.owner + '/' + cfg.repo + '/dispatches', {
         method: 'POST',
         headers: { 'Authorization': 'token ' + cfg.token, 'Content-Type': 'application/json', 'Accept': 'application/vnd.github.v3+json' },
-        body: JSON.stringify({ event_type: 'telegram-post', client_payload: { category: document.getElementById('tgCategory').value } })
+        body: JSON.stringify({ event_type: 'telegram-post', client_payload: { category: '' } })
       });
       if (r.ok || r.status === 204) {
         log('GitHub Actions ishga tushdi! 2-3 daqiqada post yuboriladi', 'ok');
