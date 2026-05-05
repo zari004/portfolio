@@ -4322,11 +4322,14 @@ var TG = (function() {
   function collectSlots() {
     var slots = [];
     document.querySelectorAll('.tg-slot-row').forEach(function(row) {
+      var t = row.querySelector('.tg-slot-time');
+      var c = row.querySelector('.tg-slot-cat');
+      var e = row.querySelector('.tg-slot-enabled');
       slots.push({
-        day: row.dataset.day,
-        time: row.querySelector('.tg-slot-time').value,
-        category: row.querySelector('.tg-slot-cat').value,
-        enabled: row.querySelector('.tg-slot-enabled').checked,
+        day: row.dataset.day || '',
+        time: t ? t.value : '10:00',
+        category: c ? c.value : '',
+        enabled: e ? e.checked : true,
       });
     });
     return slots;
