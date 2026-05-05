@@ -624,7 +624,14 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
 .tg-log .ok { color:#22c55e; }
 .tg-log .err { color:var(--red); }
 .tg-log .warn { color:#f59e0b; }
-@media(max-width:600px){.tg-stats{grid-template-columns:1fr 1fr}.tg-actions{flex-direction:column}}
+.tg-day-block { margin-bottom:10px; }
+.tg-day-header { display:flex;align-items:center;gap:8px;margin-bottom:6px; }
+.tg-day-name { font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);min-width:100px; }
+.tg-add-slot { background:rgba(0,136,204,0.12);border:1px solid rgba(0,136,204,0.25);color:#0088cc;border-radius:6px;width:24px;height:24px;cursor:pointer;font-size:0.65rem;display:flex;align-items:center;justify-content:center;transition:all 0.15s; }
+.tg-add-slot:hover { background:rgba(0,136,204,0.2); }
+.tg-slots { display:flex;flex-direction:column;gap:6px;padding-left:8px; }
+.tg-slot-row { display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:6px 10px; }
+@media(max-width:600px){.tg-stats{grid-template-columns:1fr 1fr}.tg-actions{flex-direction:column}.tg-slot-time{width:75px!important}}
 </style>
 </head>
 <body>
@@ -1181,41 +1188,20 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
           </button>
           <div class="tg-toggle-wrap">
             <label class="tg-toggle"><input type="checkbox" id="tgScheduleEnabled" onchange="tgSaveSchedule()"><span class="tg-toggle-slider"></span></label>
-            <span style="font-size:0.8rem;font-weight:600;color:var(--text)">Avtomatik</span>
-            <span style="font-size:0.72rem;color:var(--muted)" id="tgScheduleInfo">har kuni 10:00</span>
+            <span style="font-size:0.8rem;font-weight:600;color:var(--text)">Avtomatik jadval</span>
           </div>
-          <button class="btn btn-secondary btn-sm" onclick="tgRefreshHistory()"><i class="fas fa-sync-alt"></i> Yangilash</button>
+          <button class="btn btn-secondary btn-sm" onclick="tgRefreshHistory()"><i class="fas fa-sync-alt"></i></button>
         </div>
 
         <!-- Log -->
         <div class="tg-log" id="tgLog"></div>
 
-        <!-- Schedule config -->
+        <!-- Haftalik jadval -->
         <div class="tg-section">
-          <div class="tg-section-title"><i class="fas fa-clock"></i> Jadval sozlamalari</div>
-          <div class="form-row">
-            <div class="form-group">
-              <label>Kategoriya</label>
-              <select class="form-input" id="tgCategory" onchange="tgSaveSchedule()">
-                <option value="logo">Logo dizayn</option>
-                <option value="poster">Poster</option>
-                <option value="social">Social media</option>
-                <option value="business_card">Vizitka</option>
-                <option value="branding">Brending</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Til</label>
-              <select class="form-input" id="tgLanguage" onchange="tgSaveSchedule()">
-                <option value="uz">O'zbek</option>
-                <option value="en">English</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Vaqt (Toshkent)</label>
-              <input type="time" class="form-input" id="tgTime" value="10:00" onchange="tgSaveSchedule()">
-            </div>
+          <div class="tg-section-title"><i class="fas fa-calendar-week"></i> Haftalik jadval
+            <span style="margin-left:auto;font-size:0.65rem;color:var(--muted);font-weight:400;text-transform:none">Vaqtlar Toshkent bo'yicha</span>
           </div>
+          <div id="tgWeekSchedule"></div>
         </div>
 
         <!-- Config -->
@@ -4130,8 +4116,20 @@ function importAllData() {
 var TG = (function() {
   var BOT_TOKEN = '8602784339:AAGUCoGpwefmlClZNFG4r9n1svrw38T2CJM';
   var CHANNEL   = '@deardsgn';
-  var CFG_KEY   = 'tg_config_v1';
-  var SCHED_KEY = 'tg_schedule_v1';
+  var CFG_KEY   = 'tg_config_v2';
+  var SCHED_KEY = 'tg_schedule_v2';
+
+  var DAYS = [
+    {key:'mon',label:'Dushanba'},{key:'tue',label:'Seshanba'},
+    {key:'wed',label:'Chorshanba'},{key:'thu',label:'Payshanba'},
+    {key:'fri',label:'Juma'},{key:'sat',label:'Shanba'},{key:'sun',label:'Yakshanba'}
+  ];
+  var RUBRICS = [
+    {key:'trend',label:'📈 Trend'},{key:'tip',label:'💡 Maslahat'},
+    {key:'color',label:'🎨 Rang'},{key:'typography',label:'✍️ Tipografiya'},
+    {key:'logo',label:'⚡ Logo'},{key:'inspiration',label:'✨ Ilhom'},
+    {key:'tool',label:'🛠 Vosita'},{key:'mindset',label:'🧠 Fikr'}
+  ];
 
   function getCfg() {
     try { return JSON.parse(localStorage.getItem(CFG_KEY)) || {}; } catch(e) { return {}; }
@@ -4301,20 +4299,9 @@ var TG = (function() {
     var sched = getSched();
     var lk = document.getElementById('tgLeonardoKey');
     var sc = document.getElementById('tgScheduleEnabled');
-    var cat = document.getElementById('tgCategory');
-    var lang = document.getElementById('tgLanguage');
-    var time = document.getElementById('tgTime');
     if (lk) lk.value = cfg.leonardoKey || '';
     if (sc) sc.checked = !!sched.enabled;
-    if (cat) cat.value = sched.category || 'logo';
-    if (lang) lang.value = sched.language || 'uz';
-    if (time) time.value = sched.time || '10:00';
-    updateScheduleInfo(sched);
-  }
-
-  function updateScheduleInfo(sched) {
-    var el = document.getElementById('tgScheduleInfo');
-    if (el) el.textContent = 'har kuni ' + (sched.time || '10:00') + ' (Toshkent)';
+    renderWeekSchedule(sched.slots || []);
   }
 
   function saveConfig() {
@@ -4325,15 +4312,80 @@ var TG = (function() {
   }
 
   function saveSchedule() {
-    var sched = {
-      enabled: document.getElementById('tgScheduleEnabled') ? document.getElementById('tgScheduleEnabled').checked : false,
-      category: document.getElementById('tgCategory') ? document.getElementById('tgCategory').value : 'logo',
-      language: document.getElementById('tgLanguage') ? document.getElementById('tgLanguage').value : 'uz',
-      time: document.getElementById('tgTime') ? document.getElementById('tgTime').value : '10:00',
-    };
+    var sched = getSched();
+    sched.enabled = document.getElementById('tgScheduleEnabled') ? document.getElementById('tgScheduleEnabled').checked : false;
+    sched.slots = collectSlots();
     saveSched(sched);
-    updateScheduleInfo(sched);
     saveScheduleToGitHub(sched);
+  }
+
+  function collectSlots() {
+    var slots = [];
+    document.querySelectorAll('.tg-slot-row').forEach(function(row) {
+      slots.push({
+        day: row.dataset.day,
+        time: row.querySelector('.tg-slot-time').value,
+        category: row.querySelector('.tg-slot-cat').value,
+        enabled: row.querySelector('.tg-slot-enabled').checked,
+      });
+    });
+    return slots;
+  }
+
+  // Haftalik jadval render
+  function renderWeekSchedule(slots) {
+    var el = document.getElementById('tgWeekSchedule');
+    if (!el) return;
+
+    // Slotlarni kun bo'yicha guruhlash
+    var byDay = {};
+    DAYS.forEach(function(d) { byDay[d.key] = []; });
+    slots.forEach(function(s) { if (byDay[s.day]) byDay[s.day].push(s); });
+
+    var html = '';
+    DAYS.forEach(function(day) {
+      html += '<div class="tg-day-block" data-day="' + day.key + '">'
+        + '<div class="tg-day-header">'
+        + '<span class="tg-day-name">' + day.label + '</span>'
+        + '<button type="button" class="tg-add-slot" onclick="TG.addSlot(\'' + day.key + '\')" title="Post qo\'shish"><i class="fas fa-plus"></i></button>'
+        + '</div>'
+        + '<div class="tg-slots" id="tgSlots_' + day.key + '">';
+
+      byDay[day.key].forEach(function(slot, i) {
+        html += renderSlotRow(day.key, slot);
+      });
+
+      html += '</div></div>';
+    });
+
+    el.innerHTML = html;
+  }
+
+  function renderSlotRow(dayKey, slot) {
+    var rubricsOpts = RUBRICS.map(function(r) {
+      return '<option value="' + r.key + '"' + (slot.category === r.key ? ' selected' : '') + '>' + r.label + '</option>';
+    }).join('');
+
+    return '<div class="tg-slot-row" data-day="' + dayKey + '">'
+      + '<label class="tg-toggle" style="flex-shrink:0"><input type="checkbox" class="tg-slot-enabled" ' + (slot.enabled !== false ? 'checked' : '') + ' onchange="TG.saveSchedule()"><span class="tg-toggle-slider"></span></label>'
+      + '<input type="time" class="tg-slot-time form-input" value="' + (slot.time || '10:00') + '" onchange="TG.saveSchedule()" style="width:90px;padding:5px 8px;font-size:0.78rem">'
+      + '<select class="tg-slot-cat form-input" onchange="TG.saveSchedule()" style="flex:1;padding:5px 8px;font-size:0.78rem">' + rubricsOpts + '</select>'
+      + '<button type="button" onclick="TG.removeSlot(this)" style="background:none;border:none;color:var(--muted);cursor:pointer;padding:4px;font-size:0.8rem;flex-shrink:0"><i class="fas fa-times"></i></button>'
+      + '</div>';
+  }
+
+  function addSlot(dayKey) {
+    var container = document.getElementById('tgSlots_' + dayKey);
+    if (!container) return;
+    var div = document.createElement('div');
+    div.innerHTML = renderSlotRow(dayKey, {time:'10:00', category:'tip', enabled:true});
+    container.appendChild(div.firstElementChild);
+    saveSchedule();
+  }
+
+  function removeSlot(btn) {
+    var row = btn.closest('.tg-slot-row');
+    if (row) { row.remove(); saveSchedule(); }
   }
 
   function init() {
@@ -4342,7 +4394,7 @@ var TG = (function() {
     loadHistory();
   }
 
-  return { init:init, checkBot:checkBot, postNow:postNow, saveConfig:saveConfig, saveSchedule:saveSchedule, loadHistory:loadHistory };
+  return { init:init, checkBot:checkBot, postNow:postNow, saveConfig:saveConfig, saveSchedule:saveSchedule, loadHistory:loadHistory, addSlot:addSlot, removeSlot:removeSlot };
 })();
 
 function tgCheckBot() { TG.checkBot(); }

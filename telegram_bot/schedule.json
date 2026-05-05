@@ -1,6 +1,15 @@
 {
-  "enabled": true,
-  "category": "logo",
-  "language": "uz",
-  "time": "10:00"
+  "enabled": false,
+  "slots": [
+    {"day": "mon", "time": "10:00", "category": "trend",      "enabled": true},
+    {"day": "mon", "time": "18:00", "category": "tip",        "enabled": true},
+    {"day": "tue", "time": "10:00", "category": "color",      "enabled": true},
+    {"day": "wed", "time": "10:00", "category": "logo",       "enabled": true},
+    {"day": "wed", "time": "17:00", "category": "typography", "enabled": true},
+    {"day": "thu", "time": "10:00", "category": "tool",       "enabled": true},
+    {"day": "fri", "time": "10:00", "category": "inspiration","enabled": true},
+    {"day": "fri", "time": "18:00", "category": "mindset",    "enabled": true},
+    {"day": "sat", "time": "11:00", "category": "trend",      "enabled": true},
+    {"day": "sun", "time": "12:00", "category": "mindset",    "enabled": false}
+  ]
 }

@@ -2,15 +2,16 @@ name: Telegram Design Post
 
 on:
   schedule:
-    - cron: '0 5 * * *'   # har kuni 10:00 Toshkent (UTC+5)
+    # Har soatda tekshiradi — schedule.json da vaqt mos kelsa post yuboradi
+    - cron: '0 5-18 * * *'   # 10:00-23:00 Toshkent (UTC+5)
   workflow_dispatch:
     inputs:
       category:
-        description: 'Dizayn kategoriyasi'
+        description: 'Rubrika (bo''sh qolsa schedule.json dan oladi)'
         required: false
-        default: 'logo'
+        default: ''
         type: choice
-        options: [logo, poster, social, business_card, branding]
+        options: ['', logo, trend, tip, color, typography, inspiration, tool, mindset]
   repository_dispatch:
     types: [telegram-post]
 
@@ -23,19 +24,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Python setup
+      - name: Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      - name: Install dependencies
+      - name: Pip
         run: pip install requests
 
-      - name: Run bot
+      - name: Post
         run: python telegram_bot/post.py
         env:
-          TG_BOT_TOKEN:      ${{ secrets.TG_BOT_TOKEN }}
-          TG_CHANNEL_ID:     '@deardsgn'
-          LEONARDO_API_KEY:  ${{ secrets.LEONARDO_API_KEY }}
-          GITHUB_TOKEN:      ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_REPO:       ${{ github.repository }}
+          TG_BOT_TOKEN:       ${{ secrets.TG_BOT_TOKEN }}
+          TG_CHANNEL_ID:      '@deardsgn'
+          LEONARDO_API_KEY:   ${{ secrets.LEONARDO_API_KEY }}
+          GROQ_API_KEY:       ${{ secrets.GROQ_API_KEY }}
+          GITHUB_TOKEN:       ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPO:        ${{ github.repository }}
+          MANUAL_CATEGORY:    ${{ github.event.inputs.category || github.event.client_payload.category || '' }}
