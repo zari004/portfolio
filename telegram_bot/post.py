@@ -16,16 +16,19 @@ GITHUB_REPO  = os.environ.get('GITHUB_REPO', '')
 
 def check_env():
   """Muhit o'zgaruvchilarini tekshirish"""
-  missing = []
-  if not BOT_TOKEN: missing.append('TG_BOT_TOKEN')
-  if not GITHUB_TOKEN: missing.append('GITHUB_TOKEN')
-  if not GITHUB_REPO: missing.append('GITHUB_REPO')
-  if missing:
-    print(f'❌ XATO: Quyidagi secret\'lar topilmadi: {", ".join(missing)}')
-    print('GitHub repo → Settings → Secrets and variables → Actions → New repository secret')
+  print('--- Muhit o\'zgaruvchilari ---')
+  print(f'  TG_BOT_TOKEN:    {"✅ bor" if BOT_TOKEN else "❌ YO\'Q"}')
+  print(f'  GITHUB_TOKEN:    {"✅ bor" if GITHUB_TOKEN else "❌ YO\'Q"}')
+  print(f'  GITHUB_REPO:     {"✅ " + GITHUB_REPO if GITHUB_REPO else "❌ YO\'Q"}')
+  print(f'  GROQ_API_KEY:    {"✅ bor" if GROQ_KEY else "⚠️ yo\'q (zaxira shablon)"}')
+  print(f'  LEONARDO_API_KEY:{"✅ bor" if LEONARDO_KEY else "⚠️ yo\'q (rasmsiz post)"}')
+  print('---')
+  if not BOT_TOKEN:
+    print('❌ TG_BOT_TOKEN MAJBURIY! GitHub → Settings → Secrets → Actions → qo\'shing')
     return False
-  if not GROQ_KEY: print('⚠️ GROQ_API_KEY topilmadi — zaxira shablonlar ishlatiladi')
-  if not LEONARDO_KEY: print('⚠️ LEONARDO_API_KEY topilmadi — rasm generatsiya ishlamaydi')
+  if not GITHUB_TOKEN or not GITHUB_REPO:
+    print('❌ GITHUB_TOKEN/GITHUB_REPO topilmadi')
+    return False
   return True
 
 # Toshkent vaqt zonasi (UTC+5)
@@ -395,7 +398,8 @@ def fallback_caption(rubric_key, rubric):
 # ── LEONARDO ──────────────────────────────────────────────────────────────────
 def generate_image(rubric_key, rubric):
   if not LEONARDO_KEY:
-    raise Exception('LEONARDO_API_KEY sozlanmagan')
+    print('⚠️ LEONARDO_API_KEY yo\'q — rasmsiz post yuboriladi')
+    return None
 
   # Rasm promptini tayyorlash va tekshirish
   style = random.choice(IMAGE_STYLES)
@@ -496,7 +500,19 @@ def send_photo(image_url, caption):
     timeout=30
   )
   if not r.ok:
-    raise Exception(f'Telegram error: {r.text}')
+    raise Exception(f'Telegram sendPhoto error: {r.text}')
+  return r.json()['result']['message_id']
+
+
+def send_text(caption):
+  """Rasmsiz matn post yuborish"""
+  r = requests.post(
+    f'https://api.telegram.org/bot{BOT_TOKEN}/sendMessage',
+    json={'chat_id': CHANNEL_ID, 'text': caption, 'parse_mode': 'HTML', 'disable_web_page_preview': False},
+    timeout=30
+  )
+  if not r.ok:
+    raise Exception(f'Telegram sendMessage error: {r.text}')
   return r.json()['result']['message_id']
 
 
@@ -576,19 +592,30 @@ def post_one(rubric_key, rubric, slot_time, history):
   caption = f'{caption_text}\n\n{tags}'
   print(f'\nYakuniy matn: {caption[:120]}...')
 
-  # ── 3-BOSQICH: Rasm generatsiya (ichida 4-bosqich — rasm tekshiruvi) ──
-  print(f'\n🎨 [3/5] Rasm generatsiya qilinmoqda...')
-  image_url = generate_image(rubric_key, rubric)
-  print(f'✅ [4/5] Rasm tayyor: {image_url[:60]}...')
+  # ── 3-BOSQICH: Rasm generatsiya ──
+  image_url = None
+  if LEONARDO_KEY:
+    print(f'\n🎨 [3/5] Rasm generatsiya qilinmoqda...')
+    try:
+      image_url = generate_image(rubric_key, rubric)
+      print(f'✅ [4/5] Rasm tayyor: {image_url[:60]}...')
+    except Exception as e:
+      print(f'⚠️ Rasm generatsiya xatosi: {e} — rasmsiz yuboriladi')
+      image_url = None
+  else:
+    print(f'\n⏭ [3-4/5] Leonardo kaliti yo\'q — rasmsiz yuboriladi')
 
   # ── 5-BOSQICH: Kanalga yuborish ──
   print(f'\n📤 [5/5] Kanalga yuborilmoqda...')
-  msg_id = send_photo(image_url, caption)
+  if image_url:
+    msg_id = send_photo(image_url, caption)
+  else:
+    msg_id = send_text(caption)
   print(f'✅ Yuborildi! msg_id={msg_id}')
 
   return {
     'id': msg_id,
-    'image': image_url,
+    'image': image_url or '',
     'caption': caption_text,
     'hashtags': tags,
     'rubric': rubric_key,
