@@ -717,14 +717,14 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
       <label>Foydalanuvchi</label>
       <div class="input-wrap">
         <i class="fas fa-user"></i>
-        <input type="text" id="loginUser" placeholder="Loginni kiriting" autocomplete="username">
+        <input type="text" id="loginUser" placeholder="Loginni kiriting" autocomplete="username" onkeydown="if(event.key==='Enter'){document.getElementById('loginPass').focus();}">
       </div>
     </div>
     <div class="login-field">
       <label>Parol</label>
       <div class="input-wrap">
         <i class="fas fa-lock"></i>
-        <input type="password" id="loginPass" placeholder="Parolni kiriting" autocomplete="current-password">
+        <input type="password" id="loginPass" placeholder="Parolni kiriting" autocomplete="current-password" onkeydown="if(event.key==='Enter'){doLogin();}">
         <button class="pwd-toggle" type="button" onclick="togglePwd()"><i class="fas fa-eye"></i></button>
       </div>
     </div>
