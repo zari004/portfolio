@@ -18,6 +18,12 @@
       "time": "07:37",
       "category": "mindset",
       "enabled": true
+    },
+    {
+      "day": "wed",
+      "time": "10:00",
+      "category": "tip",
+      "enabled": true
     }
   ]
 }
