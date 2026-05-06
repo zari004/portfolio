@@ -746,10 +746,10 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
     </div>
     <!-- Mode switcher -->
     <div class="mode-switcher" id="modeSwitcher">
-      <button class="mode-btn active" id="modeBtnSite" onclick="switchMode('site')">
+      <button class="mode-btn active" id="modeBtnSite" onclick="TG.switchMode('site')">
         <i class="fas fa-globe"></i> Sayt
       </button>
-      <button class="mode-btn" id="modeBtnBot" onclick="switchMode('bot')">
+      <button class="mode-btn" id="modeBtnBot" onclick="TG.switchMode('bot')">
         <i class="fab fa-telegram"></i> Bot
         <span class="tg-nav-dot" id="tgNavDot" style="position:relative;top:0;right:0;margin-left:2px"></span>
       </button>
@@ -5041,7 +5041,8 @@ var TG = (function() {
     saveRubricTextPrompt:saveRubricTextPrompt, saveRubricImagePrompt:saveRubricImagePrompt,
     saveSettings:saveSettings, togglePass:togglePass,
     checkLeonardoCredits:checkLeonardoCredits, checkGroqStatus:checkGroqStatus,
-    testGroq:testGroq, testLeonardo:testLeonardo
+    testGroq:testGroq, testLeonardo:testLeonardo,
+    switchMode:switchMode
   };
 })();
 
