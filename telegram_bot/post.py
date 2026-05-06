@@ -1,7 +1,7 @@
 """
 Telegram Design Bot — Zarnigor Orifova
 Har kuni avtomatik dizayn postlari yuboradi.
-Groq (LLama3) + Leonardo.ai + Telegram Bot API
+Pipeline: Groq (matn) → Tekshiruvchi Agent → Telegram
 """
 import os, json, time, random, requests, base64
 from datetime import datetime, timezone, timedelta
@@ -99,6 +99,12 @@ MAZMUN QOIDALARI:
 - "Bizga murojaat qiling" YOZMANG
 - Har post BOSHQACHA strukturada bo'lsin
 
+MANBA LINKLARI — MAJBURIY:
+- Har postda kamida 1 ta manba linki bo'lsin
+- Format: <a href="url">manba nomi</a>
+- Linkni matn ichida TABIIY joylashtiring, masalan: "...bu haqda <a href="url">Behance</a>da ko'rishingiz mumkin"
+- Linkni post oxirida alohida qo'ymang, matn oqimida qo'shing
+
 MISOL (qanday ko'rinishi kerak):
 <b>Whitespace</b> — dizayndagi eng kam baholi, eng ko'p noto'g'ri tushuniladigan element.
 
@@ -121,9 +127,111 @@ HASHTAG_SETS = {
 
 COMMON_TAGS = '#zarnigordesign #o\'zbekdizayner #uzbekdesign #freelancedesigner'
 
+# ── MANBALAR (rubrika bo'yicha) ──────────────────────────────────────────────
+SOURCES = {
+  'trend': [
+    {'name': 'Behance', 'url': 'https://www.behance.net/galleries/graphic-design'},
+    {'name': 'Awwwards', 'url': 'https://www.awwwards.com/websites/trend/'},
+    {'name': 'Dribbble', 'url': 'https://dribbble.com/shots/popular'},
+    {'name': 'DesignBoom', 'url': 'https://www.designboom.com/design/'},
+  ],
+  'tip': [
+    {'name': 'Smashing Magazine', 'url': 'https://www.smashingmagazine.com/category/design/'},
+    {'name': 'UX Planet', 'url': 'https://uxplanet.org/'},
+    {'name': 'Nielsen Norman', 'url': 'https://www.nngroup.com/articles/'},
+  ],
+  'color': [
+    {'name': 'Coolors', 'url': 'https://coolors.co/palettes/trending'},
+    {'name': 'Color Hunt', 'url': 'https://colorhunt.co/'},
+    {'name': 'Adobe Color', 'url': 'https://color.adobe.com/trends'},
+  ],
+  'typography': [
+    {'name': 'Google Fonts', 'url': 'https://fonts.google.com/'},
+    {'name': 'Typewolf', 'url': 'https://www.typewolf.com/'},
+    {'name': 'Fonts In Use', 'url': 'https://fontsinuse.com/'},
+  ],
+  'logo': [
+    {'name': 'LogoLounge', 'url': 'https://www.logolounge.com/'},
+    {'name': 'Brand New', 'url': 'https://www.underconsideration.com/brandnew/'},
+    {'name': 'Logomoose', 'url': 'https://www.logomoose.com/'},
+  ],
+  'inspiration': [
+    {'name': 'Behance', 'url': 'https://www.behance.net/'},
+    {'name': 'Pinterest Design', 'url': 'https://www.pinterest.com/categories/design/'},
+    {'name': 'It\'s Nice That', 'url': 'https://www.itsnicethat.com/'},
+  ],
+  'tool': [
+    {'name': 'Figma Community', 'url': 'https://www.figma.com/community'},
+    {'name': 'ProductHunt Design', 'url': 'https://www.producthunt.com/topics/design-tools'},
+    {'name': 'Muzli', 'url': 'https://muz.li/'},
+  ],
+  'mindset': [
+    {'name': 'Creative Boom', 'url': 'https://www.creativeboom.com/'},
+    {'name': 'AIGA Eye on Design', 'url': 'https://eyeondesign.aiga.org/'},
+    {'name': 'The Futur', 'url': 'https://thefutur.com/blog'},
+  ],
+}
 
-def groq_generate(rubric_key, rubric):
-  """Groq orqali post matni generatsiya qilish"""
+MAX_QUALITY_RETRIES = 3
+
+# ── TEKSHIRUVCHI AGENT ───────────────────────────────────────────────────────
+REVIEWER_PROMPT = """Siz professional kontent tekshiruvchi agentisiz. Telegram dizayn kanaliga (@deardsgn) yuboriladigan postni tekshirishingiz kerak.
+
+TEKSHIRISH MEZONLARI:
+1. FORMAT: <b>qalin</b> va <i>kursiv</i> HTML teglar bor-yo'qligi (kamida 2 ta <b>, 1 ta <i>)
+2. UZUNLIK: 4-8 qator orasida bo'lishi kerak (juda qisqa yoki juda uzun emas)
+3. QIMMAT: Post o'quvchiga biror yangi bilim yoki foydali ma'lumot berishi kerak
+4. USLUB: Monoton, boring, shart qolipli bo'lmasin. Tirik, qiziqarli bo'lishi kerak
+5. GRAMMATIK: O'zbek tili grammatikasi to'g'ri bo'lishi kerak
+6. MANBA: Post ichida kamida bitta <a href="...">manba nomi</a> link bo'lishi kerak
+7. REKLAMA: "Bizga murojaat qiling", "Buyurtma bering" kabi reklama bo'lmasligi kerak
+8. TAKROR: Oldingi postlar bilan bir xil bo'lmasligi kerak (har safar boshqacha struktura)
+
+JAVOB FORMATI (faqat JSON):
+{"passed": true} — agar post tayyor bo'lsa
+{"passed": false, "errors": ["xato1", "xato2"], "suggestion": "qanday tuzatish kerak"} — agar post yaroqsiz bo'lsa
+
+Faqat JSON qaytaring, boshqa hech narsa yozmang."""
+
+
+def quality_check(post_text, rubric_key):
+  """Tekshiruvchi agent: postni sifat bo'yicha baholash"""
+  if not GROQ_KEY:
+    return {'passed': True}
+
+  try:
+    r = requests.post(
+      'https://api.groq.com/openai/v1/chat/completions',
+      headers={'Authorization': f'Bearer {GROQ_KEY}', 'Content-Type': 'application/json'},
+      json={
+        'model': 'llama-3.3-70b-versatile',
+        'messages': [
+          {'role': 'system', 'content': REVIEWER_PROMPT},
+          {'role': 'user', 'content': f'Rubrika: {rubric_key}\n\nPost matni:\n{post_text}'},
+        ],
+        'max_tokens': 200,
+        'temperature': 0.2,
+      },
+      timeout=20
+    )
+    if r.ok:
+      raw = r.json()['choices'][0]['message']['content'].strip()
+      # JSON ajratish
+      if '{' in raw:
+        json_str = raw[raw.index('{'):raw.rindex('}')+1]
+        result = json.loads(json_str)
+        print(f'Tekshiruv: {"✅ O\'tdi" if result.get("passed") else "❌ Qaytarildi"}')
+        if not result.get('passed'):
+          print(f'  Xatolar: {result.get("errors", [])}')
+        return result
+    return {'passed': True}
+  except Exception as e:
+    print(f'Tekshiruv xatosi: {e}')
+    return {'passed': True}
+
+
+def groq_generate(rubric_key, rubric, feedback=None):
+  """Groq orqali post matni generatsiya qilish (manba linklari bilan)"""
   if not GROQ_KEY:
     return fallback_caption(rubric_key, rubric)
 
@@ -138,13 +246,26 @@ def groq_generate(rubric_key, rubric):
   ]
   chosen_style = random.choice(styles)
 
+  # Manba linklari
+  rubric_sources = SOURCES.get(rubric_key, SOURCES['tip'])
+  selected_sources = random.sample(rubric_sources, min(2, len(rubric_sources)))
+  source_info = '\n'.join([f'  - {s["name"]}: {s["url"]}' for s in selected_sources])
+
   user_prompt = f"""Rubrika: {rubric['emoji']} {rubric['title']}
 Mavzu: {rubric['desc']}
 Bugun: {datetime.now(timezone(timedelta(hours=TZ_OFFSET))).strftime('%A, %d %B %Y')}
 Yozish uslubi: {chosen_style}
 
-Telegram HTML formatida post yozing (<b>qalin</b>, <i>kursiv</i> ishlatish MAJBURIY).
+MANBALAR (post ichida kamida 1 ta link shu manbalardan qo'shing):
+{source_info}
+Link formati: <a href="url">manba nomi</a> — matn ichida tabiiy joylang.
+
+Telegram HTML formatida post yozing (<b>qalin</b>, <i>kursiv</i>, <a href="...">link</a> ishlatish MAJBURIY).
 Hashtag yozmang. Faqat post matni:"""
+
+  # Agar feedback bo'lsa (qayta yozish uchun)
+  if feedback:
+    user_prompt += f'\n\n⚠️ OLDINGI POST RAD ETILDI. Xatolar:\n{feedback}\nYuqoridagi xatolarni tuzatib QAYTADAN yozing:'
 
   try:
     r = requests.post(
@@ -156,8 +277,8 @@ Hashtag yozmang. Faqat post matni:"""
           {'role': 'system', 'content': SYSTEM_PROMPT},
           {'role': 'user', 'content': user_prompt},
         ],
-        'max_tokens': 300,
-        'temperature': 0.85,
+        'max_tokens': 400,
+        'temperature': 0.85 if not feedback else 0.7,
       },
       timeout=30
     )
@@ -348,14 +469,35 @@ def main():
 
   print(f'Rubrika: {rubric["emoji"]} {rubric["title"]}')
 
-  # Matn generatsiya
-  caption_text = groq_generate(rubric_key, rubric)
+  # ── PIPELINE: Matn → Tekshiruv → Qayta yozish (agar kerak) ──
+  caption_text = None
+  feedback = None
+
+  for attempt in range(MAX_QUALITY_RETRIES):
+    print(f'\n--- Urinish {attempt + 1}/{MAX_QUALITY_RETRIES} ---')
+
+    # 1. Matn agenti: post generatsiya
+    caption_text = groq_generate(rubric_key, rubric, feedback=feedback)
+
+    # 2. Tekshiruvchi agent: sifat nazorati
+    review = quality_check(caption_text, rubric_key)
+
+    if review.get('passed'):
+      print(f'✅ Post tekshiruvdan o\'tdi (urinish {attempt + 1})')
+      break
+    else:
+      errors = review.get('errors', [])
+      suggestion = review.get('suggestion', '')
+      feedback = '\n'.join([f'- {e}' for e in errors])
+      if suggestion:
+        feedback += f'\nTaklif: {suggestion}'
+      print(f'🔄 Qayta yozishga yuborildi...')
 
   # Hashtags
   tags = HASHTAG_SETS.get(rubric_key, '') + ' ' + COMMON_TAGS
   caption = f'{caption_text}\n\n{tags}'
 
-  print(f'Caption: {caption[:100]}...')
+  print(f'\nFinal caption: {caption[:120]}...')
 
   # Rasm generatsiya
   image_url = generate_image(rubric_key, rubric)
@@ -363,7 +505,7 @@ def main():
 
   # Telegram ga yuborish
   msg_id = send_photo(image_url, caption)
-  print(f'Yuborildi! msg_id={msg_id}')
+  print(f'✅ Yuborildi! msg_id={msg_id}')
 
   # Tarix saqlash
   history, sha = gh_get('telegram_bot/history.json')
@@ -379,6 +521,7 @@ def main():
     'rubric_title': rubric['title'],
     'timestamp': datetime.now(timezone.utc).isoformat(),
     'status': 'sent',
+    'attempts': attempt + 1,
   })
   gh_put('telegram_bot/history.json', history[:300], sha, 'Telegram: history yangilandi')
   print('Tayyor!')
