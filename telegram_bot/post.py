@@ -7,12 +7,26 @@ import os, json, time, random, requests, base64
 from datetime import datetime, timezone, timedelta
 
 # ── ENV ───────────────────────────────────────────────────────────────────────
-BOT_TOKEN    = os.environ['TG_BOT_TOKEN']
+BOT_TOKEN    = os.environ.get('TG_BOT_TOKEN', '')
 CHANNEL_ID   = os.environ.get('TG_CHANNEL_ID', '@deardsgn')
 LEONARDO_KEY = os.environ.get('LEONARDO_API_KEY', '')
 GROQ_KEY     = os.environ.get('GROQ_API_KEY', '')
-GITHUB_TOKEN = os.environ['GITHUB_TOKEN']
-GITHUB_REPO  = os.environ['GITHUB_REPO']
+GITHUB_TOKEN = os.environ.get('GITHUB_TOKEN', '')
+GITHUB_REPO  = os.environ.get('GITHUB_REPO', '')
+
+def check_env():
+  """Muhit o'zgaruvchilarini tekshirish"""
+  missing = []
+  if not BOT_TOKEN: missing.append('TG_BOT_TOKEN')
+  if not GITHUB_TOKEN: missing.append('GITHUB_TOKEN')
+  if not GITHUB_REPO: missing.append('GITHUB_REPO')
+  if missing:
+    print(f'❌ XATO: Quyidagi secret\'lar topilmadi: {", ".join(missing)}')
+    print('GitHub repo → Settings → Secrets and variables → Actions → New repository secret')
+    return False
+  if not GROQ_KEY: print('⚠️ GROQ_API_KEY topilmadi — zaxira shablonlar ishlatiladi')
+  if not LEONARDO_KEY: print('⚠️ LEONARDO_API_KEY topilmadi — rasm generatsiya ishlamaydi')
+  return True
 
 # Toshkent vaqt zonasi (UTC+5)
 TZ_OFFSET = 5
@@ -193,6 +207,56 @@ JAVOB FORMATI (faqat JSON):
 
 Faqat JSON qaytaring, boshqa hech narsa yozmang."""
 
+IMAGE_REVIEWER_PROMPT = """Siz rasm sifat tekshiruvchisisiz. Telegram dizayn kanali (@deardsgn) uchun generatsiya qilinadigan rasm promptini tekshirishingiz kerak.
+
+TEKSHIRISH MEZONLARI:
+1. MAVZUGA MOSLIGI: Prompt grafik dizayn, web dizayn yoki kreativ sohasiga tegishli bo'lishi kerak
+2. KREATIVLIK: Prompt professional, original va ko'zga tashlanadigan natija berishi kerak
+3. MATN YO'Q: Promptda "NO TEXT", "NO WORDS", "NO LETTERS" ko'rsatmasi bo'lishi SHART
+4. SIFAT: Prompt aniq tasvir yaratish uchun yetarli detallarga ega bo'lishi kerak
+5. SOHA: Prompt aynan dizayn sohasiga (tipografiya, rang, logo, brending, UI/UX) tegishli bo'lishi kerak
+
+JAVOB FORMATI (faqat JSON):
+{"passed": true} — agar prompt yaxshi bo'lsa
+{"passed": false, "errors": ["xato1"], "suggestion": "qanday tuzatish kerak"} — agar yaroqsiz bo'lsa
+
+Faqat JSON qaytaring."""
+
+
+def image_quality_check(image_prompt, rubric_key):
+  """Rasm promptini sifat bo'yicha tekshirish"""
+  if not GROQ_KEY:
+    return {'passed': True}
+
+  try:
+    r = requests.post(
+      'https://api.groq.com/openai/v1/chat/completions',
+      headers={'Authorization': f'Bearer {GROQ_KEY}', 'Content-Type': 'application/json'},
+      json={
+        'model': 'llama-3.3-70b-versatile',
+        'messages': [
+          {'role': 'system', 'content': IMAGE_REVIEWER_PROMPT},
+          {'role': 'user', 'content': f'Rubrika: {rubric_key}\n\nRasm prompti:\n{image_prompt}'},
+        ],
+        'max_tokens': 200,
+        'temperature': 0.2,
+      },
+      timeout=20
+    )
+    if r.ok:
+      raw = r.json()['choices'][0]['message']['content'].strip()
+      if '{' in raw:
+        json_str = raw[raw.index('{'):raw.rindex('}')+1]
+        result = json.loads(json_str)
+        print(f'Rasm tekshiruv: {"✅ O\'tdi" if result.get("passed") else "❌ Qaytarildi"}')
+        if not result.get('passed'):
+          print(f'  Xatolar: {result.get("errors", [])}')
+        return result
+    return {'passed': True}
+  except Exception as e:
+    print(f'Rasm tekshiruv xatosi: {e}')
+    return {'passed': True}
+
 
 def quality_check(post_text, rubric_key):
   """Tekshiruvchi agent: postni sifat bo'yicha baholash"""
@@ -333,9 +397,29 @@ def generate_image(rubric_key, rubric):
   if not LEONARDO_KEY:
     raise Exception('LEONARDO_API_KEY sozlanmagan')
 
+  # Rasm promptini tayyorlash va tekshirish
   style = random.choice(IMAGE_STYLES)
   prompt = rubric['image_prompt'].format(style=style)
-  print(f'Image prompt: {prompt[:70]}...')
+
+  for img_attempt in range(MAX_QUALITY_RETRIES):
+    print(f'Rasm prompt (urinish {img_attempt+1}): {prompt[:70]}...')
+    img_review = image_quality_check(prompt, rubric_key)
+    if img_review.get('passed'):
+      break
+    else:
+      suggestion = img_review.get('suggestion', '')
+      errors = img_review.get('errors', [])
+      print(f'🔄 Rasm prompti qayta ishlanmoqda: {errors}')
+      # Yangi stil tanlash va promptni yaxshilash
+      style = random.choice(IMAGE_STYLES)
+      prompt = rubric['image_prompt'].format(style=style)
+      if suggestion:
+        prompt += f', {suggestion}'
+      # "NO TEXT" ni har doim qo'shish
+      if 'NO TEXT' not in prompt:
+        prompt += ', NO TEXT, NO WORDS, NO LETTERS'
+
+  print(f'Yakuniy rasm prompt: {prompt[:80]}...')
 
   h = {'Authorization': f'Bearer {LEONARDO_KEY}', 'Content-Type': 'application/json'}
 
@@ -461,18 +545,22 @@ def post_one(rubric_key, rubric, slot_time, history):
   print(f'\n{"="*50}')
   print(f'Rubrika: {rubric["emoji"]} {rubric["title"]} | Vaqt: {slot_time}')
 
-  # ── PIPELINE: Matn → Tekshiruv → Qayta yozish (agar kerak) ──
+  # ── 1-BOSQICH: Matn yaratish ──
+  print(f'\n📝 [1/5] Matn yaratilmoqda...')
   caption_text = None
   feedback = None
   final_attempt = 1
 
   for attempt in range(MAX_QUALITY_RETRIES):
-    print(f'\n--- Urinish {attempt + 1}/{MAX_QUALITY_RETRIES} ---')
+    print(f'\n--- Matn urinish {attempt + 1}/{MAX_QUALITY_RETRIES} ---')
     caption_text = groq_generate(rubric_key, rubric, feedback=feedback)
+
+    # ── 2-BOSQICH: Matn tekshiruvi ──
+    print(f'🔍 [2/5] Matn tekshiruvdan o\'tmoqda...')
     review = quality_check(caption_text, rubric_key)
 
     if review.get('passed'):
-      print(f'✅ Post tekshiruvdan o\'tdi (urinish {attempt + 1})')
+      print(f'✅ Matn tekshiruvdan o\'tdi (urinish {attempt + 1})')
       final_attempt = attempt + 1
       break
     else:
@@ -481,16 +569,20 @@ def post_one(rubric_key, rubric, slot_time, history):
       feedback = '\n'.join([f'- {e}' for e in errors])
       if suggestion:
         feedback += f'\nTaklif: {suggestion}'
-      print(f'🔄 Qayta yozishga yuborildi...')
+      print(f'🔄 Matn qayta yozishga yuborildi...')
       final_attempt = attempt + 1
 
   tags = HASHTAG_SETS.get(rubric_key, '') + ' ' + COMMON_TAGS
   caption = f'{caption_text}\n\n{tags}'
   print(f'\nYakuniy matn: {caption[:120]}...')
 
+  # ── 3-BOSQICH: Rasm generatsiya (ichida 4-bosqich — rasm tekshiruvi) ──
+  print(f'\n🎨 [3/5] Rasm generatsiya qilinmoqda...')
   image_url = generate_image(rubric_key, rubric)
-  print(f'Rasm: {image_url}')
+  print(f'✅ [4/5] Rasm tayyor: {image_url[:60]}...')
 
+  # ── 5-BOSQICH: Kanalga yuborish ──
+  print(f'\n📤 [5/5] Kanalga yuborilmoqda...')
   msg_id = send_photo(image_url, caption)
   print(f'✅ Yuborildi! msg_id={msg_id}')
 
@@ -511,6 +603,9 @@ def post_one(rubric_key, rubric, slot_time, history):
 # ── MAIN ──────────────────────────────────────────────────────────────────────
 def main():
   print(f'Bot ishga tushdi: {datetime.now(timezone(timedelta(hours=TZ_OFFSET))).strftime("%Y-%m-%d %H:%M")} (Toshkent)')
+
+  if not check_env():
+    raise SystemExit(1)
 
   schedule, _ = gh_get('telegram_bot/schedule.json')
   if not schedule:

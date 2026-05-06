@@ -672,6 +672,19 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
 .tg-review-entry .tg-review-status { font-weight:700;margin-bottom:4px; }
 .tg-review-entry .tg-review-errors { color:#ef4444;margin-top:4px; }
 .tg-review-entry .tg-review-time { font-size:0.7rem;color:var(--muted);margin-top:4px; }
+/* Progress bar */
+.tg-progress-bar { background:var(--surface);border-bottom:1px solid var(--border);padding:10px 20px;animation:tgSlideDown 0.3s ease; }
+@keyframes tgSlideDown { from{transform:translateY(-100%);opacity:0} to{transform:translateY(0);opacity:1} }
+.tg-progress-steps { display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px; }
+.tg-progress-step { font-size:0.72rem;padding:4px 10px;border-radius:6px;background:var(--bg);border:1px solid var(--border);color:var(--muted);display:flex;align-items:center;gap:5px;transition:all 0.3s; }
+.tg-progress-step.active { background:rgba(34,197,94,0.12);border-color:rgba(34,197,94,0.4);color:#22c55e; }
+.tg-progress-step.active i { animation:tgPulse 1s infinite; }
+.tg-progress-step.done { background:rgba(34,197,94,0.08);border-color:rgba(34,197,94,0.2);color:#22c55e;opacity:0.6; }
+.tg-progress-step.done i:before { content:'\f00c'; }
+.tg-progress-step.error { background:rgba(239,68,68,0.12);border-color:rgba(239,68,68,0.4);color:#ef4444; }
+@keyframes tgPulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+.tg-progress-track { height:3px;background:var(--border);border-radius:3px;overflow:hidden; }
+.tg-progress-fill { height:100%;background:linear-gradient(90deg,#22c55e,var(--accent));border-radius:3px;transition:width 0.5s ease;width:0%; }
 /* Schedule */
 .tg-day-block { margin-bottom:8px; }
 .tg-day-header { display:grid;grid-template-columns:110px 1fr auto;align-items:center;gap:8px;margin-bottom:6px; }
@@ -854,6 +867,17 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
         <span class="save-shortcut">Ctrl+S</span>
         <button class="topbar-save-btn" onclick="saveAll()"><i class="fas fa-save"></i> <span>Saqlash</span></button>
       </div>
+    </div>
+    <!-- Post jarayoni holat paneli -->
+    <div class="tg-progress-bar" id="tgProgressBar" style="display:none">
+      <div class="tg-progress-steps">
+        <div class="tg-progress-step" id="tgStep1"><i class="fas fa-pen-nib"></i> Matn yaratilmoqda</div>
+        <div class="tg-progress-step" id="tgStep2"><i class="fas fa-shield-alt"></i> Tekshiruvdan o'tmoqda</div>
+        <div class="tg-progress-step" id="tgStep3"><i class="fas fa-image"></i> Rasm generatsiya qilinmoqda</div>
+        <div class="tg-progress-step" id="tgStep4"><i class="fas fa-eye"></i> Rasm tekshirilmoqda</div>
+        <div class="tg-progress-step" id="tgStep5"><i class="fab fa-telegram"></i> Kanalga yuborilmoqda</div>
+      </div>
+      <div class="tg-progress-track"><div class="tg-progress-fill" id="tgProgressFill"></div></div>
     </div>
     <div class="panels-container">
 
@@ -1381,10 +1405,14 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
         <div class="tg-pane" id="tg-pane-reviewer">
           <div class="tg-section">
             <div class="tg-section-title"><i class="fas fa-shield-alt"></i> Sifat nazorati agenti</div>
-            <p style="font-size:0.8rem;color:var(--sub);margin-bottom:14px">Har bir post chop etishdan avval avtomatik tekshiruvdan o'tadi. Agar post mezonlarga mos kelmasa, matn agentiga xato tafsilotlari bilan qaytariladi.</p>
+            <p style="font-size:0.8rem;color:var(--sub);margin-bottom:14px">Har bir post chop etishdan avval avtomatik tekshiruvdan o'tadi. Agar mezonlarga mos kelmasa, agentlarga xato tafsilotlari bilan qaytariladi.</p>
             <div class="tg-toggle-wrap" style="margin-bottom:14px">
               <label class="tg-toggle"><input type="checkbox" id="tgReviewerEnabled" checked onchange="TG.saveReviewerSettings()"><span class="tg-toggle-slider"></span></label>
-              <span style="font-size:0.8rem;font-weight:600;color:var(--text)">Tekshiruvchi agent yoqiq</span>
+              <span style="font-size:0.8rem;font-weight:600;color:var(--text)">Matn tekshiruvchi yoqiq</span>
+            </div>
+            <div class="tg-toggle-wrap" style="margin-bottom:14px">
+              <label class="tg-toggle"><input type="checkbox" id="tgImageReviewerEnabled" checked onchange="TG.saveReviewerSettings()"><span class="tg-toggle-slider"></span></label>
+              <span style="font-size:0.8rem;font-weight:600;color:var(--text)">Rasm tekshiruvchi yoqiq</span>
             </div>
             <div class="form-group">
               <label>Maksimal qayta urinishlar soni</label>
@@ -1394,12 +1422,12 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
                 <option value="4">4</option>
                 <option value="5">5</option>
               </select>
-              <div class="form-hint">Post rad etilsa, necha marta qayta yozilishi mumkin</div>
+              <div class="form-hint">Rad etilsa, necha marta qayta ishlanishi mumkin</div>
             </div>
           </div>
 
           <div class="tg-section">
-            <div class="tg-section-title"><i class="fas fa-list-check"></i> Tekshirish mezonlari</div>
+            <div class="tg-section-title"><i class="fas fa-pen-fancy"></i> Matn tekshirish mezonlari</div>
             <div class="tg-reviewer-criteria" id="tgReviewerCriteria">
               <label class="tg-criteria-item"><input type="checkbox" checked data-criteria="format" onchange="TG.saveReviewerSettings()"> <b>Format:</b> <span>&lt;b&gt; va &lt;i&gt; teglar mavjud (kamida 2+1)</span></label>
               <label class="tg-criteria-item"><input type="checkbox" checked data-criteria="length" onchange="TG.saveReviewerSettings()"> <b>Uzunlik:</b> <span>4-8 qator orasida</span></label>
@@ -1408,6 +1436,32 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
               <label class="tg-criteria-item"><input type="checkbox" checked data-criteria="source" onchange="TG.saveReviewerSettings()"> <b>Manba:</b> <span>Kamida 1 ta &lt;a href&gt; link mavjud</span></label>
               <label class="tg-criteria-item"><input type="checkbox" checked data-criteria="noreklama" onchange="TG.saveReviewerSettings()"> <b>Reklama yo'q:</b> <span>"Buyurtma bering" kabi matn yo'q</span></label>
             </div>
+          </div>
+
+          <div class="tg-section">
+            <div class="tg-section-title"><i class="fas fa-image"></i> Rasm tekshirish mezonlari</div>
+            <div class="tg-reviewer-criteria" id="tgImageReviewerCriteria">
+              <label class="tg-criteria-item"><input type="checkbox" checked data-criteria="img_relevance" onchange="TG.saveReviewerSettings()"> <b>Mavzuga mosligi:</b> <span>Rasm post mavzusiga mos bo'lishi</span></label>
+              <label class="tg-criteria-item"><input type="checkbox" checked data-criteria="img_design" onchange="TG.saveReviewerSettings()"> <b>Dizayn sohasi:</b> <span>Grafik/web dizayn sohasiga tegishli</span></label>
+              <label class="tg-criteria-item"><input type="checkbox" checked data-criteria="img_creative" onchange="TG.saveReviewerSettings()"> <b>Kreativlik:</b> <span>Professional va kreativ ko'rinish</span></label>
+              <label class="tg-criteria-item"><input type="checkbox" checked data-criteria="img_notext" onchange="TG.saveReviewerSettings()"> <b>Matn yo'q:</b> <span>Rasmda o'qilmaydigan yoki buzilgan matn yo'q</span></label>
+              <label class="tg-criteria-item"><input type="checkbox" checked data-criteria="img_quality" onchange="TG.saveReviewerSettings()"> <b>Sifat:</b> <span>Yuqori aniqlik, blur yoki artefakt yo'q</span></label>
+            </div>
+          </div>
+
+          <div class="tg-section">
+            <div class="tg-section-title"><i class="fas fa-sliders-h"></i> Tekshiruvchi prompt (o'zgartirilishi mumkin)</div>
+            <div class="form-group">
+              <label>Matn tekshiruv prompti</label>
+              <textarea class="form-input" id="tgReviewerPrompt" rows="8" style="resize:vertical;font-family:'JetBrains Mono',monospace;font-size:0.72rem" oninput="TG.saveReviewerSettings()"></textarea>
+              <div class="form-hint">Tekshiruvchi agent uchun system prompt — o'z mezonlaringizni qo'shishingiz mumkin</div>
+            </div>
+            <div class="form-group">
+              <label>Rasm tekshiruv prompti</label>
+              <textarea class="form-input" id="tgImageReviewerPrompt" rows="6" style="resize:vertical;font-family:'JetBrains Mono',monospace;font-size:0.72rem" oninput="TG.saveReviewerSettings()"></textarea>
+              <div class="form-hint">Rasm prompt sifatini tekshiruvchi agent prompti</div>
+            </div>
+            <button class="btn btn-secondary btn-sm" onclick="TG.resetReviewerPrompts()"><i class="fas fa-undo"></i> Standart promptga qaytarish</button>
           </div>
 
           <div class="tg-section">
@@ -4808,6 +4862,7 @@ var TG = (function() {
       return;
     }
     if (btn) { btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Yuklanmoqda...'; }
+    showProgress(1);
     log('GitHub Actions ishga tushirilmoqda...','warn');
     try {
       var r = await fetch('https://api.github.com/repos/'+gh.owner+'/'+gh.repo+'/dispatches', {
@@ -4816,16 +4871,29 @@ var TG = (function() {
         body:JSON.stringify({event_type:'telegram-post', client_payload:{category:''}})
       });
       if (r.ok||r.status===204) {
-        log('GitHub Actions ishga tushdi! 2-3 daqiqada post yuboriladi','ok');
-        showToast('Post jarayoni boshlandi — 2-3 daqiqada yuboriladi','success');
-        setTimeout(function(){ loadHistory(); }, 180000);
+        log('GitHub Actions ishga tushdi!','ok');
+        showToast('Post jarayoni boshlandi','success');
+        // Progress simulyatsiyasi (GitHub Actions ichida ishlaydi)
+        setTimeout(function(){ showProgress(2); log('Matn tekshiruvdan o\'tmoqda...','warn'); }, 15000);
+        setTimeout(function(){ showProgress(3); log('Rasm generatsiya qilinmoqda...','warn'); }, 40000);
+        setTimeout(function(){ showProgress(4); log('Rasm tekshirilmoqda...','warn'); }, 80000);
+        setTimeout(function(){ showProgress(5); log('Kanalga yuborilmoqda...','warn'); }, 120000);
+        setTimeout(function(){
+          var fill = document.getElementById('tgProgressFill');
+          if (fill) fill.style.width = '100%';
+          log('Post yuborilgan bo\'lishi kerak — tarixni tekshiring','ok');
+          hideProgress();
+          loadHistory();
+        }, 150000);
       } else {
         var err = await r.json().catch(function(){return {};});
+        progressError(1);
         throw new Error(err.message||r.status);
       }
     } catch(e) {
       log('Xato: '+e.message,'err');
       showToast('Xato: '+e.message,'error');
+      hideProgress();
     }
     setTimeout(function(){ if(btn){btn.disabled=false;btn.innerHTML='<i class="fab fa-telegram"></i> Hozir yuborish';} },5000);
   }
@@ -5095,18 +5163,31 @@ var TG = (function() {
 
   // ── TEKSHIRUVCHI AGENT SOZLAMALARI ──
   var REVIEWER_KEY = 'tg_reviewer';
+  var DEFAULT_REVIEWER_PROMPT = 'Siz professional kontent tekshiruvchi agentisiz. Telegram dizayn kanaliga yuboriladigan postni tekshiring.\n\nTEKSHIRISH MEZONLARI:\n1. FORMAT: <b>qalin</b> va <i>kursiv</i> HTML teglar bor (kamida 2 ta <b>, 1 ta <i>)\n2. UZUNLIK: 4-8 qator orasida\n3. QIMMAT: O\'quvchiga foydali bilim berishi kerak\n4. USLUB: Tirik, qiziqarli, monoton emas\n5. MANBA: Kamida 1 ta <a href="...">link</a> bo\'lishi kerak\n6. REKLAMA: "Bizga murojaat qiling" kabi reklama bo\'lmasligi kerak\n\nJAVOB FORMATI (faqat JSON):\n{"passed": true}\n{"passed": false, "errors": ["xato1"], "suggestion": "tuzatish"}';
+  var DEFAULT_IMAGE_REVIEWER_PROMPT = 'Siz rasm sifat tekshiruvchisisiz. Telegram dizayn kanali uchun generatsiya qilingan rasm promptini tekshiring.\n\nMEZONLAR:\n1. Mavzuga mosligi — grafik/web dizayn sohasiga tegishli\n2. Kreativlik — professional va original ko\'rinish\n3. Matn yo\'q — "NO TEXT" ko\'rsatmasi bor\n4. Sifat — aniq tasvir, blur/artefakt yo\'q\n\nJAVOB FORMATI (faqat JSON):\n{"passed": true}\n{"passed": false, "errors": ["xato1"], "suggestion": "tuzatish"}';
 
   function saveReviewerSettings() {
     var enabled = document.getElementById('tgReviewerEnabled');
+    var imgEnabled = document.getElementById('tgImageReviewerEnabled');
     var retries = document.getElementById('tgReviewerRetries');
+    var promptEl = document.getElementById('tgReviewerPrompt');
+    var imgPromptEl = document.getElementById('tgImageReviewerPrompt');
     var criteria = {};
     document.querySelectorAll('#tgReviewerCriteria input[data-criteria]').forEach(function(cb) {
       criteria[cb.dataset.criteria] = cb.checked;
     });
+    var imgCriteria = {};
+    document.querySelectorAll('#tgImageReviewerCriteria input[data-criteria]').forEach(function(cb) {
+      imgCriteria[cb.dataset.criteria] = cb.checked;
+    });
     var cfg = {
       enabled: enabled ? enabled.checked : true,
+      imageEnabled: imgEnabled ? imgEnabled.checked : true,
       retries: retries ? parseInt(retries.value) : 3,
-      criteria: criteria
+      criteria: criteria,
+      imageCriteria: imgCriteria,
+      reviewerPrompt: promptEl ? promptEl.value : DEFAULT_REVIEWER_PROMPT,
+      imageReviewerPrompt: imgPromptEl ? imgPromptEl.value : DEFAULT_IMAGE_REVIEWER_PROMPT
     };
     localStorage.setItem(REVIEWER_KEY, JSON.stringify(cfg));
   }
@@ -5115,16 +5196,61 @@ var TG = (function() {
     try {
       var cfg = JSON.parse(localStorage.getItem(REVIEWER_KEY)) || {};
       var enabled = document.getElementById('tgReviewerEnabled');
+      var imgEnabled = document.getElementById('tgImageReviewerEnabled');
       var retries = document.getElementById('tgReviewerRetries');
-      if (enabled && cfg.enabled !== undefined) enabled.checked = cfg.enabled;
+      var promptEl = document.getElementById('tgReviewerPrompt');
+      var imgPromptEl = document.getElementById('tgImageReviewerPrompt');
+      if (enabled) enabled.checked = cfg.enabled !== undefined ? cfg.enabled : true;
+      if (imgEnabled) imgEnabled.checked = cfg.imageEnabled !== undefined ? cfg.imageEnabled : true;
       if (retries && cfg.retries) retries.value = cfg.retries;
+      if (promptEl) promptEl.value = cfg.reviewerPrompt || DEFAULT_REVIEWER_PROMPT;
+      if (imgPromptEl) imgPromptEl.value = cfg.imageReviewerPrompt || DEFAULT_IMAGE_REVIEWER_PROMPT;
       if (cfg.criteria) {
         Object.keys(cfg.criteria).forEach(function(key) {
           var cb = document.querySelector('#tgReviewerCriteria input[data-criteria="'+key+'"]');
           if (cb) cb.checked = cfg.criteria[key];
         });
       }
+      if (cfg.imageCriteria) {
+        Object.keys(cfg.imageCriteria).forEach(function(key) {
+          var cb = document.querySelector('#tgImageReviewerCriteria input[data-criteria="'+key+'"]');
+          if (cb) cb.checked = cfg.imageCriteria[key];
+        });
+      }
     } catch(e) {}
+  }
+
+  function resetReviewerPrompts() {
+    var promptEl = document.getElementById('tgReviewerPrompt');
+    var imgPromptEl = document.getElementById('tgImageReviewerPrompt');
+    if (promptEl) promptEl.value = DEFAULT_REVIEWER_PROMPT;
+    if (imgPromptEl) imgPromptEl.value = DEFAULT_IMAGE_REVIEWER_PROMPT;
+    saveReviewerSettings();
+    log('Tekshiruvchi promptlar standartga qaytarildi','ok');
+  }
+
+  // ── PROGRESS BAR ──
+  function showProgress(step) {
+    var bar = document.getElementById('tgProgressBar');
+    var fill = document.getElementById('tgProgressFill');
+    if (!bar) return;
+    bar.style.display = 'block';
+    for (var i = 1; i <= 5; i++) {
+      var el = document.getElementById('tgStep'+i);
+      if (!el) continue;
+      el.classList.remove('active','done','error');
+      if (i < step) el.classList.add('done');
+      else if (i === step) el.classList.add('active');
+    }
+    if (fill) fill.style.width = Math.min(step * 20, 100) + '%';
+  }
+  function hideProgress() {
+    var bar = document.getElementById('tgProgressBar');
+    if (bar) setTimeout(function(){ bar.style.display='none'; }, 3000);
+  }
+  function progressError(step) {
+    var el = document.getElementById('tgStep'+step);
+    if (el) { el.classList.remove('active'); el.classList.add('error'); }
   }
 
   function init() {
@@ -5147,6 +5273,8 @@ var TG = (function() {
     checkLeonardoCredits:checkLeonardoCredits, checkGroqStatus:checkGroqStatus,
     testGroq:testGroq, testLeonardo:testLeonardo,
     saveReviewerSettings:saveReviewerSettings, loadReviewerSettings:loadReviewerSettings,
+    resetReviewerPrompts:resetReviewerPrompts,
+    showProgress:showProgress, hideProgress:hideProgress,
     switchMode:switchMode
   };
 })();
