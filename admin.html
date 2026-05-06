@@ -660,10 +660,10 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
 /* Empty state */
 .tg-empty { text-align:center;padding:32px;color:var(--muted);font-size:0.8rem; }
 /* Schedule */
-.tg-day-block { margin-bottom:10px; }
-.tg-day-header { display:flex;align-items:center;gap:8px;margin-bottom:6px; }
-.tg-day-name { font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);min-width:100px; }
-.tg-add-slot { background:rgba(0,136,204,0.12);border:1px solid rgba(0,136,204,0.25);color:#0088cc;border-radius:6px;width:24px;height:24px;cursor:pointer;font-size:0.65rem;display:flex;align-items:center;justify-content:center;transition:all 0.15s; }
+.tg-day-block { margin-bottom:8px; }
+.tg-day-header { display:grid;grid-template-columns:110px 1fr auto;align-items:center;gap:8px;margin-bottom:6px; }
+.tg-day-name { font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted); }
+.tg-add-slot { background:rgba(0,136,204,0.12);border:1px solid rgba(0,136,204,0.25);color:#0088cc;border-radius:6px;width:26px;height:26px;cursor:pointer;font-size:0.65rem;display:flex;align-items:center;justify-content:center;transition:all 0.15s;flex-shrink:0; }
 .tg-add-slot:hover { background:rgba(0,136,204,0.2); }
 .tg-slots { display:flex;flex-direction:column;gap:6px;padding-left:8px; }
 .tg-slot-row { display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:6px 10px; }
@@ -1252,19 +1252,6 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
           <p>Avtomatik dizayn postlari va kanalga yuborish</p>
         </div>
 
-        <!-- Header status -->
-        <div class="tg-header">
-          <div class="tg-header-icon"><i class="fab fa-telegram"></i></div>
-          <div class="tg-header-info">
-            <div class="tg-header-title">@deardsgn kanali</div>
-            <div class="tg-header-sub" id="tgBotStatus">Bot ulanish tekshirilmoqda...</div>
-          </div>
-          <div class="tg-header-status">
-            <span class="tg-dot" id="tgStatusDot"></span>
-            <span id="tgStatusText">...</span>
-          </div>
-        </div>
-
         <!-- Sub navigation olib tashlandi — sidebar orqali boshqariladi -->
 
         <!-- Log (global) -->
@@ -1412,6 +1399,18 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
 
         <!-- ===== TAB 7: SOZLAMALAR ===== -->
         <div class="tg-pane" id="tg-pane-settings">
+          <!-- Bot ulanish holati -->
+          <div class="tg-header">
+            <div class="tg-header-icon"><i class="fab fa-telegram"></i></div>
+            <div class="tg-header-info">
+              <div class="tg-header-title">@deardsgn kanali</div>
+              <div class="tg-header-sub" id="tgBotStatus">Bot ulanish tekshirilmoqda...</div>
+            </div>
+            <div class="tg-header-status">
+              <span class="tg-dot" id="tgStatusDot"></span>
+              <span id="tgStatusText">...</span>
+            </div>
+          </div>
           <div class="tg-section">
             <div class="tg-section-title"><i class="fas fa-robot"></i> Telegram Bot</div>
             <div class="form-group">

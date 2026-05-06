@@ -23,82 +23,90 @@ RUBRICS = {
     'emoji': '📈',
     'title': 'Trend',
     'desc': '2025 yildagi dizayn trendlari va yangiliklar',
-    'image_prompt': 'modern graphic design trend 2025, {style}, professional, editorial, minimalist composition, high quality',
+    'image_prompt': 'abstract modern design aesthetic 2025, {style}, geometric shapes, NO TEXT, NO WORDS, NO LETTERS, clean composition, high quality, award winning',
   },
   'tip': {
     'emoji': '💡',
     'title': 'Maslahat',
     'desc': 'Dizayn bo\'yicha amaliy maslahatlar',
-    'image_prompt': 'clean graphic design educational poster, {style}, typography focused, professional layout',
+    'image_prompt': 'creative designer workspace flat lay, {style}, NO TEXT NO LETTERS, tools and stationery, professional photography',
   },
   'color': {
     'emoji': '🎨',
     'title': 'Rang',
     'desc': 'Rang psixologiyasi, kombinatsiyalar va palittralar',
-    'image_prompt': 'beautiful color palette design, {style}, harmonious colors, brand identity, professional',
+    'image_prompt': 'stunning color palette abstract art, {style}, NO TEXT, harmonious color swatches, gradient flow, brand identity mood board',
   },
   'typography': {
     'emoji': '✍️',
     'title': 'Tipografiya',
     'desc': 'Shrift va tipografiya asoslari',
-    'image_prompt': 'editorial typography design, {style}, font pairing, text layout, clean and modern',
+    'image_prompt': 'abstract letterform art sculpture, {style}, single elegant letter form, NO READABLE TEXT, 3d render, artistic typography concept',
   },
   'logo': {
     'emoji': '⚡',
     'title': 'Logo',
     'desc': 'Logo dizayn va brending',
-    'image_prompt': 'minimalist logo design concept, {style}, vector style, professional brand identity',
+    'image_prompt': 'minimalist abstract logo mark concept, {style}, NO TEXT NO WORDS, clean geometric symbol, vector aesthetic, white background or dark',
   },
   'inspiration': {
     'emoji': '✨',
     'title': 'Ilhom',
     'desc': 'Ilhomlantiruvchi loyihalar va g\'oyalar',
-    'image_prompt': 'award winning graphic design portfolio piece, {style}, stunning visual composition, creative concept',
+    'image_prompt': 'stunning abstract art installation, {style}, NO TEXT, visually arresting composition, museum quality, dramatic lighting, contemporary art',
   },
   'tool': {
     'emoji': '🛠',
     'title': 'Vosita',
     'desc': 'Dizaynerlarga foydali vositalar va resurslar',
-    'image_prompt': 'modern design workspace mockup, {style}, professional tools, creative setup',
+    'image_prompt': 'minimal creative tools flat lay photography, {style}, NO TEXT NO LABELS, Pantone chips pens notebooks, professional product photography',
   },
   'mindset': {
     'emoji': '🧠',
     'title': 'Fikr',
     'desc': 'Dizayn falsafasi va kreativlik haqida',
-    'image_prompt': 'conceptual creative design, abstract minimalist art, {style}, thought provoking visual',
+    'image_prompt': 'surreal conceptual abstract art, {style}, NO TEXT, brain creativity concept, flowing shapes, deep perspective, cinematic',
   },
 }
 
 IMAGE_STYLES = [
-  'dark background', 'light minimal', 'vibrant colorful', 'black and white',
-  'gradient modern', 'flat design', 'premium luxury', 'bold and dynamic',
+  'ultra dark moody background', 'crisp white minimal', 'vibrant neon colorful',
+  'elegant black and gold', 'deep gradient purple blue', 'earthy tones natural',
+  'electric green accent dark', 'soft pastel dreamy', 'bold red and black',
 ]
 
 # ── GROQ CAPTION GENERATOR ────────────────────────────────────────────────────
-SYSTEM_PROMPT = """Siz O'zbekistonning mashhur grafik dizayner va blogerisisz.
-Sizning Telegram kanalingiz (@deardsgn) bor va u yerda dizayn haqida post yozasiz.
+SYSTEM_PROMPT = """Siz O'zbekistonning tajribali grafik dizayner va Telegram blogerisisz (@deardsgn).
 
-YOZISH USLUBI (quyidagi kanallar uslubidan o'rgan):
-- Oddiy, samimiy, do'stona — lekin professional
-- Qisqa va mazmunli — ortiqcha gap yo'q
-- O'zbek tilida yozing. Ingliz atamalar (logo, branding, typography...) o'zbek gapda ishlatsa bo'ladi
-- 2-4 ta emoji ishlatish (ko'p emas)
-- Har post biror qimmatli fikr, ma'lumot yoki taassurot beradi
-- Ba'zan shaxsiy tajriba ulashing ("men ham bu xatoni qilganman...")
-- O'quvchini fikrlashga yoki javob berishga undang
-- Post 3-6 qatordan iborat bo'lsin
+MAJBURIY FORMAT — Telegram HTML:
+- Muhim so'z yoki iborani <b>qalin</b> qilib yozing (har postda 2-4 ta)
+- Taassurot yoki shaxsiy fikrni <i>kursiv</i> qiling (har postda 1-2 ta)
+- Hech qachon oddiy tekst bilan to'ldirmang
 
-POST TUZILISHI:
-1. Kuchli birinchi qator (diqqatni tortadigan)
-2. Asosiy g'oya (2-4 qator)
-3. Xulosa yoki savol (1 qator)
+USLUB VARIATSIYALARI — har postda BOSHQACHA boshlang:
+• Ba'zan qisqa provokatsion savol bilan: "Nima uchun ko'p dizaynerlar bu xatoni qiladi?"
+• Ba'zan shaxsiy voqea bilan: "Kecha mijoz loyihasida shunday narsaga duch keldim..."
+• Ba'zan qattiq bayonot bilan: "Ko'pchilik aytadigan narsa — yolg'on."
+• Ba'zan ro'yxat bilan: 3 ta sabab, 5 ta belgi, 2 ta variant
+• Ba'zan qisqa hikoya bilan: muammo → yechim → xulosa
 
-QOIDALAR:
-- Salbiy yoki kamsituvchi narsa yozmang
-- Reklama ovozida yozmang
-- Haqiqiy, jonli tuyg'u bilan yozing
-- "bizga murojaat qiling" tipidagi quruq reklama YOQMAYDI
-"""
+MAZMUN QOIDALARI:
+- O'zbek tilida, lekin branding, whitespace, grid, layout — inglizcha atamalar OK
+- 1-2 ta emoji yetarli (ko'p emas)
+- Post 4-8 qator (na juda qisqa, na juda uzun)
+- Har doim 1 ta aniq qimmatli ma'lumot bo'lsin
+- Oxirida savol YOKI qisqa harakat chaqiruvi (ixtiyoriy)
+- "Bizga murojaat qiling" YOZMANG
+- Har post BOSHQACHA strukturada bo'lsin
+
+MISOL (qanday ko'rinishi kerak):
+<b>Whitespace</b> — dizayndagi eng kam baholi, eng ko'p noto'g'ri tushuniladigan element.
+
+Ko'pchilik bo'sh joyni "to'ldirish kerak" deb o'ylaydi. <i>Aslida bo'sh joy — bu nafas, bu ritm.</i>
+
+Apple'ning sahifalariga qarang: <b>kontent ozmi?</b> Yo'q. Bo'sh joy ko'pmi? Ha. Natija? Premium his.
+
+Keyingi loyihangizda ataylab 20% ko'proq whitespace qoldiring — farqni ko'rasiz."""
 
 HASHTAG_SETS = {
   'trend':      '#dizayntrendlari #graphicdesign #design2025 #trendingdesign #dizayn #kreativ',
@@ -119,13 +127,24 @@ def groq_generate(rubric_key, rubric):
   if not GROQ_KEY:
     return fallback_caption(rubric_key, rubric)
 
-  user_prompt = f"""Quyidagi rubrika uchun Telegram post yozing:
+  styles = [
+    "Shaxsiy tajriba yoki voqeadan boshlang",
+    "Provokatsion savol bilan boshlang",
+    "Qattiq, to'g'ridan-to'g'ri bayonot bilan boshlang",
+    "Ro'yxat formatida yozing (3-5 ta band)",
+    "Muammo → yechim → xulosa strukturasida yozing",
+    "Mashhur brend yoki dizaynerga havola qilib boshlang",
+    "Umumiy noto'g'ri tushunchani rad eting",
+  ]
+  chosen_style = random.choice(styles)
 
-Rubrika: {rubric['emoji']} {rubric['title']}
+  user_prompt = f"""Rubrika: {rubric['emoji']} {rubric['title']}
 Mavzu: {rubric['desc']}
 Bugun: {datetime.now(timezone(timedelta(hours=TZ_OFFSET))).strftime('%A, %d %B %Y')}
+Yozish uslubi: {chosen_style}
 
-Post matni (hashtag yo'q, faqat matn):"""
+Telegram HTML formatida post yozing (<b>qalin</b>, <i>kursiv</i> ishlatish MAJBURIY).
+Hashtag yozmang. Faqat post matni:"""
 
   try:
     r = requests.post(
