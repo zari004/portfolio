@@ -12,6 +12,12 @@
       "time": "07:39",
       "category": "tool",
       "enabled": true
+    },
+    {
+      "day": "wed",
+      "time": "10:00",
+      "category": "tip",
+      "enabled": true
     }
   ]
 }
