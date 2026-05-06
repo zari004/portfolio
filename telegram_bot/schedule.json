@@ -6,6 +6,12 @@
       "time": "07:38",
       "category": "typography",
       "enabled": true
+    },
+    {
+      "day": "wed",
+      "time": "10:00",
+      "category": "tip",
+      "enabled": true
     }
   ]
 }
