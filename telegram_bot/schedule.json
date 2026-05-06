@@ -1,4 +1,11 @@
 {
   "enabled": true,
-  "slots": []
+  "slots": [
+    {
+      "day": "wed",
+      "time": "10:00",
+      "category": "tip",
+      "enabled": true
+    }
+  ]
 }
