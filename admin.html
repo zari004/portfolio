@@ -746,10 +746,10 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
     </div>
     <!-- Mode switcher -->
     <div class="mode-switcher" id="modeSwitcher">
-      <button class="mode-btn active" id="modeBtnSite" onclick="TG.switchMode('site')">
+      <button class="mode-btn active" id="modeBtnSite" onclick="switchMode('site')">
         <i class="fas fa-globe"></i> Sayt
       </button>
-      <button class="mode-btn" id="modeBtnBot" onclick="TG.switchMode('bot')">
+      <button class="mode-btn" id="modeBtnBot" onclick="switchMode('bot')">
         <i class="fab fa-telegram"></i> Bot
         <span class="tg-nav-dot" id="tgNavDot" style="position:relative;top:0;right:0;margin-left:2px"></span>
       </button>
@@ -5051,6 +5051,41 @@ function tgPostNow() { TG.postNow(); }
 function tgSaveConfig() { TG.saveConfig(); }
 function tgSaveSchedule() { TG.saveSchedule(); }
 function tgRefreshHistory() { TG.loadHistory(); }
+
+function switchMode(mode) {
+  var siteNav = document.getElementById('siteNav');
+  var botNav  = document.getElementById('botNav');
+  var btnSite = document.getElementById('modeBtnSite');
+  var btnBot  = document.getElementById('modeBtnBot');
+  if (!siteNav || !botNav) return;
+  if (mode === 'bot') {
+    siteNav.style.display = 'none';
+    botNav.style.display  = 'block';
+    btnSite.classList.remove('active');
+    btnBot.classList.add('active');
+    document.querySelectorAll('.panel').forEach(function(p) { p.classList.remove('active'); });
+    var tgPanel = document.getElementById('panel-telegram');
+    if (tgPanel) tgPanel.classList.add('active');
+    var ttl = document.getElementById('topbarTitle');
+    if (ttl) ttl.textContent = 'Dashboard';
+    if (!_tgInited) { _tgInited = true; TG.init(); }
+    var firstNav = botNav.querySelector('.tg-nav');
+    TG.switchTab('dashboard', firstNav);
+  } else {
+    siteNav.style.display = 'block';
+    botNav.style.display  = 'none';
+    btnSite.classList.add('active');
+    btnBot.classList.remove('active');
+    document.querySelectorAll('.panel').forEach(function(p) { p.classList.remove('active'); });
+    var heroPanel = document.getElementById('panel-hero');
+    if (heroPanel) heroPanel.classList.add('active');
+    document.querySelectorAll('#siteNav .nav-item').forEach(function(n) { n.classList.remove('active'); });
+    var firstSiteNav = siteNav.querySelector('.nav-item');
+    if (firstSiteNav) firstSiteNav.classList.add('active');
+    var ttl = document.getElementById('topbarTitle');
+    if (ttl) ttl.textContent = 'Hero';
+  }
+}
 
 // Telegram paneli ochilganda init
 var _tgInited = false;
