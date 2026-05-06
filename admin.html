@@ -659,6 +659,19 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
 .tg-history-status.err { background:rgba(239,68,68,0.12);color:var(--red); }
 /* Empty state */
 .tg-empty { text-align:center;padding:32px;color:var(--muted);font-size:0.8rem; }
+/* Tekshiruvchi agent */
+.tg-criteria-item { display:flex;align-items:flex-start;gap:8px;padding:8px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;margin-bottom:6px;font-size:0.8rem;color:var(--text);cursor:pointer;transition:border-color 0.15s; }
+.tg-criteria-item:hover { border-color:var(--accent); }
+.tg-criteria-item input[type="checkbox"] { margin-top:2px;accent-color:var(--accent); }
+.tg-criteria-item b { color:var(--text);white-space:nowrap; }
+.tg-criteria-item span { color:var(--sub); }
+.tg-reviewer-log { display:flex;flex-direction:column;gap:8px; }
+.tg-review-entry { background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:0.78rem; }
+.tg-review-entry.passed { border-left:3px solid #22c55e; }
+.tg-review-entry.failed { border-left:3px solid #ef4444; }
+.tg-review-entry .tg-review-status { font-weight:700;margin-bottom:4px; }
+.tg-review-entry .tg-review-errors { color:#ef4444;margin-top:4px; }
+.tg-review-entry .tg-review-time { font-size:0.7rem;color:var(--muted);margin-top:4px; }
 /* Schedule */
 .tg-day-block { margin-bottom:8px; }
 .tg-day-header { display:grid;grid-template-columns:110px 1fr auto;align-items:center;gap:8px;margin-bottom:6px; }
@@ -798,6 +811,9 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
       <div class="nav-item tg-nav" onclick="TG.switchTab('image',this)">
         <i class="fas fa-image"></i> Rasm Agenti
       </div>
+      <div class="nav-item tg-nav" onclick="TG.switchTab('reviewer',this)">
+        <i class="fas fa-shield-alt"></i> Tekshiruvchi
+      </div>
       <div class="nav-item tg-nav" onclick="TG.switchTab('sources',this)">
         <i class="fas fa-newspaper"></i> Manbalar
       </div>
@@ -832,7 +848,7 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
         <div class="topbar-title" id="topbarTitle">Hero</div>
       </div>
       <div class="topbar-right">
-        <a href="index.html" target="_blank" class="topbar-preview-link"><i class="fas fa-external-link-alt"></i> <span>Saytni ko'rish</span></a>
+        <a href="index.html" target="_blank" class="topbar-preview-link" id="topbarPreviewLink"><i class="fas fa-external-link-alt" id="topbarPreviewIcon"></i> <span id="topbarPreviewText">Saytni ko'rish</span></a>
         <div class="unpushed-badge" id="unpushedBadge" onclick="document.querySelector('[data-panel=github]').click()" title="Push qilinmagan o'zgarishlar bor"><span class="pulse-dot"></span> Push kutmoqda</div>
         <div class="unsaved-badge" id="unsavedBadge"><i class="fas fa-circle" style="font-size:0.45rem"></i> Saqlanmagan</div>
         <span class="save-shortcut">Ctrl+S</span>
@@ -1361,7 +1377,48 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
           </div>
         </div>
 
-        <!-- ===== TAB 5: JADVAL ===== -->
+        <!-- ===== TAB 5: TEKSHIRUVCHI AGENT ===== -->
+        <div class="tg-pane" id="tg-pane-reviewer">
+          <div class="tg-section">
+            <div class="tg-section-title"><i class="fas fa-shield-alt"></i> Sifat nazorati agenti</div>
+            <p style="font-size:0.8rem;color:var(--sub);margin-bottom:14px">Har bir post chop etishdan avval avtomatik tekshiruvdan o'tadi. Agar post mezonlarga mos kelmasa, matn agentiga xato tafsilotlari bilan qaytariladi.</p>
+            <div class="tg-toggle-wrap" style="margin-bottom:14px">
+              <label class="tg-toggle"><input type="checkbox" id="tgReviewerEnabled" checked onchange="TG.saveReviewerSettings()"><span class="tg-toggle-slider"></span></label>
+              <span style="font-size:0.8rem;font-weight:600;color:var(--text)">Tekshiruvchi agent yoqiq</span>
+            </div>
+            <div class="form-group">
+              <label>Maksimal qayta urinishlar soni</label>
+              <select class="form-input" id="tgReviewerRetries" onchange="TG.saveReviewerSettings()" style="width:100px">
+                <option value="2">2</option>
+                <option value="3" selected>3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+              </select>
+              <div class="form-hint">Post rad etilsa, necha marta qayta yozilishi mumkin</div>
+            </div>
+          </div>
+
+          <div class="tg-section">
+            <div class="tg-section-title"><i class="fas fa-list-check"></i> Tekshirish mezonlari</div>
+            <div class="tg-reviewer-criteria" id="tgReviewerCriteria">
+              <label class="tg-criteria-item"><input type="checkbox" checked data-criteria="format" onchange="TG.saveReviewerSettings()"> <b>Format:</b> <span>&lt;b&gt; va &lt;i&gt; teglar mavjud (kamida 2+1)</span></label>
+              <label class="tg-criteria-item"><input type="checkbox" checked data-criteria="length" onchange="TG.saveReviewerSettings()"> <b>Uzunlik:</b> <span>4-8 qator orasida</span></label>
+              <label class="tg-criteria-item"><input type="checkbox" checked data-criteria="value" onchange="TG.saveReviewerSettings()"> <b>Qimmat:</b> <span>Foydali ma'lumot yoki bilim berishi</span></label>
+              <label class="tg-criteria-item"><input type="checkbox" checked data-criteria="style" onchange="TG.saveReviewerSettings()"> <b>Uslub:</b> <span>Tirik va qiziqarli, monoton emas</span></label>
+              <label class="tg-criteria-item"><input type="checkbox" checked data-criteria="source" onchange="TG.saveReviewerSettings()"> <b>Manba:</b> <span>Kamida 1 ta &lt;a href&gt; link mavjud</span></label>
+              <label class="tg-criteria-item"><input type="checkbox" checked data-criteria="noreklama" onchange="TG.saveReviewerSettings()"> <b>Reklama yo'q:</b> <span>"Buyurtma bering" kabi matn yo'q</span></label>
+            </div>
+          </div>
+
+          <div class="tg-section">
+            <div class="tg-section-title"><i class="fas fa-clipboard-list"></i> Oxirgi tekshiruvlar</div>
+            <div id="tgReviewerLog" class="tg-reviewer-log">
+              <div class="tg-empty"><i class="fas fa-shield-alt" style="font-size:2rem;display:block;margin-bottom:8px;opacity:0.3"></i>Hali tekshiruv yo'q</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== TAB 6: JADVAL ===== -->
         <div class="tg-pane" id="tg-pane-schedule">
           <div class="tg-section">
             <div class="tg-section-title"><i class="fas fa-calendar-week"></i> Haftalik jadval
@@ -1973,10 +2030,22 @@ function collectFormData() {
 }
 
 function saveAll() {
-  collectFormData();
-  saveToStorage();
-  clearDirty();
-  showToast('Barcha ma\'lumotlar saqlandi', 'success');
+  var currentMode = localStorage.getItem('admin_mode') || 'site';
+  if (currentMode === 'bot') {
+    if (typeof TG !== 'undefined') {
+      TG.saveSettings();
+      TG.saveTextSettings();
+      TG.saveImageSettings();
+      TG.saveReviewerSettings();
+    }
+    clearDirty();
+    showToast('Bot sozlamalari saqlandi', 'success');
+  } else {
+    collectFormData();
+    saveToStorage();
+    clearDirty();
+    showToast('Sayt ma\'lumotlari saqlandi', 'success');
+  }
 }
 
 function toggleMsgSettings() {
@@ -5024,8 +5093,43 @@ var TG = (function() {
     loadSettingsTab();
   }
 
+  // ── TEKSHIRUVCHI AGENT SOZLAMALARI ──
+  var REVIEWER_KEY = 'tg_reviewer';
+
+  function saveReviewerSettings() {
+    var enabled = document.getElementById('tgReviewerEnabled');
+    var retries = document.getElementById('tgReviewerRetries');
+    var criteria = {};
+    document.querySelectorAll('#tgReviewerCriteria input[data-criteria]').forEach(function(cb) {
+      criteria[cb.dataset.criteria] = cb.checked;
+    });
+    var cfg = {
+      enabled: enabled ? enabled.checked : true,
+      retries: retries ? parseInt(retries.value) : 3,
+      criteria: criteria
+    };
+    localStorage.setItem(REVIEWER_KEY, JSON.stringify(cfg));
+  }
+
+  function loadReviewerSettings() {
+    try {
+      var cfg = JSON.parse(localStorage.getItem(REVIEWER_KEY)) || {};
+      var enabled = document.getElementById('tgReviewerEnabled');
+      var retries = document.getElementById('tgReviewerRetries');
+      if (enabled && cfg.enabled !== undefined) enabled.checked = cfg.enabled;
+      if (retries && cfg.retries) retries.value = cfg.retries;
+      if (cfg.criteria) {
+        Object.keys(cfg.criteria).forEach(function(key) {
+          var cb = document.querySelector('#tgReviewerCriteria input[data-criteria="'+key+'"]');
+          if (cb) cb.checked = cfg.criteria[key];
+        });
+      }
+    } catch(e) {}
+  }
+
   function init() {
     loadUI();
+    loadReviewerSettings();
     checkBot();
     loadHistory();
     checkGroqStatus();
@@ -5042,6 +5146,7 @@ var TG = (function() {
     saveSettings:saveSettings, togglePass:togglePass,
     checkLeonardoCredits:checkLeonardoCredits, checkGroqStatus:checkGroqStatus,
     testGroq:testGroq, testLeonardo:testLeonardo,
+    saveReviewerSettings:saveReviewerSettings, loadReviewerSettings:loadReviewerSettings,
     switchMode:switchMode
   };
 })();
@@ -5059,6 +5164,10 @@ function switchMode(mode) {
   var btnBot  = document.getElementById('modeBtnBot');
   if (!siteNav || !botNav) return;
   localStorage.setItem('admin_mode', mode);
+  var previewLink = document.getElementById('topbarPreviewLink');
+  var previewIcon = document.getElementById('topbarPreviewIcon');
+  var previewText = document.getElementById('topbarPreviewText');
+
   if (mode === 'bot') {
     siteNav.style.display = 'none';
     botNav.style.display  = 'block';
@@ -5069,6 +5178,12 @@ function switchMode(mode) {
     if (tgPanel) tgPanel.classList.add('active');
     var ttl = document.getElementById('topbarTitle');
     if (ttl) ttl.textContent = 'Dashboard';
+    if (previewLink) {
+      var chId = (localStorage.getItem('tg_settings') ? JSON.parse(localStorage.getItem('tg_settings')).channelId : '') || '@deardsgn';
+      previewLink.href = 'https://t.me/' + chId.replace('@','');
+      previewIcon.className = 'fab fa-telegram';
+      previewText.textContent = 'Kanalni ko\'rish';
+    }
     if (!_tgInited) { _tgInited = true; TG.init(); }
     var firstNav = botNav.querySelector('.tg-nav');
     TG.switchTab('dashboard', firstNav);
@@ -5085,6 +5200,11 @@ function switchMode(mode) {
     if (firstSiteNav) firstSiteNav.classList.add('active');
     var ttl = document.getElementById('topbarTitle');
     if (ttl) ttl.textContent = 'Hero';
+    if (previewLink) {
+      previewLink.href = 'index.html';
+      previewIcon.className = 'fas fa-external-link-alt';
+      previewText.textContent = 'Saytni ko\'rish';
+    }
   }
 }
 
