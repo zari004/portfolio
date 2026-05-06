@@ -789,26 +789,26 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
     <!-- BOT nav -->
     <nav class="sidebar-nav" id="botNav" style="display:none">
       <div class="nav-section">Telegram Bot</div>
-      <div class="nav-item tg-nav active" onclick="switchTab('dashboard',this)">
+      <div class="nav-item tg-nav active" onclick="TG.switchTab('dashboard',this)">
         <i class="fas fa-tachometer-alt"></i> Dashboard
       </div>
-      <div class="nav-item tg-nav" onclick="switchTab('text',this)">
+      <div class="nav-item tg-nav" onclick="TG.switchTab('text',this)">
         <i class="fas fa-pen-nib"></i> Matn Agenti
       </div>
-      <div class="nav-item tg-nav" onclick="switchTab('image',this)">
+      <div class="nav-item tg-nav" onclick="TG.switchTab('image',this)">
         <i class="fas fa-image"></i> Rasm Agenti
       </div>
-      <div class="nav-item tg-nav" onclick="switchTab('sources',this)">
+      <div class="nav-item tg-nav" onclick="TG.switchTab('sources',this)">
         <i class="fas fa-newspaper"></i> Manbalar
       </div>
-      <div class="nav-item tg-nav" onclick="switchTab('schedule',this)">
+      <div class="nav-item tg-nav" onclick="TG.switchTab('schedule',this)">
         <i class="fas fa-calendar-alt"></i> Jadval
       </div>
-      <div class="nav-item tg-nav" onclick="switchTab('history',this)">
+      <div class="nav-item tg-nav" onclick="TG.switchTab('history',this)">
         <i class="fas fa-history"></i> Tarix
       </div>
       <div class="nav-section">Sozlamalar</div>
-      <div class="nav-item tg-nav" onclick="switchTab('settings',this)">
+      <div class="nav-item tg-nav" onclick="TG.switchTab('settings',this)">
         <i class="fas fa-cog"></i> Bot Sozlamalari
       </div>
     </nav>
@@ -2399,6 +2399,7 @@ function enterApp(user) {
   document.getElementById('userRole').textContent = user.role === 'admin' ? 'Administrator' : 'Editor';
   document.getElementById('userAvatar').textContent = user.username.charAt(0).toUpperCase();
   fillAllForms();
+  setTimeout(restoreAdminMode, 100);
   // Push kutmoqda belgisini tekshirish
   if (localStorage.getItem('_needsPush') === '1') {
     setNeedsPush(true);
@@ -5058,6 +5059,7 @@ function switchMode(mode) {
   var btnSite = document.getElementById('modeBtnSite');
   var btnBot  = document.getElementById('modeBtnBot');
   if (!siteNav || !botNav) return;
+  localStorage.setItem('admin_mode', mode);
   if (mode === 'bot') {
     siteNav.style.display = 'none';
     botNav.style.display  = 'block';
@@ -5085,6 +5087,12 @@ function switchMode(mode) {
     var ttl = document.getElementById('topbarTitle');
     if (ttl) ttl.textContent = 'Hero';
   }
+}
+
+// Sahifa yuklanganida oxirgi rejimni tiklash
+function restoreAdminMode() {
+  var savedMode = localStorage.getItem('admin_mode');
+  if (savedMode === 'bot') switchMode('bot');
 }
 
 // Telegram paneli ochilganda init
