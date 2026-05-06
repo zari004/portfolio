@@ -2,8 +2,8 @@ name: Telegram Design Post
 
 on:
   schedule:
-    # Har soatda tekshiradi — schedule.json da vaqt mos kelsa post yuboradi
-    - cron: '0 5-18 * * *'   # 10:00-23:00 Toshkent (UTC+5)
+    # Har 30 daqiqada tekshiradi — schedule.json da vaqt mos kelsa post yuboradi
+    - cron: '*/30 1-18 * * *'   # 06:00-23:00 Toshkent (UTC+5)
   workflow_dispatch:
     inputs:
       category:

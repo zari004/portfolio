@@ -417,30 +417,95 @@ def send_photo(image_url, caption):
 
 
 # ── SCHEDULE CHECK ────────────────────────────────────────────────────────────
-def get_current_slot(schedule):
-  """Hozirgi vaqtga mos slot topish"""
+def get_current_slots(schedule):
+  """Hozirgi vaqtga mos BARCHA slotlarni topish"""
   now_tashkent = datetime.now(timezone(timedelta(hours=TZ_OFFSET)))
   day_names = ['mon','tue','wed','thu','fri','sat','sun']
   current_day = day_names[now_tashkent.weekday()]
   current_time = now_tashkent.strftime('%H:%M')
 
-  # Manual trigger bo'lsa
   manual_cat = os.environ.get('MANUAL_CATEGORY', '')
   if manual_cat:
-    return {'category': manual_cat, 'rubric': manual_cat}
+    return [{'category': manual_cat, 'time': current_time}]
 
+  matched = []
   slots = schedule.get('slots', [])
   for slot in slots:
     if slot.get('enabled', True) and slot.get('day') == current_day:
       slot_time = slot.get('time', '10:00')
-      # ±30 daqiqa oralig'ida bo'lsa, bu slot
       slot_h, slot_m = map(int, slot_time.split(':'))
       cur_h, cur_m = map(int, current_time.split(':'))
       diff = abs((cur_h * 60 + cur_m) - (slot_h * 60 + slot_m))
       if diff <= 30:
-        return slot
+        matched.append(slot)
 
-  return None
+  return matched
+
+
+def already_posted_today(history, rubric_key, slot_time):
+  """Bugun shu slot uchun allaqachon post yuborilganmi"""
+  today = datetime.now(timezone(timedelta(hours=TZ_OFFSET))).strftime('%Y-%m-%d')
+  for entry in (history or []):
+    ts = entry.get('timestamp', '')
+    entry_date = ts[:10]
+    if entry_date == today:
+      if entry.get('rubric') == rubric_key and entry.get('slot_time', '') == slot_time:
+        return True
+    elif entry_date < today:
+      break
+  return False
+
+
+def post_one(rubric_key, rubric, slot_time, history):
+  """Bitta postni to'liq pipeline orqali yuborish"""
+  print(f'\n{"="*50}')
+  print(f'Rubrika: {rubric["emoji"]} {rubric["title"]} | Vaqt: {slot_time}')
+
+  # ── PIPELINE: Matn → Tekshiruv → Qayta yozish (agar kerak) ──
+  caption_text = None
+  feedback = None
+  final_attempt = 1
+
+  for attempt in range(MAX_QUALITY_RETRIES):
+    print(f'\n--- Urinish {attempt + 1}/{MAX_QUALITY_RETRIES} ---')
+    caption_text = groq_generate(rubric_key, rubric, feedback=feedback)
+    review = quality_check(caption_text, rubric_key)
+
+    if review.get('passed'):
+      print(f'✅ Post tekshiruvdan o\'tdi (urinish {attempt + 1})')
+      final_attempt = attempt + 1
+      break
+    else:
+      errors = review.get('errors', [])
+      suggestion = review.get('suggestion', '')
+      feedback = '\n'.join([f'- {e}' for e in errors])
+      if suggestion:
+        feedback += f'\nTaklif: {suggestion}'
+      print(f'🔄 Qayta yozishga yuborildi...')
+      final_attempt = attempt + 1
+
+  tags = HASHTAG_SETS.get(rubric_key, '') + ' ' + COMMON_TAGS
+  caption = f'{caption_text}\n\n{tags}'
+  print(f'\nYakuniy matn: {caption[:120]}...')
+
+  image_url = generate_image(rubric_key, rubric)
+  print(f'Rasm: {image_url}')
+
+  msg_id = send_photo(image_url, caption)
+  print(f'✅ Yuborildi! msg_id={msg_id}')
+
+  return {
+    'id': msg_id,
+    'image': image_url,
+    'caption': caption_text,
+    'hashtags': tags,
+    'rubric': rubric_key,
+    'rubric_title': rubric['title'],
+    'slot_time': slot_time,
+    'timestamp': datetime.now(timezone.utc).isoformat(),
+    'status': 'sent',
+    'attempts': final_attempt,
+  }
 
 
 # ── MAIN ──────────────────────────────────────────────────────────────────────
@@ -454,77 +519,44 @@ def main():
   if not schedule.get('enabled', True):
     print('Bot o\'chirilgan (enabled: false)'); return
 
-  # Slot topish (yoki manual)
-  slot = get_current_slot(schedule)
   is_manual = os.environ.get('MANUAL_TRIGGER', 'false').lower() in ('true', '1')
-  if not slot and not is_manual:
+  slots = get_current_slots(schedule)
+
+  if not slots and not is_manual:
     print('Bu vaqtda post yo\'q — jadval bo\'yicha emas'); return
-  if not slot and is_manual:
-    # Manual trigger bo'lsa, bugungi birinchi enabled slotdan oladi, yoki 'tip' ishlatadi
+  if not slots and is_manual:
     enabled_slots = [s for s in schedule.get('slots', []) if s.get('enabled', True)]
-    slot = enabled_slots[0] if enabled_slots else {'category': 'tip'}
+    slots = [enabled_slots[0]] if enabled_slots else [{'category': 'tip', 'time': '00:00'}]
 
-  rubric_key = (slot or {}).get('category', 'tip')
-  rubric = RUBRICS.get(rubric_key, RUBRICS['tip'])
-
-  print(f'Rubrika: {rubric["emoji"]} {rubric["title"]}')
-
-  # ── PIPELINE: Matn → Tekshiruv → Qayta yozish (agar kerak) ──
-  caption_text = None
-  feedback = None
-
-  for attempt in range(MAX_QUALITY_RETRIES):
-    print(f'\n--- Urinish {attempt + 1}/{MAX_QUALITY_RETRIES} ---')
-
-    # 1. Matn agenti: post generatsiya
-    caption_text = groq_generate(rubric_key, rubric, feedback=feedback)
-
-    # 2. Tekshiruvchi agent: sifat nazorati
-    review = quality_check(caption_text, rubric_key)
-
-    if review.get('passed'):
-      print(f'✅ Post tekshiruvdan o\'tdi (urinish {attempt + 1})')
-      break
-    else:
-      errors = review.get('errors', [])
-      suggestion = review.get('suggestion', '')
-      feedback = '\n'.join([f'- {e}' for e in errors])
-      if suggestion:
-        feedback += f'\nTaklif: {suggestion}'
-      print(f'🔄 Qayta yozishga yuborildi...')
-
-  # Hashtags
-  tags = HASHTAG_SETS.get(rubric_key, '') + ' ' + COMMON_TAGS
-  caption = f'{caption_text}\n\n{tags}'
-
-  print(f'\nFinal caption: {caption[:120]}...')
-
-  # Rasm generatsiya
-  image_url = generate_image(rubric_key, rubric)
-  print(f'Image: {image_url}')
-
-  # Telegram ga yuborish
-  msg_id = send_photo(image_url, caption)
-  print(f'✅ Yuborildi! msg_id={msg_id}')
-
-  # Tarix saqlash
+  # Tarixni yuklash (takroriy postni oldini olish uchun)
   history, sha = gh_get('telegram_bot/history.json')
   if not isinstance(history, list):
     history = []
 
-  history.insert(0, {
-    'id': msg_id,
-    'image': image_url,
-    'caption': caption_text,
-    'hashtags': tags,
-    'rubric': rubric_key,
-    'rubric_title': rubric['title'],
-    'timestamp': datetime.now(timezone.utc).isoformat(),
-    'status': 'sent',
-    'attempts': attempt + 1,
-  })
-  gh_put('telegram_bot/history.json', history[:300], sha, 'Telegram: history yangilandi')
-  print('Tayyor!')
+  posted_count = 0
+  for slot in slots:
+    rubric_key = slot.get('category', 'tip')
+    slot_time = slot.get('time', '00:00')
+    rubric = RUBRICS.get(rubric_key, RUBRICS['tip'])
+
+    if already_posted_today(history, rubric_key, slot_time):
+      print(f'⏭ O\'tkazildi: {rubric["emoji"]} {rubric["title"]} ({slot_time}) — bugun allaqachon yuborilgan')
+      continue
+
+    try:
+      entry = post_one(rubric_key, rubric, slot_time, history)
+      history.insert(0, entry)
+      posted_count += 1
+    except Exception as e:
+      print(f'❌ Xato ({rubric_key}): {e}')
+      continue
+
+  # Tarixni saqlash
+  if posted_count > 0:
+    gh_put('telegram_bot/history.json', history[:300], sha, f'Telegram: {posted_count} ta post yuborildi')
+    print(f'\n🎉 Jami {posted_count} ta post yuborildi!')
+  else:
+    print('\nYangi post yuborilmadi.')
 
 
 if __name__ == '__main__':
