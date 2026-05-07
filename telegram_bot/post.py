@@ -16,18 +16,21 @@ GITHUB_REPO  = os.environ.get('GITHUB_REPO', '')
 
 def check_env():
   """Muhit o'zgaruvchilarini tekshirish"""
-  print('--- Muhit o\'zgaruvchilari ---')
-  print(f'  TG_BOT_TOKEN:    {"✅ bor" if BOT_TOKEN else "❌ YO\'Q"}')
-  print(f'  GITHUB_TOKEN:    {"✅ bor" if GITHUB_TOKEN else "❌ YO\'Q"}')
-  print(f'  GITHUB_REPO:     {"✅ " + GITHUB_REPO if GITHUB_REPO else "❌ YO\'Q"}')
-  print(f'  GROQ_API_KEY:    {"✅ bor" if GROQ_KEY else "⚠️ yo\'q (zaxira shablon)"}')
-  print(f'  LEONARDO_API_KEY:{"✅ bor" if LEONARDO_KEY else "⚠️ yo\'q (rasmsiz post)"}')
+  yoq = "YO'Q"
+  zaxira = "yo'q (zaxira shablon)"
+  rasmsiz = "yo'q (rasmsiz post)"
+  print('--- Muhit tekshiruvi ---')
+  print('  TG_BOT_TOKEN:     ' + ('bor' if BOT_TOKEN else 'TOPILMADI'))
+  print('  GITHUB_TOKEN:     ' + ('bor' if GITHUB_TOKEN else 'TOPILMADI'))
+  print('  GITHUB_REPO:      ' + (GITHUB_REPO if GITHUB_REPO else 'TOPILMADI'))
+  print('  GROQ_API_KEY:     ' + ('bor' if GROQ_KEY else zaxira))
+  print('  LEONARDO_API_KEY: ' + ('bor' if LEONARDO_KEY else rasmsiz))
   print('---')
   if not BOT_TOKEN:
-    print('❌ TG_BOT_TOKEN MAJBURIY! GitHub → Settings → Secrets → Actions → qo\'shing')
+    print('XATO: TG_BOT_TOKEN majburiy! GitHub Settings > Secrets > Actions')
     return False
   if not GITHUB_TOKEN or not GITHUB_REPO:
-    print('❌ GITHUB_TOKEN/GITHUB_REPO topilmadi')
+    print('XATO: GITHUB_TOKEN yoki GITHUB_REPO topilmadi')
     return False
   return True
 
@@ -251,7 +254,7 @@ def image_quality_check(image_prompt, rubric_key):
       if '{' in raw:
         json_str = raw[raw.index('{'):raw.rindex('}')+1]
         result = json.loads(json_str)
-        print(f'Rasm tekshiruv: {"✅ O\'tdi" if result.get("passed") else "❌ Qaytarildi"}')
+        print('Rasm tekshiruv: ' + ('O\'tdi' if result.get('passed') else 'Qaytarildi'))
         if not result.get('passed'):
           print(f'  Xatolar: {result.get("errors", [])}')
         return result
@@ -287,7 +290,7 @@ def quality_check(post_text, rubric_key):
       if '{' in raw:
         json_str = raw[raw.index('{'):raw.rindex('}')+1]
         result = json.loads(json_str)
-        print(f'Tekshiruv: {"✅ O\'tdi" if result.get("passed") else "❌ Qaytarildi"}')
+        print('Tekshiruv: ' + ('O\'tdi' if result.get('passed') else 'Qaytarildi'))
         if not result.get('passed'):
           print(f'  Xatolar: {result.get("errors", [])}')
         return result
@@ -682,4 +685,12 @@ def main():
 
 
 if __name__ == '__main__':
-  main()
+  import traceback
+  try:
+    main()
+  except SystemExit:
+    raise
+  except Exception as e:
+    print(f'\n!!! KUTILMAGAN XATO !!!')
+    traceback.print_exc()
+    raise SystemExit(1)
