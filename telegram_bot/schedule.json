@@ -3,20 +3,14 @@
   "slots": [
     {
       "day": "thu",
-      "time": "12:00",
-      "category": "typography",
+      "time": "13:30",
+      "category": "tip",
       "enabled": true
     },
     {
       "day": "thu",
-      "time": "12:30",
-      "category": "tool",
-      "enabled": true
-    },
-    {
-      "day": "thu",
-      "time": "13:00",
-      "category": "mindset",
+      "time": "14:00",
+      "category": "color",
       "enabled": true
     }
   ]
