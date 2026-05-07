@@ -520,11 +520,16 @@ def send_text(caption):
 
 
 # ── SCHEDULE CHECK ────────────────────────────────────────────────────────────
-def get_current_slots(schedule):
-  """Hozirgi vaqtga mos BARCHA slotlarni topish"""
+def get_current_slots(schedule, history=None):
+  """Bugun o'tkazib yuborilgan (hali yuborilmagan) slotlarni topish.
+  GitHub Actions cron kechikishi mumkin, shuning uchun vaqt oynasi
+  o'rniga 'bugungi vaqti o'tgan lekin hali yuborilmagan' mantiq ishlatiladi.
+  """
   now_tashkent = datetime.now(timezone(timedelta(hours=TZ_OFFSET)))
   day_names = ['mon','tue','wed','thu','fri','sat','sun']
   current_day = day_names[now_tashkent.weekday()]
+  cur_h, cur_m = now_tashkent.hour, now_tashkent.minute
+  cur_minutes = cur_h * 60 + cur_m
   current_time = now_tashkent.strftime('%H:%M')
 
   print(f'Jadval tekshiruvi: {current_day} {current_time} (Toshkent)')
@@ -533,6 +538,17 @@ def get_current_slots(schedule):
   if manual_cat:
     print(f'  Manual kategoriya: {manual_cat}')
     return [{'category': manual_cat, 'time': current_time}]
+
+  # Bugun qaysi postlar allaqachon yuborilgan
+  today = now_tashkent.strftime('%Y-%m-%d')
+  posted_keys = set()
+  for entry in (history or []):
+    ts = entry.get('timestamp', '')
+    if ts[:10] == today:
+      key = entry.get('rubric', '') + '|' + entry.get('slot_time', '')
+      posted_keys.add(key)
+    elif ts[:10] < today:
+      break
 
   matched = []
   slots = schedule.get('slots', [])
@@ -543,19 +559,29 @@ def get_current_slots(schedule):
     enabled_count += 1
     slot_day = slot.get('day', '')
     slot_time = slot.get('time', '10:00')
-    # "everyday" kunini har qanday kun bilan match qilish
+    slot_cat = slot.get('category', 'tip')
     day_match = (slot_day == current_day or slot_day == 'everyday')
-    if day_match:
-      slot_h, slot_m = map(int, slot_time.split(':'))
-      cur_h, cur_m = map(int, current_time.split(':'))
-      diff = abs((cur_h * 60 + cur_m) - (slot_h * 60 + slot_m))
-      if diff <= 15:
-        print(f'  MATCH: {slot_day} {slot_time} ({slot.get("category","")}) — farq {diff} daq')
-        matched.append(slot)
-      else:
-        print(f'  O\'tib ketdi: {slot_day} {slot_time} ({slot.get("category","")}) — farq {diff} daq (>15)')
+    if not day_match:
+      print(f'  Boshqa kun: {slot_day} {slot_time} ({slot_cat}) — bugun {current_day}')
+      continue
+
+    slot_h, slot_m = map(int, slot_time.split(':'))
+    slot_minutes = slot_h * 60 + slot_m
+
+    # Slot vaqti o'tganmi yoki 15 daqiqa ichidami
+    time_ok = (slot_minutes <= cur_minutes + 15)
+
+    # Allaqachon yuborilganmi
+    post_key = slot_cat + '|' + slot_time
+    already_done = post_key in posted_keys
+
+    if time_ok and not already_done:
+      print(f'  MATCH: {slot_day} {slot_time} ({slot_cat}) — hali yuborilmagan')
+      matched.append(slot)
+    elif already_done:
+      print(f'  Yuborilgan: {slot_day} {slot_time} ({slot_cat}) — bugun allaqachon post qilingan')
     else:
-      print(f'  Boshqa kun: {slot_day} {slot_time} ({slot.get("category","")}) — bugun {current_day}')
+      print(f'  Erta: {slot_day} {slot_time} ({slot_cat}) — hali vaqti kelmagan (hozir {current_time})')
 
   if not matched:
     print(f'  Natija: hech qanday slot mos kelmadi ({enabled_count} ta yoqilgan slotdan)')
@@ -664,8 +690,13 @@ def main():
   if not schedule.get('enabled', True):
     print('Bot o\'chirilgan (enabled: false)'); return
 
+  # Tarixni AVVAL yuklash — get_current_slots ga kerak
+  history, sha = gh_get('telegram_bot/history.json')
+  if not isinstance(history, list):
+    history = []
+
   is_manual = os.environ.get('MANUAL_TRIGGER', 'false').lower() in ('true', '1')
-  slots = get_current_slots(schedule)
+  slots = get_current_slots(schedule, history)
 
   if not slots and not is_manual:
     print('Bu vaqtda post yo\'q — jadval bo\'yicha emas'); return
@@ -673,20 +704,11 @@ def main():
     enabled_slots = [s for s in schedule.get('slots', []) if s.get('enabled', True)]
     slots = [enabled_slots[0]] if enabled_slots else [{'category': 'tip', 'time': '00:00'}]
 
-  # Tarixni yuklash (takroriy postni oldini olish uchun)
-  history, sha = gh_get('telegram_bot/history.json')
-  if not isinstance(history, list):
-    history = []
-
   posted_count = 0
   for slot in slots:
     rubric_key = slot.get('category', 'tip')
     slot_time = slot.get('time', '00:00')
     rubric = RUBRICS.get(rubric_key, RUBRICS['tip'])
-
-    if already_posted_today(history, rubric_key, slot_time):
-      print(f'⏭ O\'tkazildi: {rubric["emoji"]} {rubric["title"]} ({slot_time}) — bugun allaqachon yuborilgan')
-      continue
 
     try:
       entry = post_one(rubric_key, rubric, slot_time, history)

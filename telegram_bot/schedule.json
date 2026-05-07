@@ -3,13 +3,13 @@
   "slots": [
     {
       "day": "thu",
-      "time": "13:30",
+      "time": "15:30",
       "category": "tip",
       "enabled": true
     },
     {
       "day": "thu",
-      "time": "14:00",
+      "time": "16:00",
       "category": "color",
       "enabled": true
     }
