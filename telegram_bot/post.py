@@ -549,11 +549,11 @@ def get_current_slots(schedule):
       slot_h, slot_m = map(int, slot_time.split(':'))
       cur_h, cur_m = map(int, current_time.split(':'))
       diff = abs((cur_h * 60 + cur_m) - (slot_h * 60 + slot_m))
-      if diff <= 30:
+      if diff <= 15:
         print(f'  MATCH: {slot_day} {slot_time} ({slot.get("category","")}) — farq {diff} daq')
         matched.append(slot)
       else:
-        print(f'  O\'tib ketdi: {slot_day} {slot_time} ({slot.get("category","")}) — farq {diff} daq (>30)')
+        print(f'  O\'tib ketdi: {slot_day} {slot_time} ({slot.get("category","")}) — farq {diff} daq (>15)')
     else:
       print(f'  Boshqa kun: {slot_day} {slot_time} ({slot.get("category","")}) — bugun {current_day}')
 
