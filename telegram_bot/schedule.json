@@ -2,9 +2,9 @@
   "enabled": true,
   "slots": [
     {
-      "day": "wed",
-      "time": "07:47",
-      "category": "tool",
+      "day": "thu",
+      "time": "10:00",
+      "category": "tip",
       "enabled": true
     }
   ]
