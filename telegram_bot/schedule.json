@@ -3,12 +3,6 @@
   "slots": [
     {
       "day": "wed",
-      "time": "07:38",
-      "category": "typography",
-      "enabled": true
-    },
-    {
-      "day": "wed",
       "time": "07:39",
       "category": "tool",
       "enabled": true
