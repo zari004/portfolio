@@ -1,23 +1,4 @@
 {
   "enabled": true,
-  "slots": [
-    {
-      "day": "thu",
-      "time": "11:30",
-      "category": "typography",
-      "enabled": true
-    },
-    {
-      "day": "thu",
-      "time": "12:00",
-      "category": "tool",
-      "enabled": true
-    },
-    {
-      "day": "thu",
-      "time": "12:30",
-      "category": "mindset",
-      "enabled": true
-    }
-  ]
+  "slots": []
 }
