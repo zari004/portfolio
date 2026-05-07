@@ -1280,6 +1280,10 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
 
       <!-- TELEGRAM PANEL -->
       <div class="panel" id="panel-telegram">
+        <div class="panel-header">
+          <h2>Telegram Bot</h2>
+          <p>Avtomatik dizayn postlari va kanalga yuborish</p>
+        </div>
 
         <!-- ===== TAB 1: DASHBOARD ===== -->
         <div class="tg-pane active" id="tg-pane-dashboard">
@@ -1315,9 +1319,6 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
             <button class="btn btn-secondary btn-sm" onclick="TG.loadHistory()" title="Yangilash"><i class="fas fa-sync-alt"></i></button>
             <button class="btn btn-secondary btn-sm" onclick="tgCheckBot()" title="Botni tekshirish"><i class="fas fa-plug"></i></button>
           </div>
-
-          <!-- Log — faqat Dashboard da ko'rinadi -->
-          <div class="tg-log" id="tgLog"></div>
 
           <!-- Last 3 posts preview -->
           <div class="tg-section">
@@ -1498,6 +1499,7 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
         <!-- ===== TAB 8: SOZLAMALAR ===== -->
         <div class="tg-pane" id="tg-pane-settings">
           <!-- Bot ulanish holati -->
+          <div class="tg-log" id="tgLog"></div>
           <div class="tg-header">
             <div class="tg-header-icon"><i class="fab fa-telegram"></i></div>
             <div class="tg-header-info">
