@@ -601,11 +601,6 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
 .tg-dot.online { background:#22c55e;box-shadow:0 0 6px rgba(34,197,94,0.5); }
 .tg-dot.offline { background:var(--red); }
 /* Sub-nav tabs */
-.tg-subnav { display:flex;gap:4px;margin-bottom:20px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:5px;overflow-x:auto;flex-wrap:nowrap; }
-.tg-subnav::-webkit-scrollbar { height:3px; }
-.tg-tab-btn { flex-shrink:0;background:none;border:none;color:var(--muted);font-family:inherit;font-size:0.76rem;font-weight:600;padding:7px 14px;border-radius:8px;cursor:pointer;transition:all 0.18s;display:flex;align-items:center;gap:6px;white-space:nowrap; }
-.tg-tab-btn:hover { color:var(--text);background:var(--bg); }
-.tg-tab-btn.active { background:#0088cc;color:#fff; }
 /* Tab panes */
 .tg-pane { display:none; }
 .tg-pane.active { display:block; }
@@ -723,8 +718,6 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
   .tg-actions{flex-direction:column}
   .tg-slot-row{flex-wrap:wrap}
   .tg-slot-time{width:75px!important}
-  .tg-subnav{gap:2px}
-  .tg-tab-btn{font-size:0.68rem;padding:6px 10px}
 }
 </style>
 </head>
@@ -1287,15 +1280,6 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
 
       <!-- TELEGRAM PANEL -->
       <div class="panel" id="panel-telegram">
-        <div class="panel-header">
-          <h2>Telegram Bot</h2>
-          <p>Avtomatik dizayn postlari va kanalga yuborish</p>
-        </div>
-
-        <!-- Sub navigation olib tashlandi — sidebar orqali boshqariladi -->
-
-        <!-- Log (global) -->
-        <div class="tg-log" id="tgLog"></div>
 
         <!-- ===== TAB 1: DASHBOARD ===== -->
         <div class="tg-pane active" id="tg-pane-dashboard">
@@ -1331,6 +1315,9 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
             <button class="btn btn-secondary btn-sm" onclick="TG.loadHistory()" title="Yangilash"><i class="fas fa-sync-alt"></i></button>
             <button class="btn btn-secondary btn-sm" onclick="tgCheckBot()" title="Botni tekshirish"><i class="fas fa-plug"></i></button>
           </div>
+
+          <!-- Log — faqat Dashboard da ko'rinadi -->
+          <div class="tg-log" id="tgLog"></div>
 
           <!-- Last 3 posts preview -->
           <div class="tg-section">
@@ -1487,7 +1474,7 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
           </div>
         </div>
 
-        <!-- ===== TAB 6: TARIX ===== -->
+        <!-- ===== TAB 7: TARIX ===== -->
         <div class="tg-pane" id="tg-pane-history">
           <div class="tg-section">
             <div class="tg-section-title"><i class="fas fa-history"></i> Yuborilgan postlar
@@ -1508,7 +1495,7 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
           </div>
         </div>
 
-        <!-- ===== TAB 7: SOZLAMALAR ===== -->
+        <!-- ===== TAB 8: SOZLAMALAR ===== -->
         <div class="tg-pane" id="tg-pane-settings">
           <!-- Bot ulanish holati -->
           <div class="tg-header">
@@ -4577,48 +4564,11 @@ var TG = (function() {
     if (pane) pane.classList.add('active');
     TG_STATE.currentTab = tabId;
     // Topbar title
-    var titles = { dashboard:'Dashboard', text:'Matn Agenti', image:'Rasm Agenti', sources:'Manbalar', schedule:'Jadval', history:'Tarix', settings:'Bot Sozlamalari' };
+    var titles = { dashboard:'Dashboard', text:'Matn Agenti', image:'Rasm Agenti', reviewer:'Tekshiruvchi', sources:'Manbalar', schedule:'Jadval', history:'Tarix', settings:'Bot Sozlamalari' };
     var ttl = document.getElementById('topbarTitle');
     if (ttl) ttl.textContent = titles[tabId] || tabId;
-    if (tabId === 'dashboard') { checkBot(); tgLoadHistory(); }
-    if (tabId === 'history') tgLoadHistory();
-  }
-
-  function switchMode(mode) {
-    var siteNav = document.getElementById('siteNav');
-    var botNav  = document.getElementById('botNav');
-    var btnSite = document.getElementById('modeBtnSite');
-    var btnBot  = document.getElementById('modeBtnBot');
-    var panelsCont = document.querySelector('.panels-container');
-    if (mode === 'bot') {
-      siteNav.style.display = 'none';
-      botNav.style.display  = 'block';
-      btnSite.classList.remove('active');
-      btnBot.classList.add('active');
-      // Show telegram panel, hide others
-      document.querySelectorAll('.panel').forEach(function(p) { p.classList.remove('active'); });
-      var tgPanel = document.getElementById('panel-telegram');
-      if (tgPanel) tgPanel.classList.add('active');
-      var ttl = document.getElementById('topbarTitle');
-      if (ttl) ttl.textContent = 'Dashboard';
-      // Activate first tab
-      var firstNav = botNav.querySelector('.tg-nav');
-      switchTab('dashboard', firstNav);
-    } else {
-      siteNav.style.display = 'block';
-      botNav.style.display  = 'none';
-      btnSite.classList.add('active');
-      btnBot.classList.remove('active');
-      // Restore first site panel
-      document.querySelectorAll('.panel').forEach(function(p) { p.classList.remove('active'); });
-      var heroPanel = document.getElementById('panel-hero');
-      if (heroPanel) heroPanel.classList.add('active');
-      var firstNav = siteNav.querySelector('.nav-item');
-      document.querySelectorAll('#siteNav .nav-item').forEach(function(n) { n.classList.remove('active'); });
-      if (firstNav) firstNav.classList.add('active');
-      var ttl = document.getElementById('topbarTitle');
-      if (ttl) ttl.textContent = 'Hero';
-    }
+    if (tabId === 'dashboard') { checkBot(); loadHistory(); }
+    if (tabId === 'history') loadHistory();
   }
 
   /* ── Bot check ── */
@@ -4885,6 +4835,7 @@ var TG = (function() {
           log('Post yuborilgan bo\'lishi kerak — tarixni tekshiring','ok');
           hideProgress();
           loadHistory();
+          if(btn){btn.disabled=false;btn.innerHTML='<i class="fab fa-telegram"></i> Hozir yuborish';}
         }, 150000);
       } else {
         var err = await r.json().catch(function(){return {};});
@@ -4895,8 +4846,8 @@ var TG = (function() {
       log('Xato: '+e.message,'err');
       showToast('Xato: '+e.message,'error');
       hideProgress();
+      if(btn){btn.disabled=false;btn.innerHTML='<i class="fab fa-telegram"></i> Hozir yuborish';}
     }
-    setTimeout(function(){ if(btn){btn.disabled=false;btn.innerHTML='<i class="fab fa-telegram"></i> Hozir yuborish';} },5000);
   }
 
   /* ── Schedule UI ── */
@@ -5275,8 +5226,7 @@ var TG = (function() {
     testGroq:testGroq, testLeonardo:testLeonardo,
     saveReviewerSettings:saveReviewerSettings, loadReviewerSettings:loadReviewerSettings,
     resetReviewerPrompts:resetReviewerPrompts,
-    showProgress:showProgress, hideProgress:hideProgress,
-    switchMode:switchMode
+    showProgress:showProgress, hideProgress:hideProgress
   };
 })();
 
