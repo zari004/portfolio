@@ -527,20 +527,40 @@ def get_current_slots(schedule):
   current_day = day_names[now_tashkent.weekday()]
   current_time = now_tashkent.strftime('%H:%M')
 
+  print(f'Jadval tekshiruvi: {current_day} {current_time} (Toshkent)')
+
   manual_cat = os.environ.get('MANUAL_CATEGORY', '')
   if manual_cat:
+    print(f'  Manual kategoriya: {manual_cat}')
     return [{'category': manual_cat, 'time': current_time}]
 
   matched = []
   slots = schedule.get('slots', [])
+  enabled_count = 0
   for slot in slots:
-    if slot.get('enabled', True) and slot.get('day') == current_day:
-      slot_time = slot.get('time', '10:00')
+    if not slot.get('enabled', True):
+      continue
+    enabled_count += 1
+    slot_day = slot.get('day', '')
+    slot_time = slot.get('time', '10:00')
+    # "everyday" kunini har qanday kun bilan match qilish
+    day_match = (slot_day == current_day or slot_day == 'everyday')
+    if day_match:
       slot_h, slot_m = map(int, slot_time.split(':'))
       cur_h, cur_m = map(int, current_time.split(':'))
       diff = abs((cur_h * 60 + cur_m) - (slot_h * 60 + slot_m))
       if diff <= 30:
+        print(f'  MATCH: {slot_day} {slot_time} ({slot.get("category","")}) — farq {diff} daq')
         matched.append(slot)
+      else:
+        print(f'  O\'tib ketdi: {slot_day} {slot_time} ({slot.get("category","")}) — farq {diff} daq (>30)')
+    else:
+      print(f'  Boshqa kun: {slot_day} {slot_time} ({slot.get("category","")}) — bugun {current_day}')
+
+  if not matched:
+    print(f'  Natija: hech qanday slot mos kelmadi ({enabled_count} ta yoqilgan slotdan)')
+  else:
+    print(f'  Natija: {len(matched)} ta slot topildi')
 
   return matched
 
