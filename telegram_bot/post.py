@@ -696,13 +696,20 @@ def main():
     history = []
 
   is_manual = os.environ.get('MANUAL_TRIGGER', 'false').lower() in ('true', '1')
-  slots = get_current_slots(schedule, history)
+  all_slots = get_current_slots(schedule, history)
 
-  if not slots and not is_manual:
+  if not all_slots and not is_manual:
     print('Bu vaqtda post yo\'q — jadval bo\'yicha emas'); return
-  if not slots and is_manual:
+  if not all_slots and is_manual:
     enabled_slots = [s for s in schedule.get('slots', []) if s.get('enabled', True)]
-    slots = [enabled_slots[0]] if enabled_slots else [{'category': 'tip', 'time': '00:00'}]
+    all_slots = [enabled_slots[0]] if enabled_slots else [{'category': 'tip', 'time': '00:00'}]
+
+  # Har cron da faqat 1 ta post (ketma-ket yuborishni oldini olish)
+  if not is_manual and len(all_slots) > 1:
+    print(f'  {len(all_slots)} ta slot topildi, faqat 1-chi yuboriladi (qolganlari keyingi cron da)')
+    slots = [all_slots[0]]
+  else:
+    slots = all_slots
 
   posted_count = 0
   for slot in slots:
