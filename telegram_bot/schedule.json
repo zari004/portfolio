@@ -3,18 +3,6 @@
   "slots": [
     {
       "day": "wed",
-      "time": "07:39",
-      "category": "tool",
-      "enabled": true
-    },
-    {
-      "day": "wed",
-      "time": "07:37",
-      "category": "mindset",
-      "enabled": true
-    },
-    {
-      "day": "wed",
       "time": "07:47",
       "category": "tool",
       "enabled": true
