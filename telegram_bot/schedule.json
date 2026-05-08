@@ -3,7 +3,7 @@
   "slots": [
     {
       "day": "everyday",
-      "time": "10:00",
+      "time": "01:00",
       "category": "tip",
       "enabled": true
     }
