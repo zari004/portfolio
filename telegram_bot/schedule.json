@@ -2,15 +2,9 @@
   "enabled": true,
   "slots": [
     {
-      "day": "thu",
-      "time": "15:30",
+      "day": "everyday",
+      "time": "10:00",
       "category": "tip",
-      "enabled": true
-    },
-    {
-      "day": "thu",
-      "time": "16:00",
-      "category": "color",
       "enabled": true
     }
   ]
