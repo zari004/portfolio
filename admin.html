@@ -733,6 +733,19 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
 .dub-log .ok { color:#22c55e; }
 .dub-log .err { color:var(--red); }
 .dub-log .warn { color:#f59e0b; }
+.dub-step-row { transition:background 0.3s; }
+.dub-step-row.waiting .dub-step-status { color:var(--muted); }
+.dub-step-row.active { background:rgba(124,58,237,0.08); }
+.dub-step-row.active .dub-step-status { color:#7c3aed;font-weight:600; }
+.dub-step-row.active .dub-step-pct { color:#7c3aed;font-weight:600; }
+.dub-step-row.active i { color:#7c3aed!important;animation:tgPulse 1s infinite; }
+.dub-step-row.done { opacity:0.55; }
+.dub-step-row.done .dub-step-status { color:#22c55e; }
+.dub-step-row.done .dub-step-pct { color:#22c55e; }
+.dub-step-row.done i { color:#22c55e!important; }
+.dub-step-row.error { background:rgba(239,68,68,0.06); }
+.dub-step-row.error .dub-step-status { color:var(--red);font-weight:600; }
+.dub-step-row.error i { color:var(--red)!important; }
 </style>
 </head>
 <body>
@@ -1648,18 +1661,63 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
           <!-- Jarayon -->
           <div class="tg-section" id="dubProgressSection" style="display:none">
             <div class="tg-section-title"><i class="fas fa-tasks"></i> Jarayon</div>
-            <div class="dub-steps">
-              <div class="dub-step" id="dubStep1"><i class="fas fa-music"></i> Audio ajratish</div>
-              <div class="dub-step" id="dubStep2"><i class="fas fa-microphone"></i> Transkriptsiya</div>
-              <div class="dub-step" id="dubStep3"><i class="fas fa-user-circle"></i> Ovoz tahlili</div>
-              <div class="dub-step" id="dubStep4"><i class="fas fa-language"></i> Tarjima</div>
-              <div class="dub-step" id="dubStep5"><i class="fas fa-volume-up"></i> TTS ovoz</div>
-              <div class="dub-step" id="dubStep6"><i class="fas fa-video"></i> Birlashtirish</div>
+            <!-- Umumiy progress -->
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+              <div class="tg-progress-track" style="flex:1">
+                <div class="tg-progress-fill" id="dubProgressFill" style="width:0%"></div>
+              </div>
+              <span id="dubProgressPct" style="font-size:0.75rem;font-weight:700;color:var(--accent);min-width:36px;text-align:right">0%</span>
             </div>
-            <div class="tg-progress-track" style="margin-top:10px">
-              <div class="tg-progress-fill" id="dubProgressFill" style="width:0%"></div>
-            </div>
-            <div class="dub-log" id="dubLog"></div>
+            <!-- Bosqichlar jadvali -->
+            <table style="width:100%;border-collapse:collapse;font-size:0.75rem">
+              <thead>
+                <tr style="border-bottom:1px solid var(--border)">
+                  <th style="text-align:left;padding:6px 8px;color:var(--muted);font-weight:600">#</th>
+                  <th style="text-align:left;padding:6px 8px;color:var(--muted);font-weight:600">Bosqich</th>
+                  <th style="text-align:left;padding:6px 8px;color:var(--muted);font-weight:600">Holat</th>
+                  <th style="text-align:right;padding:6px 8px;color:var(--muted);font-weight:600">Foiz</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="dub-step-row" id="dubStep1" style="border-bottom:1px solid var(--border)">
+                  <td style="padding:7px 8px;color:var(--muted)">1</td>
+                  <td style="padding:7px 8px"><i class="fas fa-music" style="width:16px;color:var(--muted)"></i> Audio ajratish</td>
+                  <td style="padding:7px 8px" class="dub-step-status">Kutilmoqda</td>
+                  <td style="padding:7px 8px;text-align:right" class="dub-step-pct">—</td>
+                </tr>
+                <tr class="dub-step-row" id="dubStep2" style="border-bottom:1px solid var(--border)">
+                  <td style="padding:7px 8px;color:var(--muted)">2</td>
+                  <td style="padding:7px 8px"><i class="fas fa-microphone" style="width:16px;color:var(--muted)"></i> Transkriptsiya</td>
+                  <td style="padding:7px 8px" class="dub-step-status">Kutilmoqda</td>
+                  <td style="padding:7px 8px;text-align:right" class="dub-step-pct">—</td>
+                </tr>
+                <tr class="dub-step-row" id="dubStep3" style="border-bottom:1px solid var(--border)">
+                  <td style="padding:7px 8px;color:var(--muted)">3</td>
+                  <td style="padding:7px 8px"><i class="fas fa-user-circle" style="width:16px;color:var(--muted)"></i> Ovoz tahlili</td>
+                  <td style="padding:7px 8px" class="dub-step-status">Kutilmoqda</td>
+                  <td style="padding:7px 8px;text-align:right" class="dub-step-pct">—</td>
+                </tr>
+                <tr class="dub-step-row" id="dubStep4" style="border-bottom:1px solid var(--border)">
+                  <td style="padding:7px 8px;color:var(--muted)">4</td>
+                  <td style="padding:7px 8px"><i class="fas fa-language" style="width:16px;color:var(--muted)"></i> Tarjima</td>
+                  <td style="padding:7px 8px" class="dub-step-status">Kutilmoqda</td>
+                  <td style="padding:7px 8px;text-align:right" class="dub-step-pct">—</td>
+                </tr>
+                <tr class="dub-step-row" id="dubStep5" style="border-bottom:1px solid var(--border)">
+                  <td style="padding:7px 8px;color:var(--muted)">5</td>
+                  <td style="padding:7px 8px"><i class="fas fa-volume-up" style="width:16px;color:var(--muted)"></i> TTS ovoz</td>
+                  <td style="padding:7px 8px" class="dub-step-status">Kutilmoqda</td>
+                  <td style="padding:7px 8px;text-align:right" class="dub-step-pct">—</td>
+                </tr>
+                <tr class="dub-step-row" id="dubStep6">
+                  <td style="padding:7px 8px;color:var(--muted)">6</td>
+                  <td style="padding:7px 8px"><i class="fas fa-video" style="width:16px;color:var(--muted)"></i> Birlashtirish</td>
+                  <td style="padding:7px 8px" class="dub-step-status">Kutilmoqda</td>
+                  <td style="padding:7px 8px;text-align:right" class="dub-step-pct">—</td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="dub-log" id="dubLog" style="margin-top:10px"></div>
           </div>
 
           <!-- Natija -->
@@ -5720,22 +5778,45 @@ var DUB = (function() {
     });
   }
 
-  // ── Steplarni yangilash ──
+  // ── Steplarni yangilash (jadval) ──
+  var STEP_NAMES = ['', 'Audio ajratish', 'Transkriptsiya', 'Ovoz tahlili', 'Tarjima', 'TTS ovoz', 'Birlashtirish'];
+
   function updateSteps(currentStep, status) {
+    var totalPct = 0;
     for (var s = 1; s <= 6; s++) {
-      var el = document.getElementById('dubStep' + s);
-      if (!el) continue;
-      el.classList.remove('active', 'done', 'error');
-      if (s < currentStep) el.classList.add('done');
-      else if (s === currentStep && status === 'processing') el.classList.add('active');
-    }
-    if (status === 'done') {
-      for (var d = 1; d <= 6; d++) {
-        var el2 = document.getElementById('dubStep' + d);
-        if (el2) { el2.classList.remove('active'); el2.classList.add('done'); }
+      var row = document.getElementById('dubStep' + s);
+      if (!row) continue;
+      var statusCell = row.querySelector('.dub-step-status');
+      var pctCell = row.querySelector('.dub-step-pct');
+      row.classList.remove('active', 'done', 'error', 'waiting');
+
+      if (s < currentStep || status === 'done') {
+        row.classList.add('done');
+        if (statusCell) statusCell.textContent = 'Tayyor';
+        if (pctCell) pctCell.textContent = '100%';
+        totalPct += 100;
+      } else if (s === currentStep && status === 'processing') {
+        row.classList.add('active');
+        if (statusCell) statusCell.textContent = 'Bajarilmoqda...';
+        // Bosqich ichidagi taxminiy foiz (serverdan progress asosida)
+        var stepInnerPct = Math.max(0, Math.min(99, Math.round((_stepTick % 5) * 20)));
+        if (pctCell) pctCell.textContent = stepInnerPct + '%';
+        totalPct += stepInnerPct;
+        _stepTick++;
+      } else {
+        row.classList.add('waiting');
+        if (statusCell) statusCell.textContent = 'Kutilmoqda';
+        if (pctCell) pctCell.textContent = '—';
       }
     }
+    // Umumiy foiz
+    var overallPct = status === 'done' ? 100 : Math.round(totalPct / 6);
+    var pctEl = document.getElementById('dubProgressPct');
+    if (pctEl) pctEl.textContent = overallPct + '%';
+    var fillEl = document.getElementById('dubProgressFill');
+    if (fillEl) fillEl.style.width = overallPct + '%';
   }
+  var _stepTick = 0;
 
   // ── Server natijasi ──
   function showServerResult(data, serverUrl) {
@@ -5790,9 +5871,8 @@ var DUB = (function() {
         '</div>';
     }
 
-    // Barcha steplarni bajarilgan qilish (vizual)
-    var fillEl = document.getElementById('dubProgressFill');
-    if (fillEl) fillEl.style.width = '100%';
+    // Jadval — config eksport holati
+    updateSteps(7, 'done');
     resetButton();
   }
 
@@ -5802,14 +5882,24 @@ var DUB = (function() {
     var resultSection = document.getElementById('dubResultSection');
     if (progressSection) progressSection.style.display = 'block';
     if (resultSection) resultSection.style.display = 'none';
+    _stepTick = 0;
     for (var s = 1; s <= 6; s++) {
-      var step = document.getElementById('dubStep' + s);
-      if (step) step.classList.remove('active', 'done', 'error');
+      var row = document.getElementById('dubStep' + s);
+      if (row) {
+        row.classList.remove('active', 'done', 'error', 'waiting');
+        row.classList.add('waiting');
+        var sc = row.querySelector('.dub-step-status');
+        var pc = row.querySelector('.dub-step-pct');
+        if (sc) sc.textContent = 'Kutilmoqda';
+        if (pc) pc.textContent = '—';
+      }
     }
     var logEl = document.getElementById('dubLog');
     if (logEl) logEl.innerHTML = '';
     var fillEl = document.getElementById('dubProgressFill');
     if (fillEl) fillEl.style.width = '0%';
+    var pctEl = document.getElementById('dubProgressPct');
+    if (pctEl) pctEl.textContent = '0%';
     _lastLogCount = 0;
   }
 
