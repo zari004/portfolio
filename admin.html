@@ -1598,12 +1598,42 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
 
         <!-- TAB 1: DUBLYAJ QILISH -->
         <div class="dub-pane active" id="dub-pane-convert">
+          <!-- Server holati -->
+          <div class="tg-section" style="padding:10px 14px">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <div style="display:flex;align-items:center;gap:8px;font-size:0.78rem">
+                <span class="tg-dot" id="dubServerDot"></span>
+                <span id="dubServerStatus" style="color:var(--muted)">Server tekshirilmoqda...</span>
+              </div>
+              <button class="btn btn-secondary btn-sm" onclick="DUB.checkServer()" style="font-size:0.68rem;padding:3px 8px">
+                <i class="fas fa-sync-alt"></i>
+              </button>
+            </div>
+          </div>
+
           <div class="tg-section">
             <div class="tg-section-title"><i class="fas fa-film"></i> Video dublyaj qilish</div>
+            <!-- Manba tanlash -->
             <div class="form-group">
-              <label>Video fayl</label>
-              <input type="file" class="form-input" id="dubVideoFile" accept="video/*" style="padding:8px">
-              <div class="form-hint">MP4, MKV, AVI formatdagi video faylni tanlang</div>
+              <label>Video manbasi</label>
+              <div style="display:flex;gap:6px;margin-bottom:8px">
+                <button class="btn btn-sm" id="dubSrcUrl" onclick="DUB.switchSource('url')" style="font-size:0.72rem;padding:4px 12px;background:var(--accent);color:#0a0a0a;border:none;border-radius:6px;cursor:pointer">
+                  <i class="fas fa-link"></i> URL havola
+                </button>
+                <button class="btn btn-sm" id="dubSrcFile" onclick="DUB.switchSource('file')" style="font-size:0.72rem;padding:4px 12px;background:var(--card);color:var(--muted);border:1px solid var(--border);border-radius:6px;cursor:pointer">
+                  <i class="fas fa-file-video"></i> Fayl yuklash
+                </button>
+              </div>
+              <!-- URL input -->
+              <div id="dubSourceUrl">
+                <input type="text" class="form-input" id="dubVideoUrl" placeholder="https://... yoki YouTube link" style="font-size:0.82rem">
+                <div class="form-hint">YouTube, to'g'ridan-to'g'ri video URL yoki boshqa havola</div>
+              </div>
+              <!-- Fayl input -->
+              <div id="dubSourceFile" style="display:none">
+                <input type="file" class="form-input" id="dubVideoFile" accept="video/*" style="padding:8px">
+                <div class="form-hint">MP4, MKV, AVI formatdagi video faylni tanlang</div>
+              </div>
             </div>
             <div class="form-group">
               <label>Ovoz turi</label>
@@ -1731,6 +1761,15 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
               <label>FFmpeg yo'li</label>
               <input type="text" class="form-input" id="dubFfmpegPath" value="ffmpeg" oninput="DUB.saveSettings()">
               <div class="form-hint">Odatda "ffmpeg" yetarli. Agar ishlamasa to'liq yo'l yozing</div>
+            </div>
+          </div>
+
+          <div class="tg-section">
+            <div class="tg-section-title"><i class="fas fa-server"></i> Server</div>
+            <div class="form-group">
+              <label>Server URL</label>
+              <input type="text" class="form-input" id="dubServerUrl" value="http://localhost:5000" oninput="DUB.saveSettings()">
+              <div class="form-hint">Dubber server manzili. Serverni ishga tushirish: <code>cd anime_dubber && python server.py</code></div>
             </div>
           </div>
 
@@ -5423,15 +5462,18 @@ function tgSaveSchedule() { TG.saveSchedule(); }
 function tgRefreshHistory() { TG.loadHistory(); }
 
 /* ============================================================
-   DUB MODULE — Anime Dublyaj boshqarish
+   DUB MODULE — Anime Dublyaj boshqarish (Server bilan)
    ============================================================ */
 var DUB = (function() {
   'use strict';
 
   var STORAGE_KEY = 'dub_settings';
   var _inited = false;
+  var _pollTimer = null;
+  var _currentJobId = null;
+  var _sourceMode = 'url';  // 'url' yoki 'file'
+  var _lastLogCount = 0;
 
-  // ── Default sozlamalar ──
   var DEFAULTS = {
     geminiKey: '',
     geminiModel: 'gemini-1.5-flash',
@@ -5442,6 +5484,7 @@ var DUB = (function() {
       male_rough: { rate: '-10%', pitch: '-15%' }
     },
     ffmpegPath: 'ffmpeg',
+    serverUrl: 'http://localhost:5000',
     whisperModel: 'small',
     voiceType: 'auto',
     subtitlesOnly: false
@@ -5452,29 +5495,71 @@ var DUB = (function() {
     if (_inited) return;
     _inited = true;
     loadSettings();
+    checkServer();
+  }
+
+  // ── Server URL ──
+  function getServerUrl() {
+    return (val('dubServerUrl') || DEFAULTS.serverUrl).replace(/\/+$/, '');
+  }
+
+  // ── Server tekshirish ──
+  function checkServer() {
+    var dot = document.getElementById('dubServerDot');
+    var txt = document.getElementById('dubServerStatus');
+    if (dot) { dot.className = 'tg-dot'; }
+    if (txt) { txt.textContent = 'Tekshirilmoqda...'; txt.style.color = 'var(--muted)'; }
+
+    var url = getServerUrl() + '/api/health';
+    fetch(url, { method: 'GET', mode: 'cors' })
+      .then(function(r) { return r.json(); })
+      .then(function() {
+        if (dot) { dot.className = 'tg-dot online'; }
+        if (txt) { txt.textContent = 'Server ulangan'; txt.style.color = '#22c55e'; }
+      })
+      .catch(function() {
+        if (dot) { dot.className = 'tg-dot offline'; }
+        if (txt) {
+          txt.innerHTML = 'Server ulanmagan — <code style="font-size:0.7rem">cd anime_dubber && python server.py</code>';
+          txt.style.color = 'var(--red)';
+        }
+      });
   }
 
   // ── Tab switching ──
   function switchTab(tabId, navEl) {
-    // Pane-larni yashirish
     var panes = document.querySelectorAll('#panel-dubber .dub-pane');
-    for (var i = 0; i < panes.length; i++) {
-      panes[i].classList.remove('active');
-    }
+    for (var i = 0; i < panes.length; i++) { panes[i].classList.remove('active'); }
     var target = document.getElementById('dub-pane-' + tabId);
     if (target) target.classList.add('active');
 
-    // Nav active holati
     var navItems = document.querySelectorAll('#dubNav .dub-nav');
-    for (var j = 0; j < navItems.length; j++) {
-      navItems[j].classList.remove('active');
-    }
+    for (var j = 0; j < navItems.length; j++) { navItems[j].classList.remove('active'); }
     if (navEl) navEl.classList.add('active');
 
-    // Topbar title
     var ttl = document.getElementById('topbarTitle');
     var titles = { convert: 'Dublyaj qilish', settings: 'Dublyaj sozlamalari' };
     if (ttl) ttl.textContent = titles[tabId] || 'Dublyaj';
+  }
+
+  // ── Manba almashtirish (URL / Fayl) ──
+  function switchSource(mode) {
+    _sourceMode = mode;
+    var urlBox  = document.getElementById('dubSourceUrl');
+    var fileBox = document.getElementById('dubSourceFile');
+    var btnUrl  = document.getElementById('dubSrcUrl');
+    var btnFile = document.getElementById('dubSrcFile');
+    if (mode === 'url') {
+      if (urlBox) urlBox.style.display = 'block';
+      if (fileBox) fileBox.style.display = 'none';
+      if (btnUrl) { btnUrl.style.background = 'var(--accent)'; btnUrl.style.color = '#0a0a0a'; btnUrl.style.border = 'none'; }
+      if (btnFile) { btnFile.style.background = 'var(--card)'; btnFile.style.color = 'var(--muted)'; btnFile.style.border = '1px solid var(--border)'; }
+    } else {
+      if (urlBox) urlBox.style.display = 'none';
+      if (fileBox) fileBox.style.display = 'block';
+      if (btnFile) { btnFile.style.background = 'var(--accent)'; btnFile.style.color = '#0a0a0a'; btnFile.style.border = 'none'; }
+      if (btnUrl) { btnUrl.style.background = 'var(--card)'; btnUrl.style.color = 'var(--muted)'; btnUrl.style.border = '1px solid var(--border)'; }
+    }
   }
 
   // ── Sozlamalarni saqlash ──
@@ -5489,13 +5574,12 @@ var DUB = (function() {
         male_rough: { rate: val('dubVoiceMaleRoughRate'), pitch: val('dubVoiceMaleRoughPitch') }
       },
       ffmpegPath:    val('dubFfmpegPath'),
+      serverUrl:     val('dubServerUrl'),
       whisperModel:  val('dubWhisperModel'),
       voiceType:     val('dubVoiceType'),
       subtitlesOnly: checked('dubSubtitlesOnly')
     };
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    } catch (e) { /* ignore */ }
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch (e) {}
   }
 
   // ── Sozlamalarni yuklash ──
@@ -5503,13 +5587,9 @@ var DUB = (function() {
     var data = DEFAULTS;
     try {
       var saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        var parsed = JSON.parse(saved);
-        data = mergeDeep(DEFAULTS, parsed);
-      }
-    } catch (e) { /* ignore */ }
+      if (saved) { data = mergeDeep(DEFAULTS, JSON.parse(saved)); }
+    } catch (e) {}
 
-    // Qiymatlarni inputlarga yozish
     setVal('dubGeminiKey',       data.geminiKey);
     setVal('dubGeminiModel',     data.geminiModel);
     setVal('dubTranslatePrompt', data.translatePrompt);
@@ -5520,6 +5600,7 @@ var DUB = (function() {
     setVal('dubVoiceMaleRoughRate', data.voices.male_rough.rate);
     setVal('dubVoiceMaleRoughPitch',data.voices.male_rough.pitch);
     setVal('dubFfmpegPath',      data.ffmpegPath);
+    setVal('dubServerUrl',       data.serverUrl);
     setVal('dubWhisperModel',    data.whisperModel);
     setVal('dubVoiceType',       data.voiceType);
     setCheck('dubSubtitlesOnly', data.subtitlesOnly);
@@ -5538,150 +5619,218 @@ var DUB = (function() {
     }
   }
 
-  // ── Dublyaj boshlash ──
+  // ── DUBLYAJ BOSHLASH ──
   function startDub() {
-    // Tekshiruvlar
     var geminiKey = val('dubGeminiKey');
     if (!geminiKey) {
-      showToast('Gemini API kalitini kiriting! (Sozlamalar bo\'limida)', 'error');
+      showToast('Gemini API kalitini kiriting! (Sozlamalar)', 'error');
       switchTab('settings', document.querySelector('#dubNav .dub-nav:last-child'));
       return;
     }
 
-    var fileInput = document.getElementById('dubVideoFile');
-    if (!fileInput || !fileInput.files || !fileInput.files.length) {
-      showToast('Video faylni tanlang!', 'error');
-      return;
+    // Manba tekshirish
+    var videoUrl = '';
+    var videoFile = null;
+    if (_sourceMode === 'url') {
+      videoUrl = val('dubVideoUrl').trim();
+      if (!videoUrl) {
+        showToast('Video URL ni kiriting!', 'error');
+        return;
+      }
+    } else {
+      var fileInput = document.getElementById('dubVideoFile');
+      if (!fileInput || !fileInput.files || !fileInput.files.length) {
+        showToast('Video faylni tanlang!', 'error');
+        return;
+      }
+      videoFile = fileInput.files[0];
     }
 
-    var fileName = fileInput.files[0].name;
-    var fileSize = (fileInput.files[0].size / (1024 * 1024)).toFixed(1);
+    // UI reset
+    resetProgress();
+    var btn = document.getElementById('dubStartBtn');
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Jarayon...'; }
 
-    // Progressni ko'rsatish
+    dubLog('Dublyaj boshlanmoqda...', 'ok');
+    if (videoUrl) { dubLog('URL: ' + videoUrl); }
+    else { dubLog('Fayl: ' + videoFile.name + ' (' + (videoFile.size / 1048576).toFixed(1) + ' MB)'); }
+
+    // Config tayyorlash
+    var config = buildExportConfig();
+    config.voiceType = val('dubVoiceType');
+    config.whisperModel = val('dubWhisperModel');
+    config.subtitlesOnly = checked('dubSubtitlesOnly');
+
+    var serverUrl = getServerUrl();
+
+    if (_sourceMode === 'url') {
+      // JSON so'rov
+      fetch(serverUrl + '/api/dub', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: videoUrl, config: config })
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.error) { throw new Error(data.error); }
+        _currentJobId = data.jobId;
+        dubLog('Job boshlandi: ' + data.jobId, 'ok');
+        startPolling();
+      })
+      .catch(function(err) {
+        dubLog('XATO: ' + err.message, 'err');
+        showToast('Server xatosi: ' + err.message, 'error');
+        resetButton();
+      });
+    } else {
+      // Fayl yuklash (multipart)
+      var formData = new FormData();
+      formData.append('video', videoFile);
+      formData.append('config', JSON.stringify(config));
+
+      fetch(serverUrl + '/api/dub', {
+        method: 'POST',
+        body: formData
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.error) { throw new Error(data.error); }
+        _currentJobId = data.jobId;
+        dubLog('Job boshlandi: ' + data.jobId, 'ok');
+        startPolling();
+      })
+      .catch(function(err) {
+        dubLog('XATO: ' + err.message, 'err');
+        showToast('Server xatosi: ' + err.message, 'error');
+        resetButton();
+      });
+    }
+  }
+
+  // ── Polling — serverdan holat so'rash ──
+  function startPolling() {
+    _lastLogCount = 0;
+    if (_pollTimer) clearInterval(_pollTimer);
+    _pollTimer = setInterval(pollStatus, 2000);
+    pollStatus(); // darhol birinchi marta
+  }
+
+  function stopPolling() {
+    if (_pollTimer) { clearInterval(_pollTimer); _pollTimer = null; }
+  }
+
+  function pollStatus() {
+    if (!_currentJobId) { stopPolling(); return; }
+    var url = getServerUrl() + '/api/dub/' + _currentJobId + '/status';
+
+    fetch(url).then(function(r) { return r.json(); })
+    .then(function(data) {
+      // Yangi loglarni ko'rsatish
+      var logs = data.logs || [];
+      for (var i = _lastLogCount; i < logs.length; i++) {
+        var lvl = logs[i].level;
+        var cls = lvl === 'error' ? 'err' : (lvl === 'success' ? 'ok' : '');
+        dubLog(logs[i].msg, cls);
+      }
+      _lastLogCount = logs.length;
+
+      // Steplarni yangilash
+      updateSteps(data.step, data.status);
+
+      // Progress bar
+      var fillEl = document.getElementById('dubProgressFill');
+      if (fillEl) fillEl.style.width = data.progress + '%';
+
+      // Tugagan / Xato
+      if (data.status === 'done') {
+        stopPolling();
+        showResult(data);
+        resetButton();
+        showToast('Dublyaj tayyor!', 'success');
+      } else if (data.status === 'error') {
+        stopPolling();
+        dubLog('XATO: ' + (data.error || 'Noma\'lum xato'), 'err');
+        setStepError(data.step || 1);
+        resetButton();
+        showToast('Dublyaj xatosi!', 'error');
+      }
+    })
+    .catch(function(err) {
+      dubLog('Server bilan bog\'lanish uzildi: ' + err.message, 'err');
+      stopPolling();
+      resetButton();
+    });
+  }
+
+  // ── Steplarni yangilash ──
+  function updateSteps(currentStep, status) {
+    for (var s = 1; s <= 6; s++) {
+      var el = document.getElementById('dubStep' + s);
+      if (!el) continue;
+      el.classList.remove('active', 'done', 'error');
+      if (s < currentStep) {
+        el.classList.add('done');
+      } else if (s === currentStep && status === 'processing') {
+        el.classList.add('active');
+      }
+    }
+    if (status === 'done') {
+      for (var d = 1; d <= 6; d++) {
+        var el2 = document.getElementById('dubStep' + d);
+        if (el2) { el2.classList.remove('active'); el2.classList.add('done'); }
+      }
+    }
+  }
+
+  function setStepError(num) {
+    var el = document.getElementById('dubStep' + num);
+    if (el) { el.classList.remove('active','done'); el.classList.add('error'); }
+  }
+
+  // ── Natija ko'rsatish ──
+  function showResult(data) {
+    var resultSection = document.getElementById('dubResultSection');
+    var resultDiv = document.getElementById('dubResult');
+    if (resultSection) resultSection.style.display = 'block';
+    if (!resultDiv) return;
+
+    var serverUrl = getServerUrl();
+    var videoName = data.videoName || 'video';
+    var html = '<div style="background:var(--bg);border:1px solid rgba(34,197,94,0.3);border-radius:8px;padding:14px;margin-top:8px">';
+    html += '<p style="font-size:0.85rem;margin-bottom:12px;color:#22c55e"><i class="fas fa-check-circle"></i> <b>' + videoName + '</b> dublyaj tayyor!</p>';
+    html += '<div style="display:flex;gap:8px;flex-wrap:wrap">';
+    html += '<a href="' + serverUrl + '/api/dub/' + data.id + '/download" target="_blank" class="tg-btn-post" style="background:#7c3aed;text-decoration:none;font-size:0.78rem;padding:8px 16px;display:inline-flex;align-items:center;gap:6px">';
+    html += '<i class="fas fa-download"></i> Videoni yuklab olish</a>';
+    if (data.srtPath) {
+      html += '<a href="' + serverUrl + '/api/dub/' + data.id + '/srt" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration:none;font-size:0.74rem;padding:6px 12px;display:inline-flex;align-items:center;gap:5px">';
+      html += '<i class="fas fa-closed-captioning"></i> SRT subtitle</a>';
+    }
+    html += '</div></div>';
+    resultDiv.innerHTML = html;
+  }
+
+  // ── UI Yordamchi ──
+  function resetProgress() {
     var progressSection = document.getElementById('dubProgressSection');
     var resultSection = document.getElementById('dubResultSection');
     if (progressSection) progressSection.style.display = 'block';
     if (resultSection) resultSection.style.display = 'none';
-
-    // Steplarni reset
     for (var s = 1; s <= 6; s++) {
       var step = document.getElementById('dubStep' + s);
-      if (step) {
-        step.classList.remove('active', 'done', 'error');
-      }
+      if (step) step.classList.remove('active', 'done', 'error');
     }
     var logEl = document.getElementById('dubLog');
     if (logEl) logEl.innerHTML = '';
     var fillEl = document.getElementById('dubProgressFill');
     if (fillEl) fillEl.style.width = '0%';
+    _lastLogCount = 0;
+  }
 
-    // Start knopkasini o'chirish
+  function resetButton() {
     var btn = document.getElementById('dubStartBtn');
-    if (btn) {
-      btn.disabled = true;
-      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Jarayon...';
-    }
-
-    // Log
-    dubLog('Dublyaj boshlanmoqda...', 'ok');
-    dubLog('Fayl: ' + fileName + ' (' + fileSize + ' MB)');
-
-    // Simulyatsiya — bu admin panel brauzerda ishlaydi,
-    // haqiqiy dublyaj Python CLI orqali bajariladi.
-    // Admin panel faqat sozlamalarni tayyorlab, config eksport qiladi.
-    simulateProcess(fileName);
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-play"></i> Dublyaj boshlash'; }
   }
 
-  // ── Jarayonni simulyatsiya qilish ──
-  function simulateProcess(fileName) {
-    var steps = [
-      { id: 1, text: 'Audio ajratish...', time: 800 },
-      { id: 2, text: 'Whisper transkriptsiya...', time: 1200 },
-      { id: 3, text: 'Ovoz tahlili...', time: 600 },
-      { id: 4, text: 'Gemini tarjima...', time: 1500 },
-      { id: 5, text: 'TTS ovoz yaratish...', time: 1000 },
-      { id: 6, text: 'Video birlashtirish...', time: 800 }
-    ];
-
-    var total = steps.length;
-    var idx = 0;
-
-    function nextStep() {
-      if (idx >= total) {
-        // Yakunlash
-        dubLog('');
-        dubLog('Dublyaj admin panelda to\'liq bajarilmaydi.', 'warn');
-        dubLog('Python CLI orqali ishga tushiring:', 'warn');
-
-        // Config eksport qilish
-        var config = buildExportConfig();
-        var baseName = fileName.replace(/\.[^.]+$/, '');
-        var cmd = 'python main.py --input "' + fileName + '" --admin-config dub_config.json';
-        dubLog('> ' + cmd, 'ok');
-        dubLog('');
-        dubLog('Config faylni "Sozlamalarni JSON ga eksport" tugmasi orqali saqlang.', 'warn');
-
-        // Natija ko'rsatish
-        var resultSection = document.getElementById('dubResultSection');
-        var resultDiv = document.getElementById('dubResult');
-        if (resultSection) resultSection.style.display = 'block';
-        if (resultDiv) {
-          resultDiv.innerHTML =
-            '<div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px;margin-top:8px">' +
-              '<p style="font-size:0.82rem;margin-bottom:10px"><i class="fas fa-info-circle" style="color:#7c3aed"></i> Dublyaj qilish uchun quyidagilarni bajaring:</p>' +
-              '<div style="background:#1a1a1a;border-radius:6px;padding:10px;font-family:JetBrains Mono,monospace;font-size:0.72rem;line-height:1.8;color:#22c55e">' +
-                '<div>1. Sozlamalarni eksport qiling (JSON)</div>' +
-                '<div>2. Terminal oching va anime_dubber papkasiga kiring</div>' +
-                '<div>3. <span style="color:var(--accent)">pip install -r requirements.txt</span></div>' +
-                '<div>4. <span style="color:var(--accent)">python main.py --input "' + fileName + '" --admin-config dub_config.json</span></div>' +
-              '</div>' +
-              '<button class="btn btn-secondary btn-sm" style="margin-top:10px" onclick="DUB.exportConfig()">' +
-                '<i class="fas fa-download"></i> Sozlamalarni eksport qilish' +
-              '</button>' +
-            '</div>';
-        }
-
-        // Tugmani tiklash
-        var btn = document.getElementById('dubStartBtn');
-        if (btn) {
-          btn.disabled = false;
-          btn.innerHTML = '<i class="fas fa-play"></i> Dublyaj boshlash';
-        }
-
-        var fillEl = document.getElementById('dubProgressFill');
-        if (fillEl) fillEl.style.width = '100%';
-        return;
-      }
-
-      var s = steps[idx];
-      setStepActive(s.id);
-      dubLog('[' + s.id + '/6] ' + s.text);
-
-      var fillEl = document.getElementById('dubProgressFill');
-      if (fillEl) fillEl.style.width = Math.round(((idx + 1) / total) * 100) + '%';
-
-      setTimeout(function() {
-        setStepDone(s.id);
-        idx++;
-        nextStep();
-      }, s.time);
-    }
-
-    nextStep();
-  }
-
-  // ── Steplarni boshqarish ──
-  function setStepActive(num) {
-    var el = document.getElementById('dubStep' + num);
-    if (el) { el.classList.remove('done','error'); el.classList.add('active'); }
-  }
-
-  function setStepDone(num) {
-    var el = document.getElementById('dubStep' + num);
-    if (el) { el.classList.remove('active','error'); el.classList.add('done'); }
-  }
-
-  // ── Log ──
   function dubLog(msg, cls) {
     var log = document.getElementById('dubLog');
     if (!log) return;
@@ -5696,18 +5845,15 @@ var DUB = (function() {
   function exportConfig() {
     var config = buildExportConfig();
     var json = JSON.stringify(config, null, 2);
-
-    // Faylni yuklab olish
     var blob = new Blob([json], { type: 'application/json' });
-    var url = URL.createObjectURL(blob);
+    var blobUrl = URL.createObjectURL(blob);
     var a = document.createElement('a');
-    a.href = url;
+    a.href = blobUrl;
     a.download = 'dub_config.json';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-
+    URL.revokeObjectURL(blobUrl);
     showToast('Config fayl yuklandi: dub_config.json', 'success');
   }
 
@@ -5727,43 +5873,21 @@ var DUB = (function() {
     };
   }
 
-  // ── Yordamchi funksiyalar ──
-  function val(id) {
-    var el = document.getElementById(id);
-    return el ? el.value : '';
-  }
-
-  function setVal(id, v) {
-    var el = document.getElementById(id);
-    if (el) el.value = v || '';
-  }
-
-  function checked(id) {
-    var el = document.getElementById(id);
-    return el ? el.checked : false;
-  }
-
-  function setCheck(id, v) {
-    var el = document.getElementById(id);
-    if (el) el.checked = !!v;
-  }
+  // ── Yordamchi ──
+  function val(id) { var el = document.getElementById(id); return el ? el.value : ''; }
+  function setVal(id, v) { var el = document.getElementById(id); if (el) el.value = v || ''; }
+  function checked(id) { var el = document.getElementById(id); return el ? el.checked : false; }
+  function setCheck(id, v) { var el = document.getElementById(id); if (el) el.checked = !!v; }
 
   function mergeDeep(target, source) {
-    var out = {};
-    var key;
-    for (key in target) {
-      if (target.hasOwnProperty(key)) {
-        out[key] = target[key];
-      }
-    }
+    var out = {}, key;
+    for (key in target) { if (target.hasOwnProperty(key)) out[key] = target[key]; }
     for (key in source) {
       if (source.hasOwnProperty(key)) {
         if (typeof source[key] === 'object' && source[key] !== null && !Array.isArray(source[key])
             && typeof out[key] === 'object' && out[key] !== null) {
           out[key] = mergeDeep(out[key], source[key]);
-        } else {
-          out[key] = source[key];
-        }
+        } else { out[key] = source[key]; }
       }
     }
     return out;
@@ -5773,10 +5897,12 @@ var DUB = (function() {
   return {
     init: init,
     switchTab: switchTab,
+    switchSource: switchSource,
     saveSettings: saveSettings,
     loadSettings: loadSettings,
     togglePass: togglePass,
     startDub: startDub,
+    checkServer: checkServer,
     exportConfig: exportConfig
   };
 })();

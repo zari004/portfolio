@@ -7,3 +7,7 @@ tqdm
 ffmpeg-python
 soundfile
 numpy
+flask
+flask-cors
+yt-dlp
+requests
