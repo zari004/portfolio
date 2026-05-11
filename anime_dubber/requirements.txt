@@ -1,0 +1,9 @@
+openai-whisper
+google-generativeai
+edge-tts
+pydub
+librosa
+tqdm
+ffmpeg-python
+soundfile
+numpy

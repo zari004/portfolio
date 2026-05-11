@@ -719,6 +719,20 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
   .tg-slot-row{flex-wrap:wrap}
   .tg-slot-time{width:75px!important}
 }
+/* Dubber */
+.dub-pane { display:none; }
+.dub-pane.active { display:block; }
+.dub-steps { display:flex;gap:6px;flex-wrap:wrap; }
+.dub-step { font-size:0.72rem;padding:4px 10px;border-radius:6px;background:var(--bg);border:1px solid var(--border);color:var(--muted);display:flex;align-items:center;gap:5px;transition:all 0.3s; }
+.dub-step.active { background:rgba(124,58,237,0.12);border-color:rgba(124,58,237,0.4);color:#7c3aed; }
+.dub-step.active i { animation:tgPulse 1s infinite; }
+.dub-step.done { background:rgba(34,197,94,0.08);border-color:rgba(34,197,94,0.2);color:#22c55e;opacity:0.6; }
+.dub-step.done i:before { content:'\f00c'; }
+.dub-step.error { background:rgba(239,68,68,0.12);border-color:rgba(239,68,68,0.4);color:#ef4444; }
+.dub-log { margin-top:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;max-height:150px;overflow-y:auto;font-family:'JetBrains Mono',monospace;font-size:0.7rem;line-height:1.7; }
+.dub-log .ok { color:#22c55e; }
+.dub-log .err { color:var(--red); }
+.dub-log .warn { color:#f59e0b; }
 </style>
 </head>
 <body>
@@ -771,6 +785,9 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
       <button class="mode-btn" id="modeBtnBot" onclick="switchMode('bot')">
         <i class="fab fa-telegram"></i> Bot
         <span class="tg-nav-dot" id="tgNavDot" style="position:relative;top:0;right:0;margin-left:2px"></span>
+      </button>
+      <button class="mode-btn" id="modeBtnDub" onclick="switchMode('dubber')">
+        <i class="fas fa-language"></i> Dublyaj
       </button>
     </div>
     <!-- SAYT nav -->
@@ -832,6 +849,16 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
       <div class="nav-section">Sozlamalar</div>
       <div class="nav-item tg-nav" onclick="TG.switchTab('settings',this)">
         <i class="fas fa-cog"></i> Bot Sozlamalari
+      </div>
+    </nav>
+    <!-- DUBBER nav -->
+    <nav class="sidebar-nav" id="dubNav" style="display:none">
+      <div class="nav-section">Anime Dublyaj</div>
+      <div class="nav-item dub-nav active" onclick="DUB.switchTab('convert',this)">
+        <i class="fas fa-film"></i> Dublyaj qilish
+      </div>
+      <div class="nav-item dub-nav" onclick="DUB.switchTab('settings',this)">
+        <i class="fas fa-cog"></i> Sozlamalar
       </div>
     </nav>
     <div class="sidebar-footer">
@@ -1560,6 +1587,157 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
 
       </div>
 
+      <!-- ============================================================
+           DUBBER PANEL — Anime dublyaj
+           ============================================================ -->
+      <div class="panel" id="panel-dubber">
+        <div class="panel-header">
+          <h2>Anime Dublyaj</h2>
+          <p>Anime videolarni o'zbek tiliga ovozli dublyaj qilish</p>
+        </div>
+
+        <!-- TAB 1: DUBLYAJ QILISH -->
+        <div class="dub-pane active" id="dub-pane-convert">
+          <div class="tg-section">
+            <div class="tg-section-title"><i class="fas fa-film"></i> Video dublyaj qilish</div>
+            <div class="form-group">
+              <label>Video fayl</label>
+              <input type="file" class="form-input" id="dubVideoFile" accept="video/*" style="padding:8px">
+              <div class="form-hint">MP4, MKV, AVI formatdagi video faylni tanlang</div>
+            </div>
+            <div class="form-group">
+              <label>Ovoz turi</label>
+              <select class="form-input" id="dubVoiceType" style="width:200px">
+                <option value="auto">Avtomatik aniqlash</option>
+                <option value="female">Ayol ovozi (Madina)</option>
+                <option value="male_soft">Erkak yumshoq (Sardor)</option>
+                <option value="male_rough">Erkak past (Sardor qo'pol)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Whisper model</label>
+              <select class="form-input" id="dubWhisperModel" style="width:200px">
+                <option value="tiny">Tiny (eng tez, past sifat)</option>
+                <option value="base">Base (tez)</option>
+                <option value="small" selected>Small (muvozanat)</option>
+                <option value="medium">Medium (aniq)</option>
+                <option value="large">Large (eng aniq, sekin)</option>
+              </select>
+            </div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap">
+              <label style="display:flex;align-items:center;gap:6px;font-size:0.8rem;cursor:pointer">
+                <input type="checkbox" id="dubSubtitlesOnly"> Faqat subtitle (SRT) yaratish
+              </label>
+            </div>
+          </div>
+
+          <!-- Jarayon -->
+          <div class="tg-section" id="dubProgressSection" style="display:none">
+            <div class="tg-section-title"><i class="fas fa-tasks"></i> Jarayon</div>
+            <div class="dub-steps">
+              <div class="dub-step" id="dubStep1"><i class="fas fa-music"></i> Audio ajratish</div>
+              <div class="dub-step" id="dubStep2"><i class="fas fa-microphone"></i> Transkriptsiya</div>
+              <div class="dub-step" id="dubStep3"><i class="fas fa-user-circle"></i> Ovoz tahlili</div>
+              <div class="dub-step" id="dubStep4"><i class="fas fa-language"></i> Tarjima</div>
+              <div class="dub-step" id="dubStep5"><i class="fas fa-volume-up"></i> TTS ovoz</div>
+              <div class="dub-step" id="dubStep6"><i class="fas fa-video"></i> Birlashtirish</div>
+            </div>
+            <div class="tg-progress-track" style="margin-top:10px">
+              <div class="tg-progress-fill" id="dubProgressFill" style="width:0%"></div>
+            </div>
+            <div class="dub-log" id="dubLog"></div>
+          </div>
+
+          <!-- Natija -->
+          <div class="tg-section" id="dubResultSection" style="display:none">
+            <div class="tg-section-title"><i class="fas fa-check-circle" style="color:#22c55e"></i> Natija</div>
+            <div id="dubResult"></div>
+          </div>
+
+          <div style="margin-top:16px">
+            <button class="tg-btn-post" id="dubStartBtn" onclick="DUB.startDub()" style="background:#7c3aed">
+              <i class="fas fa-play"></i> Dublyaj boshlash
+            </button>
+          </div>
+        </div>
+
+        <!-- TAB 2: SOZLAMALAR -->
+        <div class="dub-pane" id="dub-pane-settings">
+          <div class="tg-section">
+            <div class="tg-section-title"><i class="fas fa-key"></i> API Kalitlar</div>
+            <div class="form-group">
+              <label>Gemini API Key</label>
+              <div class="tg-pass-wrap">
+                <input type="password" class="form-input" id="dubGeminiKey" placeholder="AIza..." oninput="DUB.saveSettings()">
+                <button class="tg-pass-eye" onclick="DUB.togglePass('dubGeminiKey',this)" tabindex="-1"><i class="fas fa-eye"></i></button>
+              </div>
+              <div class="form-hint">Bepul olish: <a href="https://aistudio.google.com/" target="_blank">aistudio.google.com</a></div>
+            </div>
+          </div>
+
+          <div class="tg-section">
+            <div class="tg-section-title"><i class="fas fa-cog"></i> Umumiy sozlamalar</div>
+            <div class="form-group">
+              <label>Gemini Model</label>
+              <select class="form-input" id="dubGeminiModel" style="width:250px" onchange="DUB.saveSettings()">
+                <option value="gemini-1.5-flash">Gemini 1.5 Flash (tez, bepul)</option>
+                <option value="gemini-1.5-pro">Gemini 1.5 Pro (aniq)</option>
+                <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Tarjima prompti</label>
+              <textarea class="form-input" id="dubTranslatePrompt" rows="5" style="resize:vertical;font-family:'JetBrains Mono',monospace;font-size:0.75rem" oninput="DUB.saveSettings()"></textarea>
+              <div class="form-hint">Gemini ga yuboriladigan tarjima ko'rsatmasi</div>
+            </div>
+          </div>
+
+          <div class="tg-section">
+            <div class="tg-section-title"><i class="fas fa-microphone-alt"></i> Ovoz sozlamalari</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+              <div class="tg-rubric-row">
+                <div class="tg-rubric-header"><span class="tg-rubric-emoji">👩</span><span class="tg-rubric-name">Ayol ovozi</span></div>
+                <div class="form-group" style="margin:0"><label style="font-size:0.7rem">Tezlik</label>
+                  <input type="text" class="form-input" id="dubVoiceFemaleRate" value="+0%" style="font-size:0.75rem" oninput="DUB.saveSettings()">
+                </div>
+                <div class="form-group" style="margin:0"><label style="font-size:0.7rem">Ohang</label>
+                  <input type="text" class="form-input" id="dubVoiceFemalePitch" value="+0Hz" style="font-size:0.75rem" oninput="DUB.saveSettings()">
+                </div>
+              </div>
+              <div class="tg-rubric-row">
+                <div class="tg-rubric-header"><span class="tg-rubric-emoji">👨</span><span class="tg-rubric-name">Erkak yumshoq</span></div>
+                <div class="form-group" style="margin:0"><label style="font-size:0.7rem">Tezlik</label>
+                  <input type="text" class="form-input" id="dubVoiceMaleSoftRate" value="+0%" style="font-size:0.75rem" oninput="DUB.saveSettings()">
+                </div>
+                <div class="form-group" style="margin:0"><label style="font-size:0.7rem">Ohang</label>
+                  <input type="text" class="form-input" id="dubVoiceMaleSoftPitch" value="+0Hz" style="font-size:0.75rem" oninput="DUB.saveSettings()">
+                </div>
+              </div>
+              <div class="tg-rubric-row">
+                <div class="tg-rubric-header"><span class="tg-rubric-emoji">🗣️</span><span class="tg-rubric-name">Erkak past</span></div>
+                <div class="form-group" style="margin:0"><label style="font-size:0.7rem">Tezlik</label>
+                  <input type="text" class="form-input" id="dubVoiceMaleRoughRate" value="-10%" style="font-size:0.75rem" oninput="DUB.saveSettings()">
+                </div>
+                <div class="form-group" style="margin:0"><label style="font-size:0.7rem">Ohang</label>
+                  <input type="text" class="form-input" id="dubVoiceMaleRoughPitch" value="-15%" style="font-size:0.75rem" oninput="DUB.saveSettings()">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="tg-section">
+            <div class="tg-section-title"><i class="fas fa-terminal"></i> FFmpeg</div>
+            <div class="form-group">
+              <label>FFmpeg yo'li</label>
+              <input type="text" class="form-input" id="dubFfmpegPath" value="ffmpeg" oninput="DUB.saveSettings()">
+              <div class="form-hint">Odatda "ffmpeg" yetarli. Agar ishlamasa to'liq yo'l yozing</div>
+            </div>
+          </div>
+
+          <button class="btn btn-secondary btn-sm" onclick="DUB.exportConfig()"><i class="fas fa-download"></i> Sozlamalarni JSON ga eksport</button>
+        </div>
+      </div>
+
     </div>
   </div>
 </div>
@@ -2083,6 +2261,12 @@ function saveAll() {
     }
     clearDirty();
     showToast('Bot sozlamalari saqlandi', 'success');
+  } else if (currentMode === 'dubber') {
+    if (typeof DUB !== 'undefined') {
+      DUB.saveSettings();
+    }
+    clearDirty();
+    showToast('Dublyaj sozlamalari saqlandi', 'success');
   } else {
     collectFormData();
     saveToStorage();
@@ -5238,23 +5422,390 @@ function tgSaveConfig() { TG.saveConfig(); }
 function tgSaveSchedule() { TG.saveSchedule(); }
 function tgRefreshHistory() { TG.loadHistory(); }
 
+/* ============================================================
+   DUB MODULE — Anime Dublyaj boshqarish
+   ============================================================ */
+var DUB = (function() {
+  'use strict';
+
+  var STORAGE_KEY = 'dub_settings';
+  var _inited = false;
+
+  // ── Default sozlamalar ──
+  var DEFAULTS = {
+    geminiKey: '',
+    geminiModel: 'gemini-1.5-flash',
+    translatePrompt: "Quyidagi anime dialogini tabiiy o'zbek tiliga tarjima qil.\nOhangni saqla: dramatik bo'lsa dramatik, kulgili bo'lsa kulgili qilib tarjima qil.\nFaqat tarjima qilingan matnni yoz, boshqa hech narsa yozma.",
+    voices: {
+      female:     { rate: '+0%',  pitch: '+0Hz' },
+      male_soft:  { rate: '+0%',  pitch: '+0Hz' },
+      male_rough: { rate: '-10%', pitch: '-15%' }
+    },
+    ffmpegPath: 'ffmpeg',
+    whisperModel: 'small',
+    voiceType: 'auto',
+    subtitlesOnly: false
+  };
+
+  // ── Init ──
+  function init() {
+    if (_inited) return;
+    _inited = true;
+    loadSettings();
+  }
+
+  // ── Tab switching ──
+  function switchTab(tabId, navEl) {
+    // Pane-larni yashirish
+    var panes = document.querySelectorAll('#panel-dubber .dub-pane');
+    for (var i = 0; i < panes.length; i++) {
+      panes[i].classList.remove('active');
+    }
+    var target = document.getElementById('dub-pane-' + tabId);
+    if (target) target.classList.add('active');
+
+    // Nav active holati
+    var navItems = document.querySelectorAll('#dubNav .dub-nav');
+    for (var j = 0; j < navItems.length; j++) {
+      navItems[j].classList.remove('active');
+    }
+    if (navEl) navEl.classList.add('active');
+
+    // Topbar title
+    var ttl = document.getElementById('topbarTitle');
+    var titles = { convert: 'Dublyaj qilish', settings: 'Dublyaj sozlamalari' };
+    if (ttl) ttl.textContent = titles[tabId] || 'Dublyaj';
+  }
+
+  // ── Sozlamalarni saqlash ──
+  function saveSettings() {
+    var data = {
+      geminiKey:       val('dubGeminiKey'),
+      geminiModel:     val('dubGeminiModel'),
+      translatePrompt: val('dubTranslatePrompt'),
+      voices: {
+        female:     { rate: val('dubVoiceFemaleRate'),    pitch: val('dubVoiceFemalePitch') },
+        male_soft:  { rate: val('dubVoiceMaleSoftRate'),  pitch: val('dubVoiceMaleSoftPitch') },
+        male_rough: { rate: val('dubVoiceMaleRoughRate'), pitch: val('dubVoiceMaleRoughPitch') }
+      },
+      ffmpegPath:    val('dubFfmpegPath'),
+      whisperModel:  val('dubWhisperModel'),
+      voiceType:     val('dubVoiceType'),
+      subtitlesOnly: checked('dubSubtitlesOnly')
+    };
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch (e) { /* ignore */ }
+  }
+
+  // ── Sozlamalarni yuklash ──
+  function loadSettings() {
+    var data = DEFAULTS;
+    try {
+      var saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        var parsed = JSON.parse(saved);
+        data = mergeDeep(DEFAULTS, parsed);
+      }
+    } catch (e) { /* ignore */ }
+
+    // Qiymatlarni inputlarga yozish
+    setVal('dubGeminiKey',       data.geminiKey);
+    setVal('dubGeminiModel',     data.geminiModel);
+    setVal('dubTranslatePrompt', data.translatePrompt);
+    setVal('dubVoiceFemaleRate',    data.voices.female.rate);
+    setVal('dubVoiceFemalePitch',   data.voices.female.pitch);
+    setVal('dubVoiceMaleSoftRate',  data.voices.male_soft.rate);
+    setVal('dubVoiceMaleSoftPitch', data.voices.male_soft.pitch);
+    setVal('dubVoiceMaleRoughRate', data.voices.male_rough.rate);
+    setVal('dubVoiceMaleRoughPitch',data.voices.male_rough.pitch);
+    setVal('dubFfmpegPath',      data.ffmpegPath);
+    setVal('dubWhisperModel',    data.whisperModel);
+    setVal('dubVoiceType',       data.voiceType);
+    setCheck('dubSubtitlesOnly', data.subtitlesOnly);
+  }
+
+  // ── Parolni ko'rsatish/yashirish ──
+  function togglePass(inputId, btn) {
+    var inp = document.getElementById(inputId);
+    if (!inp) return;
+    if (inp.type === 'password') {
+      inp.type = 'text';
+      btn.innerHTML = '<i class="fas fa-eye-slash"></i>';
+    } else {
+      inp.type = 'password';
+      btn.innerHTML = '<i class="fas fa-eye"></i>';
+    }
+  }
+
+  // ── Dublyaj boshlash ──
+  function startDub() {
+    // Tekshiruvlar
+    var geminiKey = val('dubGeminiKey');
+    if (!geminiKey) {
+      showToast('Gemini API kalitini kiriting! (Sozlamalar bo\'limida)', 'error');
+      switchTab('settings', document.querySelector('#dubNav .dub-nav:last-child'));
+      return;
+    }
+
+    var fileInput = document.getElementById('dubVideoFile');
+    if (!fileInput || !fileInput.files || !fileInput.files.length) {
+      showToast('Video faylni tanlang!', 'error');
+      return;
+    }
+
+    var fileName = fileInput.files[0].name;
+    var fileSize = (fileInput.files[0].size / (1024 * 1024)).toFixed(1);
+
+    // Progressni ko'rsatish
+    var progressSection = document.getElementById('dubProgressSection');
+    var resultSection = document.getElementById('dubResultSection');
+    if (progressSection) progressSection.style.display = 'block';
+    if (resultSection) resultSection.style.display = 'none';
+
+    // Steplarni reset
+    for (var s = 1; s <= 6; s++) {
+      var step = document.getElementById('dubStep' + s);
+      if (step) {
+        step.classList.remove('active', 'done', 'error');
+      }
+    }
+    var logEl = document.getElementById('dubLog');
+    if (logEl) logEl.innerHTML = '';
+    var fillEl = document.getElementById('dubProgressFill');
+    if (fillEl) fillEl.style.width = '0%';
+
+    // Start knopkasini o'chirish
+    var btn = document.getElementById('dubStartBtn');
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Jarayon...';
+    }
+
+    // Log
+    dubLog('Dublyaj boshlanmoqda...', 'ok');
+    dubLog('Fayl: ' + fileName + ' (' + fileSize + ' MB)');
+
+    // Simulyatsiya — bu admin panel brauzerda ishlaydi,
+    // haqiqiy dublyaj Python CLI orqali bajariladi.
+    // Admin panel faqat sozlamalarni tayyorlab, config eksport qiladi.
+    simulateProcess(fileName);
+  }
+
+  // ── Jarayonni simulyatsiya qilish ──
+  function simulateProcess(fileName) {
+    var steps = [
+      { id: 1, text: 'Audio ajratish...', time: 800 },
+      { id: 2, text: 'Whisper transkriptsiya...', time: 1200 },
+      { id: 3, text: 'Ovoz tahlili...', time: 600 },
+      { id: 4, text: 'Gemini tarjima...', time: 1500 },
+      { id: 5, text: 'TTS ovoz yaratish...', time: 1000 },
+      { id: 6, text: 'Video birlashtirish...', time: 800 }
+    ];
+
+    var total = steps.length;
+    var idx = 0;
+
+    function nextStep() {
+      if (idx >= total) {
+        // Yakunlash
+        dubLog('');
+        dubLog('Dublyaj admin panelda to\'liq bajarilmaydi.', 'warn');
+        dubLog('Python CLI orqali ishga tushiring:', 'warn');
+
+        // Config eksport qilish
+        var config = buildExportConfig();
+        var baseName = fileName.replace(/\.[^.]+$/, '');
+        var cmd = 'python main.py --input "' + fileName + '" --admin-config dub_config.json';
+        dubLog('> ' + cmd, 'ok');
+        dubLog('');
+        dubLog('Config faylni "Sozlamalarni JSON ga eksport" tugmasi orqali saqlang.', 'warn');
+
+        // Natija ko'rsatish
+        var resultSection = document.getElementById('dubResultSection');
+        var resultDiv = document.getElementById('dubResult');
+        if (resultSection) resultSection.style.display = 'block';
+        if (resultDiv) {
+          resultDiv.innerHTML =
+            '<div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px;margin-top:8px">' +
+              '<p style="font-size:0.82rem;margin-bottom:10px"><i class="fas fa-info-circle" style="color:#7c3aed"></i> Dublyaj qilish uchun quyidagilarni bajaring:</p>' +
+              '<div style="background:#1a1a1a;border-radius:6px;padding:10px;font-family:JetBrains Mono,monospace;font-size:0.72rem;line-height:1.8;color:#22c55e">' +
+                '<div>1. Sozlamalarni eksport qiling (JSON)</div>' +
+                '<div>2. Terminal oching va anime_dubber papkasiga kiring</div>' +
+                '<div>3. <span style="color:var(--accent)">pip install -r requirements.txt</span></div>' +
+                '<div>4. <span style="color:var(--accent)">python main.py --input "' + fileName + '" --admin-config dub_config.json</span></div>' +
+              '</div>' +
+              '<button class="btn btn-secondary btn-sm" style="margin-top:10px" onclick="DUB.exportConfig()">' +
+                '<i class="fas fa-download"></i> Sozlamalarni eksport qilish' +
+              '</button>' +
+            '</div>';
+        }
+
+        // Tugmani tiklash
+        var btn = document.getElementById('dubStartBtn');
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fas fa-play"></i> Dublyaj boshlash';
+        }
+
+        var fillEl = document.getElementById('dubProgressFill');
+        if (fillEl) fillEl.style.width = '100%';
+        return;
+      }
+
+      var s = steps[idx];
+      setStepActive(s.id);
+      dubLog('[' + s.id + '/6] ' + s.text);
+
+      var fillEl = document.getElementById('dubProgressFill');
+      if (fillEl) fillEl.style.width = Math.round(((idx + 1) / total) * 100) + '%';
+
+      setTimeout(function() {
+        setStepDone(s.id);
+        idx++;
+        nextStep();
+      }, s.time);
+    }
+
+    nextStep();
+  }
+
+  // ── Steplarni boshqarish ──
+  function setStepActive(num) {
+    var el = document.getElementById('dubStep' + num);
+    if (el) { el.classList.remove('done','error'); el.classList.add('active'); }
+  }
+
+  function setStepDone(num) {
+    var el = document.getElementById('dubStep' + num);
+    if (el) { el.classList.remove('active','error'); el.classList.add('done'); }
+  }
+
+  // ── Log ──
+  function dubLog(msg, cls) {
+    var log = document.getElementById('dubLog');
+    if (!log) return;
+    var line = document.createElement('div');
+    if (cls) line.className = cls;
+    line.textContent = msg;
+    log.appendChild(line);
+    log.scrollTop = log.scrollHeight;
+  }
+
+  // ── Config eksport ──
+  function exportConfig() {
+    var config = buildExportConfig();
+    var json = JSON.stringify(config, null, 2);
+
+    // Faylni yuklab olish
+    var blob = new Blob([json], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'dub_config.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    showToast('Config fayl yuklandi: dub_config.json', 'success');
+  }
+
+  function buildExportConfig() {
+    return {
+      geminiKey:       val('dubGeminiKey'),
+      geminiModel:     val('dubGeminiModel'),
+      translatePrompt: val('dubTranslatePrompt'),
+      whisperModel:    val('dubWhisperModel'),
+      defaultVoice:    val('dubVoiceType') === 'auto' ? 'male_soft' : val('dubVoiceType'),
+      ffmpegPath:      val('dubFfmpegPath'),
+      voices: {
+        female:     { rate: val('dubVoiceFemaleRate'),    pitch: val('dubVoiceFemalePitch') },
+        male_soft:  { rate: val('dubVoiceMaleSoftRate'),  pitch: val('dubVoiceMaleSoftPitch') },
+        male_rough: { rate: val('dubVoiceMaleRoughRate'), pitch: val('dubVoiceMaleRoughPitch') }
+      }
+    };
+  }
+
+  // ── Yordamchi funksiyalar ──
+  function val(id) {
+    var el = document.getElementById(id);
+    return el ? el.value : '';
+  }
+
+  function setVal(id, v) {
+    var el = document.getElementById(id);
+    if (el) el.value = v || '';
+  }
+
+  function checked(id) {
+    var el = document.getElementById(id);
+    return el ? el.checked : false;
+  }
+
+  function setCheck(id, v) {
+    var el = document.getElementById(id);
+    if (el) el.checked = !!v;
+  }
+
+  function mergeDeep(target, source) {
+    var out = {};
+    var key;
+    for (key in target) {
+      if (target.hasOwnProperty(key)) {
+        out[key] = target[key];
+      }
+    }
+    for (key in source) {
+      if (source.hasOwnProperty(key)) {
+        if (typeof source[key] === 'object' && source[key] !== null && !Array.isArray(source[key])
+            && typeof out[key] === 'object' && out[key] !== null) {
+          out[key] = mergeDeep(out[key], source[key]);
+        } else {
+          out[key] = source[key];
+        }
+      }
+    }
+    return out;
+  }
+
+  // ── Public API ──
+  return {
+    init: init,
+    switchTab: switchTab,
+    saveSettings: saveSettings,
+    loadSettings: loadSettings,
+    togglePass: togglePass,
+    startDub: startDub,
+    exportConfig: exportConfig
+  };
+})();
+
 function switchMode(mode) {
   var siteNav = document.getElementById('siteNav');
   var botNav  = document.getElementById('botNav');
+  var dubNav  = document.getElementById('dubNav');
   var btnSite = document.getElementById('modeBtnSite');
   var btnBot  = document.getElementById('modeBtnBot');
+  var btnDub  = document.getElementById('modeBtnDub');
   if (!siteNav || !botNav) return;
   localStorage.setItem('admin_mode', mode);
   var previewLink = document.getElementById('topbarPreviewLink');
   var previewIcon = document.getElementById('topbarPreviewIcon');
   var previewText = document.getElementById('topbarPreviewText');
 
+  // Barcha navlarni yashirish
+  siteNav.style.display = 'none';
+  botNav.style.display  = 'none';
+  if (dubNav) dubNav.style.display = 'none';
+  btnSite.classList.remove('active');
+  btnBot.classList.remove('active');
+  if (btnDub) btnDub.classList.remove('active');
+  document.querySelectorAll('.panel').forEach(function(p) { p.classList.remove('active'); });
+
   if (mode === 'bot') {
-    siteNav.style.display = 'none';
-    botNav.style.display  = 'block';
-    btnSite.classList.remove('active');
+    botNav.style.display = 'block';
     btnBot.classList.add('active');
-    document.querySelectorAll('.panel').forEach(function(p) { p.classList.remove('active'); });
     var tgPanel = document.getElementById('panel-telegram');
     if (tgPanel) tgPanel.classList.add('active');
     var ttl = document.getElementById('topbarTitle');
@@ -5268,12 +5819,22 @@ function switchMode(mode) {
     if (!_tgInited) { _tgInited = true; TG.init(); }
     var firstNav = botNav.querySelector('.tg-nav');
     TG.switchTab('dashboard', firstNav);
+  } else if (mode === 'dubber') {
+    if (dubNav) dubNav.style.display = 'block';
+    if (btnDub) btnDub.classList.add('active');
+    var dubPanel = document.getElementById('panel-dubber');
+    if (dubPanel) dubPanel.classList.add('active');
+    var ttl = document.getElementById('topbarTitle');
+    if (ttl) ttl.textContent = 'Dublyaj qilish';
+    if (previewLink) {
+      previewLink.href = '#';
+      previewIcon.className = 'fas fa-language';
+      previewText.textContent = 'Anime Dublyaj';
+    }
+    DUB.init();
   } else {
     siteNav.style.display = 'block';
-    botNav.style.display  = 'none';
     btnSite.classList.add('active');
-    btnBot.classList.remove('active');
-    document.querySelectorAll('.panel').forEach(function(p) { p.classList.remove('active'); });
     var heroPanel = document.getElementById('panel-hero');
     if (heroPanel) heroPanel.classList.add('active');
     document.querySelectorAll('#siteNav .nav-item').forEach(function(n) { n.classList.remove('active'); });
@@ -5289,10 +5850,10 @@ function switchMode(mode) {
   }
 }
 
-// Sahifa yuklanganida oxirgi rejimni tiklash
 function restoreAdminMode() {
   var savedMode = localStorage.getItem('admin_mode');
   if (savedMode === 'bot') switchMode('bot');
+  else if (savedMode === 'dubber') switchMode('dubber');
 }
 
 // Telegram paneli ochilganda init
