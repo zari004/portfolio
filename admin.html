@@ -1598,22 +1598,8 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
 
         <!-- TAB 1: DUBLYAJ QILISH -->
         <div class="dub-pane active" id="dub-pane-convert">
-          <!-- Server holati -->
-          <div class="tg-section" style="padding:10px 14px">
-            <div style="display:flex;align-items:center;justify-content:space-between">
-              <div style="display:flex;align-items:center;gap:8px;font-size:0.78rem">
-                <span class="tg-dot" id="dubServerDot"></span>
-                <span id="dubServerStatus" style="color:var(--muted)">Server tekshirilmoqda...</span>
-              </div>
-              <button class="btn btn-secondary btn-sm" onclick="DUB.checkServer()" style="font-size:0.68rem;padding:3px 8px">
-                <i class="fas fa-sync-alt"></i>
-              </button>
-            </div>
-          </div>
-
           <div class="tg-section">
             <div class="tg-section-title"><i class="fas fa-film"></i> Video dublyaj qilish</div>
-            <!-- Manba tanlash -->
             <div class="form-group">
               <label>Video manbasi</label>
               <div style="display:flex;gap:6px;margin-bottom:8px">
@@ -1624,12 +1610,10 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
                   <i class="fas fa-file-video"></i> Fayl yuklash
                 </button>
               </div>
-              <!-- URL input -->
               <div id="dubSourceUrl">
                 <input type="text" class="form-input" id="dubVideoUrl" placeholder="https://... yoki YouTube link" style="font-size:0.82rem">
                 <div class="form-hint">YouTube, to'g'ridan-to'g'ri video URL yoki boshqa havola</div>
               </div>
-              <!-- Fayl input -->
               <div id="dubSourceFile" style="display:none">
                 <input type="file" class="form-input" id="dubVideoFile" accept="video/*" style="padding:8px">
                 <div class="form-hint">MP4, MKV, AVI formatdagi video faylni tanlang</div>
@@ -5462,17 +5446,14 @@ function tgSaveSchedule() { TG.saveSchedule(); }
 function tgRefreshHistory() { TG.loadHistory(); }
 
 /* ============================================================
-   DUB MODULE — Anime Dublyaj boshqarish (Server bilan)
+   DUB MODULE — Anime Dublyaj sozlamalari
    ============================================================ */
 var DUB = (function() {
   'use strict';
 
   var STORAGE_KEY = 'dub_settings';
   var _inited = false;
-  var _pollTimer = null;
-  var _currentJobId = null;
-  var _sourceMode = 'url';  // 'url' yoki 'file'
-  var _lastLogCount = 0;
+  var _sourceMode = 'url';
 
   var DEFAULTS = {
     geminiKey: '',
@@ -5495,7 +5476,6 @@ var DUB = (function() {
     if (_inited) return;
     _inited = true;
     loadSettings();
-    checkServer();
   }
 
   // ── Server URL ──
@@ -5505,25 +5485,11 @@ var DUB = (function() {
 
   // ── Server tekshirish ──
   function checkServer() {
-    var dot = document.getElementById('dubServerDot');
-    var txt = document.getElementById('dubServerStatus');
-    if (dot) { dot.className = 'tg-dot'; }
-    if (txt) { txt.textContent = 'Tekshirilmoqda...'; txt.style.color = 'var(--muted)'; }
-
     var url = getServerUrl() + '/api/health';
     fetch(url, { method: 'GET', mode: 'cors' })
       .then(function(r) { return r.json(); })
-      .then(function() {
-        if (dot) { dot.className = 'tg-dot online'; }
-        if (txt) { txt.textContent = 'Server ulangan'; txt.style.color = '#22c55e'; }
-      })
-      .catch(function() {
-        if (dot) { dot.className = 'tg-dot offline'; }
-        if (txt) {
-          txt.innerHTML = 'Server ulanmagan — <code style="font-size:0.7rem">cd anime_dubber && python server.py</code>';
-          txt.style.color = 'var(--red)';
-        }
-      });
+      .then(function() { showToast('Server ulangan!', 'success'); })
+      .catch(function() { showToast('Server ulanmagan. python server.py ni ishga tushiring', 'error'); });
   }
 
   // ── Tab switching ──
@@ -5631,132 +5597,124 @@ var DUB = (function() {
     // Manba tekshirish
     var videoUrl = '';
     var videoFile = null;
+    var videoName = 'video';
     if (_sourceMode === 'url') {
       videoUrl = val('dubVideoUrl').trim();
-      if (!videoUrl) {
-        showToast('Video URL ni kiriting!', 'error');
-        return;
-      }
+      if (!videoUrl) { showToast('Video URL ni kiriting!', 'error'); return; }
+      videoName = videoUrl.split('/').pop().split('?')[0] || 'video';
     } else {
       var fileInput = document.getElementById('dubVideoFile');
       if (!fileInput || !fileInput.files || !fileInput.files.length) {
-        showToast('Video faylni tanlang!', 'error');
-        return;
+        showToast('Video faylni tanlang!', 'error'); return;
       }
       videoFile = fileInput.files[0];
+      videoName = videoFile.name;
     }
-
-    // UI reset
-    resetProgress();
-    var btn = document.getElementById('dubStartBtn');
-    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Jarayon...'; }
-
-    dubLog('Dublyaj boshlanmoqda...', 'ok');
-    if (videoUrl) { dubLog('URL: ' + videoUrl); }
-    else { dubLog('Fayl: ' + videoFile.name + ' (' + (videoFile.size / 1048576).toFixed(1) + ' MB)'); }
 
     // Config tayyorlash
     var config = buildExportConfig();
     config.voiceType = val('dubVoiceType');
     config.whisperModel = val('dubWhisperModel');
     config.subtitlesOnly = checked('dubSubtitlesOnly');
+    if (videoUrl) config.videoUrl = videoUrl;
 
+    // Avval serverga ping — bor bo'lsa server orqali, yo'q bo'lsa config eksport
     var serverUrl = getServerUrl();
+    resetProgress();
+    dubLog('Server tekshirilmoqda...', 'ok');
 
-    if (_sourceMode === 'url') {
-      // JSON so'rov
-      fetch(serverUrl + '/api/dub', {
+    fetch(serverUrl + '/api/health', { method: 'GET', mode: 'cors' })
+      .then(function(r) { return r.json(); })
+      .then(function() {
+        // Server bor — serverga yuborish
+        dubLog('Server ulangan! Dublyaj boshlanmoqda...', 'ok');
+        if (videoUrl) { dubLog('URL: ' + videoUrl); }
+        else { dubLog('Fayl: ' + videoFile.name); }
+        sendToServer(videoUrl, videoFile, config, serverUrl);
+      })
+      .catch(function() {
+        // Server yo'q — config eksport
+        dubLog('Server topilmadi.', 'warn');
+        dubLog('Sozlamalar JSON ga eksport qilinmoqda...', 'warn');
+        showOfflineResult(videoName, config);
+      });
+  }
+
+  // ── Serverga yuborish ──
+  function sendToServer(videoUrl, videoFile, config, serverUrl) {
+    var btn = document.getElementById('dubStartBtn');
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Jarayon...'; }
+
+    var fetchOpts;
+    if (videoUrl) {
+      fetchOpts = {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url: videoUrl, config: config })
-      })
-      .then(function(r) { return r.json(); })
-      .then(function(data) {
-        if (data.error) { throw new Error(data.error); }
-        _currentJobId = data.jobId;
-        dubLog('Job boshlandi: ' + data.jobId, 'ok');
-        startPolling();
-      })
-      .catch(function(err) {
-        dubLog('XATO: ' + err.message, 'err');
-        showToast('Server xatosi: ' + err.message, 'error');
-        resetButton();
-      });
+      };
     } else {
-      // Fayl yuklash (multipart)
       var formData = new FormData();
       formData.append('video', videoFile);
       formData.append('config', JSON.stringify(config));
+      fetchOpts = { method: 'POST', body: formData };
+    }
 
-      fetch(serverUrl + '/api/dub', {
-        method: 'POST',
-        body: formData
-      })
+    fetch(serverUrl + '/api/dub', fetchOpts)
       .then(function(r) { return r.json(); })
       .then(function(data) {
-        if (data.error) { throw new Error(data.error); }
-        _currentJobId = data.jobId;
+        if (data.error) throw new Error(data.error);
         dubLog('Job boshlandi: ' + data.jobId, 'ok');
-        startPolling();
+        startPolling(data.jobId, serverUrl);
       })
       .catch(function(err) {
         dubLog('XATO: ' + err.message, 'err');
         showToast('Server xatosi: ' + err.message, 'error');
         resetButton();
       });
-    }
   }
 
-  // ── Polling — serverdan holat so'rash ──
-  function startPolling() {
+  // ── Polling ──
+  var _pollTimer = null, _lastLogCount = 0;
+
+  function startPolling(jobId, serverUrl) {
     _lastLogCount = 0;
     if (_pollTimer) clearInterval(_pollTimer);
-    _pollTimer = setInterval(pollStatus, 2000);
-    pollStatus(); // darhol birinchi marta
+    _pollTimer = setInterval(function() { pollStatus(jobId, serverUrl); }, 2000);
+    pollStatus(jobId, serverUrl);
   }
 
   function stopPolling() {
     if (_pollTimer) { clearInterval(_pollTimer); _pollTimer = null; }
   }
 
-  function pollStatus() {
-    if (!_currentJobId) { stopPolling(); return; }
-    var url = getServerUrl() + '/api/dub/' + _currentJobId + '/status';
-
-    fetch(url).then(function(r) { return r.json(); })
+  function pollStatus(jobId, serverUrl) {
+    fetch(serverUrl + '/api/dub/' + jobId + '/status')
+    .then(function(r) { return r.json(); })
     .then(function(data) {
-      // Yangi loglarni ko'rsatish
       var logs = data.logs || [];
       for (var i = _lastLogCount; i < logs.length; i++) {
         var lvl = logs[i].level;
-        var cls = lvl === 'error' ? 'err' : (lvl === 'success' ? 'ok' : '');
-        dubLog(logs[i].msg, cls);
+        dubLog(logs[i].msg, lvl === 'error' ? 'err' : (lvl === 'success' ? 'ok' : ''));
       }
       _lastLogCount = logs.length;
-
-      // Steplarni yangilash
       updateSteps(data.step, data.status);
-
-      // Progress bar
       var fillEl = document.getElementById('dubProgressFill');
       if (fillEl) fillEl.style.width = data.progress + '%';
 
-      // Tugagan / Xato
       if (data.status === 'done') {
         stopPolling();
-        showResult(data);
+        showServerResult(data, serverUrl);
         resetButton();
         showToast('Dublyaj tayyor!', 'success');
       } else if (data.status === 'error') {
         stopPolling();
         dubLog('XATO: ' + (data.error || 'Noma\'lum xato'), 'err');
-        setStepError(data.step || 1);
         resetButton();
         showToast('Dublyaj xatosi!', 'error');
       }
     })
     .catch(function(err) {
-      dubLog('Server bilan bog\'lanish uzildi: ' + err.message, 'err');
+      dubLog('Server bilan aloqa uzildi', 'err');
       stopPolling();
       resetButton();
     });
@@ -5768,11 +5726,8 @@ var DUB = (function() {
       var el = document.getElementById('dubStep' + s);
       if (!el) continue;
       el.classList.remove('active', 'done', 'error');
-      if (s < currentStep) {
-        el.classList.add('done');
-      } else if (s === currentStep && status === 'processing') {
-        el.classList.add('active');
-      }
+      if (s < currentStep) el.classList.add('done');
+      else if (s === currentStep && status === 'processing') el.classList.add('active');
     }
     if (status === 'done') {
       for (var d = 1; d <= 6; d++) {
@@ -5782,31 +5737,63 @@ var DUB = (function() {
     }
   }
 
-  function setStepError(num) {
-    var el = document.getElementById('dubStep' + num);
-    if (el) { el.classList.remove('active','done'); el.classList.add('error'); }
-  }
-
-  // ── Natija ko'rsatish ──
-  function showResult(data) {
+  // ── Server natijasi ──
+  function showServerResult(data, serverUrl) {
     var resultSection = document.getElementById('dubResultSection');
     var resultDiv = document.getElementById('dubResult');
     if (resultSection) resultSection.style.display = 'block';
     if (!resultDiv) return;
-
-    var serverUrl = getServerUrl();
-    var videoName = data.videoName || 'video';
-    var html = '<div style="background:var(--bg);border:1px solid rgba(34,197,94,0.3);border-radius:8px;padding:14px;margin-top:8px">';
-    html += '<p style="font-size:0.85rem;margin-bottom:12px;color:#22c55e"><i class="fas fa-check-circle"></i> <b>' + videoName + '</b> dublyaj tayyor!</p>';
+    var name = data.videoName || 'video';
+    var html = '<div style="background:var(--bg);border:1px solid rgba(34,197,94,0.3);border-radius:8px;padding:14px">';
+    html += '<p style="font-size:0.85rem;margin-bottom:12px;color:#22c55e"><i class="fas fa-check-circle"></i> <b>' + name + '</b> dublyaj tayyor!</p>';
     html += '<div style="display:flex;gap:8px;flex-wrap:wrap">';
-    html += '<a href="' + serverUrl + '/api/dub/' + data.id + '/download" target="_blank" class="tg-btn-post" style="background:#7c3aed;text-decoration:none;font-size:0.78rem;padding:8px 16px;display:inline-flex;align-items:center;gap:6px">';
-    html += '<i class="fas fa-download"></i> Videoni yuklab olish</a>';
+    html += '<a href="' + serverUrl + '/api/dub/' + data.id + '/download" target="_blank" class="tg-btn-post" style="background:#7c3aed;text-decoration:none;font-size:0.78rem;padding:8px 16px;display:inline-flex;align-items:center;gap:6px"><i class="fas fa-download"></i> Videoni yuklab olish</a>';
     if (data.srtPath) {
-      html += '<a href="' + serverUrl + '/api/dub/' + data.id + '/srt" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration:none;font-size:0.74rem;padding:6px 12px;display:inline-flex;align-items:center;gap:5px">';
-      html += '<i class="fas fa-closed-captioning"></i> SRT subtitle</a>';
+      html += '<a href="' + serverUrl + '/api/dub/' + data.id + '/srt" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration:none;font-size:0.74rem;padding:6px 12px;display:inline-flex;align-items:center;gap:5px"><i class="fas fa-closed-captioning"></i> SRT subtitle</a>';
     }
     html += '</div></div>';
     resultDiv.innerHTML = html;
+  }
+
+  // ── Offline natija (server yo'q) ──
+  function showOfflineResult(videoName, config) {
+    var resultSection = document.getElementById('dubResultSection');
+    var resultDiv = document.getElementById('dubResult');
+    if (resultSection) resultSection.style.display = 'block';
+
+    // Config ni avtomatik eksport
+    var json = JSON.stringify(config, null, 2);
+    var blob = new Blob([json], { type: 'application/json' });
+    var blobUrl = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = blobUrl; a.download = 'dub_config.json';
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(blobUrl);
+
+    dubLog('dub_config.json yuklandi!', 'ok');
+
+    var cmd = 'python main.py --input "' + videoName + '" --admin-config dub_config.json';
+    if (config.videoUrl) {
+      cmd = 'python main.py --input "' + config.videoUrl + '" --admin-config dub_config.json';
+    }
+
+    if (resultDiv) {
+      resultDiv.innerHTML =
+        '<div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px">' +
+        '<p style="font-size:0.82rem;margin-bottom:10px"><i class="fas fa-info-circle" style="color:#7c3aed"></i> Python o\'rnatib, terminalda ishga tushiring:</p>' +
+        '<div style="background:#1a1a1a;border-radius:6px;padding:10px;font-family:JetBrains Mono,monospace;font-size:0.72rem;line-height:1.8;color:#22c55e">' +
+          '<div>1. <span style="color:var(--accent)">cd anime_dubber</span></div>' +
+          '<div>2. <span style="color:var(--accent)">pip install -r requirements.txt</span></div>' +
+          '<div>3. <span style="color:var(--accent)">' + cmd + '</span></div>' +
+        '</div>' +
+        '</div>';
+    }
+
+    // Barcha steplarni bajarilgan qilish (vizual)
+    var fillEl = document.getElementById('dubProgressFill');
+    if (fillEl) fillEl.style.width = '100%';
+    resetButton();
   }
 
   // ── UI Yordamchi ──
