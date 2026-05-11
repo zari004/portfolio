@@ -5645,13 +5645,6 @@ var DUB = (function() {
 
   // ── DUBLYAJ BOSHLASH ──
   function startDub() {
-    var geminiKey = val('dubGeminiKey');
-    if (!geminiKey) {
-      showToast('Gemini API kalitini kiriting! (Sozlamalar)', 'error');
-      switchTab('settings', document.querySelector('#dubNav .dub-nav:last-child'));
-      return;
-    }
-
     // Manba tekshirish
     var videoUrl = '';
     var videoFile = null;
@@ -5684,7 +5677,15 @@ var DUB = (function() {
     fetch(serverUrl + '/api/health', { method: 'GET', mode: 'cors' })
       .then(function(r) { return r.json(); })
       .then(function() {
-        // Server bor — serverga yuborish
+        // Server bor — Gemini kalit tekshirish
+        var geminiKey = val('dubGeminiKey');
+        if (!geminiKey) {
+          dubLog('Gemini API kaliti kerak! Sozlamalardan kiriting.', 'err');
+          showToast('Gemini API kalitini kiriting! (Sozlamalar)', 'error');
+          switchTab('settings', document.querySelector('#dubNav .dub-nav:last-child'));
+          resetButton();
+          return;
+        }
         dubLog('Server ulangan! Dublyaj boshlanmoqda...', 'ok');
         if (videoUrl) { dubLog('URL: ' + videoUrl); }
         else { dubLog('Fayl: ' + videoFile.name); }
