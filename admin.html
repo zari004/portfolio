@@ -5692,9 +5692,7 @@ var DUB = (function() {
         sendToServer(videoUrl, videoFile, config, serverUrl);
       })
       .catch(function() {
-        // Server yo'q — config eksport
-        dubLog('Server topilmadi.', 'warn');
-        dubLog('Sozlamalar JSON ga eksport qilinmoqda...', 'warn');
+        // Server yo'q
         showOfflineResult(videoName, config);
       });
   }
@@ -5839,21 +5837,13 @@ var DUB = (function() {
 
   // ── Offline natija (server yo'q) ──
   function showOfflineResult(videoName, config) {
+    // Jarayon bo'limini yashirish — hech narsa bajarilmadi
+    var progressSection = document.getElementById('dubProgressSection');
+    if (progressSection) progressSection.style.display = 'none';
+
     var resultSection = document.getElementById('dubResultSection');
     var resultDiv = document.getElementById('dubResult');
     if (resultSection) resultSection.style.display = 'block';
-
-    // Config ni avtomatik eksport
-    var json = JSON.stringify(config, null, 2);
-    var blob = new Blob([json], { type: 'application/json' });
-    var blobUrl = URL.createObjectURL(blob);
-    var a = document.createElement('a');
-    a.href = blobUrl; a.download = 'dub_config.json';
-    document.body.appendChild(a); a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(blobUrl);
-
-    dubLog('dub_config.json yuklandi!', 'ok');
 
     var cmd = 'python main.py --input "' + videoName + '" --admin-config dub_config.json';
     if (config.videoUrl) {
@@ -5862,18 +5852,20 @@ var DUB = (function() {
 
     if (resultDiv) {
       resultDiv.innerHTML =
-        '<div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px">' +
-        '<p style="font-size:0.82rem;margin-bottom:10px"><i class="fas fa-info-circle" style="color:#7c3aed"></i> Python o\'rnatib, terminalda ishga tushiring:</p>' +
-        '<div style="background:#1a1a1a;border-radius:6px;padding:10px;font-family:JetBrains Mono,monospace;font-size:0.72rem;line-height:1.8;color:#22c55e">' +
-          '<div>1. <span style="color:var(--accent)">cd anime_dubber</span></div>' +
-          '<div>2. <span style="color:var(--accent)">pip install -r requirements.txt</span></div>' +
-          '<div>3. <span style="color:var(--accent)">' + cmd + '</span></div>' +
+        '<div style="background:var(--bg);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:16px">' +
+        '<p style="font-size:0.85rem;margin-bottom:12px;color:var(--red)"><i class="fas fa-exclamation-triangle"></i> <b>Dublyaj serveri ishlamayapti</b></p>' +
+        '<p style="font-size:0.78rem;color:var(--sub);margin-bottom:14px">Dublyaj qilish uchun Python o\'rnatib, serverni ishga tushiring:</p>' +
+        '<div style="background:#1a1a1a;border-radius:6px;padding:12px;font-family:JetBrains Mono,monospace;font-size:0.72rem;line-height:2;color:#22c55e">' +
+          '<div><span style="color:var(--muted)">1.</span> <a href="https://python.org/downloads" target="_blank" style="color:var(--accent)">Python o\'rnatish</a> <span style="color:var(--muted)">(python.org)</span></div>' +
+          '<div><span style="color:var(--muted)">2.</span> <span style="color:var(--accent)">cd anime_dubber</span></div>' +
+          '<div><span style="color:var(--muted)">3.</span> <span style="color:var(--accent)">pip install -r requirements.txt</span></div>' +
+          '<div><span style="color:var(--muted)">4.</span> <span style="color:var(--accent)">python server.py</span></div>' +
+          '<div><span style="color:var(--muted)">5.</span> Admin paneldan qaytadan <b style="color:var(--text)">Dublyaj boshlash</b> bosing</div>' +
         '</div>' +
+        '<p style="font-size:0.72rem;color:var(--muted);margin-top:10px">Yoki CLI orqali: <code style="color:var(--accent);font-size:0.7rem">' + cmd + '</code></p>' +
         '</div>';
     }
 
-    // Jadval — config eksport holati
-    updateSteps(7, 'done');
     resetButton();
   }
 
