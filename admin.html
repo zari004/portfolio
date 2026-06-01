@@ -2122,8 +2122,10 @@ function loadFromStorage() {
     users = rawU ? JSON.parse(rawU) : deepClone(DEFAULT_USERS);
   } catch { users = deepClone(DEFAULT_USERS); }
 
+  // Push qilinmagan lokal o'zgarishlar bormi? Bo'lsa — lokalni himoya qilamiz.
+  var hasUnpushed = (localStorage.getItem('_needsPush') === '1');
+
   // IndexedDB dan to'liq ma'lumotni yuklash ([IDB] placeholder larni almashtirish)
-  var hasLocalData = !!localStorage.getItem('portfolio_admin_data');
   loadFromIDB().then(function(idbData) {
     if (idbData) {
       var needsRefresh = false;
@@ -2152,51 +2154,72 @@ function loadFromStorage() {
         console.log('[IDB] Rasmlar IndexedDB dan yuklandi');
         fillAllForms();
       }
-      return; // IDB data bor — GitHub dan yuklash shart emas
     }
 
-    // IDB ham bo'sh bo'lsa — data.json dan yuklash (boshqa qurilma)
-    if (!hasLocalData) {
+    // HAR DOIM serverdagi (published) data.json ni tekshirib ko'ramiz, shunda
+    // istalgan qurilmadan kirilganda eng so'nggi ma'lumot ko'rinadi.
+    // Ammo bu qurilmada push qilinmagan o'zgarishlar bo'lsa — ularni saqlaymiz.
+    if (hasUnpushed) {
+      console.log('[SYNC] Push qilinmagan lokal o\'zgarishlar bor — server ma\'lumoti tortilmadi');
+    } else {
       fetchDataFromGitHub();
     }
   }).catch(function(err) {
     console.warn('[IDB] Yuklashda xatolik:', err);
-    if (!hasLocalData) {
+    if (!hasUnpushed) {
       fetchDataFromGitHub();
     }
   });
 }
+
+// Fetch uchun zaxira repo konfiguratsiyasi (o'qish — public, token kerak emas).
+// Bu istalgan qurilmadan (localStorage bo'sh bo'lsa ham) so'nggi ma'lumotni tortishni ta'minlaydi.
+var DEFAULT_FETCH_CONFIG = { owner: 'zari004', repo: 'portfolio', branch: 'main' };
 
 // GitHub dagi data.json ni yuklash (boshqa qurilmadan kirganida)
 function fetchDataFromGitHub() {
   // Avval GitHub config tekshirish
   var cfg;
   try { cfg = JSON.parse(localStorage.getItem('github_config')); } catch(e) { cfg = null; }
+  if (!cfg || !cfg.owner || !cfg.repo || !cfg.branch) cfg = DEFAULT_FETCH_CONFIG;
 
-  // data.json ni fetch qilish
-  var jsonUrl = 'data.json?v=' + Date.now();
-  if (cfg && cfg.owner && cfg.repo && cfg.branch) {
-    jsonUrl = 'https://raw.githubusercontent.com/' + cfg.owner + '/' + cfg.repo + '/' + cfg.branch + '/data.json?v=' + Date.now();
-  }
-  fetch(jsonUrl, { cache: 'no-store' }).then(function(r) {
-    if (!r.ok) throw new Error('not found');
-    return r.json();
-  }).then(function(remoteData) {
-    if (!remoteData || !remoteData.hero) return;
-    console.log('[REMOTE] data.json dan ma\'lumot yuklandi');
-    data = Object.assign({}, DEFAULT_DATA, remoteData);
-    for (var key in DEFAULT_DATA) {
-      if (typeof DEFAULT_DATA[key] === 'object' && !Array.isArray(DEFAULT_DATA[key])) {
-        data[key] = Object.assign({}, DEFAULT_DATA[key], remoteData[key] || {});
-      }
+  var hadLocal = !!localStorage.getItem('portfolio_admin_data');
+
+  // Bir nechta manbani ketma-ket sinaymiz: avval nisbiy yo'l (z-dsgn.uz/data.json),
+  // keyin raw.githubusercontent (zaxira).
+  var urls = [
+    'data.json?v=' + Date.now(),
+    'https://raw.githubusercontent.com/' + cfg.owner + '/' + cfg.repo + '/' + cfg.branch + '/data.json?v=' + Date.now()
+  ];
+
+  function tryFetch(i) {
+    if (i >= urls.length) {
+      console.warn('[REMOTE] data.json hech qaysi manbadan yuklanmadi');
+      return;
     }
-    if (remoteData.portfolio) data.portfolio = remoteData.portfolio;
-    saveToStorage();
-    fillAllForms();
-    showToast('GitHub dan ma\'lumot yuklandi', 'success');
-  }).catch(function(err) {
-    console.warn('[REMOTE] data.json yuklanmadi:', err);
-  });
+    fetch(urls[i], { cache: 'no-store' }).then(function(r) {
+      if (!r.ok) throw new Error('not found');
+      return r.json();
+    }).then(function(remoteData) {
+      if (!remoteData || !remoteData.hero) throw new Error('invalid data');
+      console.log('[REMOTE] data.json yuklandi:', urls[i]);
+      data = Object.assign({}, DEFAULT_DATA, remoteData);
+      for (var key in DEFAULT_DATA) {
+        if (typeof DEFAULT_DATA[key] === 'object' && !Array.isArray(DEFAULT_DATA[key])) {
+          data[key] = Object.assign({}, DEFAULT_DATA[key], remoteData[key] || {});
+        }
+      }
+      if (remoteData.portfolio) data.portfolio = remoteData.portfolio;
+      saveToStorage();
+      fillAllForms();
+      // Faqat birinchi marta (lokal bo'sh bo'lganda) toast ko'rsatamiz — har safar emas.
+      if (!hadLocal) showToast('Serverdan so\'nggi ma\'lumot yuklandi', 'success');
+    }).catch(function(err) {
+      console.warn('[REMOTE] manba ishlamadi (' + urls[i] + '):', err.message);
+      tryFetch(i + 1);
+    });
+  }
+  tryFetch(0);
 }
 
 // IndexedDB — katta hajmli ma'lumotlar uchun (50-100+ MB)
