@@ -3,13 +3,13 @@ Telegram Design Bot — Zarnigor Orifova
 Har kuni avtomatik dizayn postlari yuboradi.
 Pipeline: Groq (matn) → Tekshiruvchi Agent → Telegram
 """
-import os, json, time, random, requests, base64
+import os, json, random, requests, base64
 from datetime import datetime, timezone, timedelta
 
 # ── ENV ───────────────────────────────────────────────────────────────────────
 BOT_TOKEN    = os.environ.get('TG_BOT_TOKEN', '')
 CHANNEL_ID   = os.environ.get('TG_CHANNEL_ID', '@deardsgn')
-LEONARDO_KEY = os.environ.get('LEONARDO_API_KEY', '')
+OPENAI_KEY   = os.environ.get('OPENAI_API_KEY', '')
 GROQ_KEY     = os.environ.get('GROQ_API_KEY', '')
 GITHUB_TOKEN = os.environ.get('GITHUB_TOKEN', '')
 GITHUB_REPO  = os.environ.get('GITHUB_REPO', '')
@@ -24,7 +24,7 @@ def check_env():
   print('  GITHUB_TOKEN:     ' + ('bor' if GITHUB_TOKEN else 'TOPILMADI'))
   print('  GITHUB_REPO:      ' + (GITHUB_REPO if GITHUB_REPO else 'TOPILMADI'))
   print('  GROQ_API_KEY:     ' + ('bor' if GROQ_KEY else zaxira))
-  print('  LEONARDO_API_KEY: ' + ('bor' if LEONARDO_KEY else rasmsiz))
+  print('  OPENAI_API_KEY:   ' + ('bor' if OPENAI_KEY else rasmsiz))
   print('---')
   if not BOT_TOKEN:
     print('XATO: TG_BOT_TOKEN majburiy! GitHub Settings > Secrets > Actions')
@@ -398,75 +398,129 @@ def fallback_caption(rubric_key, rubric):
   return random.choice(options)
 
 
-# ── LEONARDO ──────────────────────────────────────────────────────────────────
-def generate_image(rubric_key, rubric):
-  if not LEONARDO_KEY:
-    print('⚠️ LEONARDO_API_KEY yo\'q — rasmsiz post yuboriladi')
+# ── RASM PROMPT GENERATORI ────────────────────────────────────────────────────
+def groq_image_prompt(caption_text, rubric_key, rubric):
+  """Caption matni asosida DALL-E uchun dinamik rasm prompti yaratish"""
+  if not GROQ_KEY:
+    style = random.choice(IMAGE_STYLES)
+    return rubric['image_prompt'].format(style=style)
+
+  system = """You are a creative art director generating image prompts for an AI image generator (DALL-E / gpt-image-1).
+The images are for a design-focused Telegram channel (@deardsgn).
+
+Rules:
+- The image must VISUALLY ILLUSTRATE the post concept — not be generic
+- Always related to: graphic design, branding, typography, UI/UX, color theory, visual arts
+- Be specific: describe composition, dominant colors, lighting, artistic style
+- Styles to pick from: ultra-minimal flat design, cinematic 3D render, abstract geometric, editorial photography, painterly illustration, neon-glow digital art, bauhaus-inspired, brutalist design aesthetic
+- CRITICAL: end prompt with "absolutely no text, no letters, no words, no numbers anywhere"
+- Output: one paragraph, max 80 words, English only, no quotes"""
+
+  user = f"""Design topic: {rubric['title']} — {rubric['desc']}
+Post content (Uzbek): {caption_text[:400]}
+
+Write a vivid DALL-E image prompt that visually represents the KEY CONCEPT of this post."""
+
+  try:
+    r = requests.post(
+      'https://api.groq.com/openai/v1/chat/completions',
+      headers={'Authorization': f'Bearer {GROQ_KEY}', 'Content-Type': 'application/json'},
+      json={
+        'model': 'llama-3.3-70b-versatile',
+        'messages': [
+          {'role': 'system', 'content': system},
+          {'role': 'user', 'content': user},
+        ],
+        'max_tokens': 150,
+        'temperature': 0.85,
+      },
+      timeout=20
+    )
+    if r.ok:
+      prompt = r.json()['choices'][0]['message']['content'].strip().strip('"')
+      print(f'Dinamik prompt yaratildi: {prompt[:70]}...')
+      return prompt
+  except Exception as e:
+    print(f'Image prompt generation xatosi: {e}')
+
+  style = random.choice(IMAGE_STYLES)
+  return rubric['image_prompt'].format(style=style)
+
+
+# ── OPENAI IMAGE ───────────────────────────────────────────────────────────────
+def generate_image(rubric_key, rubric, caption_text=None):
+  """OpenAI gpt-image-1 / DALL-E 3 orqali rasm generatsiya"""
+  if not OPENAI_KEY:
+    print("⚠️ OPENAI_API_KEY yo'q — rasmsiz post yuboriladi")
     return None
 
-  # Rasm promptini tayyorlash va tekshirish
-  style = random.choice(IMAGE_STYLES)
-  prompt = rubric['image_prompt'].format(style=style)
+  # Caption asosida dinamik prompt
+  if caption_text:
+    prompt = groq_image_prompt(caption_text, rubric_key, rubric)
+  else:
+    style = random.choice(IMAGE_STYLES)
+    prompt = rubric['image_prompt'].format(style=style)
 
-  for img_attempt in range(MAX_QUALITY_RETRIES):
-    print(f'Rasm prompt (urinish {img_attempt+1}): {prompt[:70]}...')
+  if 'no text' not in prompt.lower():
+    prompt += ', absolutely no text, no letters, no words, no numbers'
+
+  # Prompt sifat tekshiruvi
+  for attempt in range(MAX_QUALITY_RETRIES):
+    print(f'Rasm prompt (urinish {attempt+1}): {prompt[:70]}...')
     img_review = image_quality_check(prompt, rubric_key)
     if img_review.get('passed'):
       break
+    suggestion = img_review.get('suggestion', '')
+    print(f'🔄 Rasm prompti qayta ishlanmoqda: {img_review.get("errors", [])}')
+    if caption_text:
+      prompt = groq_image_prompt(caption_text, rubric_key, rubric)
     else:
-      suggestion = img_review.get('suggestion', '')
-      errors = img_review.get('errors', [])
-      print(f'🔄 Rasm prompti qayta ishlanmoqda: {errors}')
-      # Yangi stil tanlash va promptni yaxshilash
       style = random.choice(IMAGE_STYLES)
       prompt = rubric['image_prompt'].format(style=style)
-      if suggestion:
-        prompt += f', {suggestion}'
-      # "NO TEXT" ni har doim qo'shish
-      if 'NO TEXT' not in prompt:
-        prompt += ', NO TEXT, NO WORDS, NO LETTERS'
+    if suggestion:
+      prompt += f', {suggestion}'
+    if 'no text' not in prompt.lower():
+      prompt += ', absolutely no text, no letters, no words, no numbers'
 
   print(f'Yakuniy rasm prompt: {prompt[:80]}...')
+  h = {'Authorization': f'Bearer {OPENAI_KEY}', 'Content-Type': 'application/json'}
 
-  h = {'Authorization': f'Bearer {LEONARDO_KEY}', 'Content-Type': 'application/json'}
-
-  # Model: Leonardo Phoenix (eng yaxshi bepul model)
-  r = requests.post('https://cloud.leonardo.ai/api/rest/v1/generations', headers=h, json={
+  # gpt-image-1 (eng yangi, eng sifatli)
+  r = requests.post('https://api.openai.com/v1/images/generations', headers=h, json={
+    'model': 'gpt-image-1',
     'prompt': prompt,
-    'negative_prompt': 'blurry, low quality, ugly, watermark, text overlay, amateur',
-    'modelId': 'de7d3faf-762f-48e0-b3b7-9d0ac3a3fcf5',  # Leonardo Phoenix
-    'width': 1024, 'height': 1024,
-    'num_images': 1,
-    'guidance_scale': 7,
-    'presetStyle': 'CINEMATIC',
-  })
+    'n': 1,
+    'size': '1024x1024',
+    'quality': 'high',
+  }, timeout=120)
+
+  if r.ok:
+    data = r.json()['data'][0]
+    if 'b64_json' in data:
+      print('✅ gpt-image-1: rasm (bytes) tayyor')
+      return base64.b64decode(data['b64_json'])
+    if 'url' in data:
+      print(f'✅ gpt-image-1: rasm (url) tayyor')
+      return data['url']
+
+  print(f'gpt-image-1 xatosi ({r.status_code}) — DALL-E 3 ga o\'tilmoqda')
+
+  # DALL-E 3 (zaxira)
+  r = requests.post('https://api.openai.com/v1/images/generations', headers=h, json={
+    'model': 'dall-e-3',
+    'prompt': prompt,
+    'n': 1,
+    'size': '1024x1024',
+    'quality': 'hd',
+    'style': 'vivid',
+  }, timeout=120)
 
   if not r.ok:
-    # Fallback: Creative model
-    r = requests.post('https://cloud.leonardo.ai/api/rest/v1/generations', headers=h, json={
-      'prompt': prompt,
-      'modelId': 'b24e16ff-06e3-43eb-8d33-4416c2d75876',
-      'width': 1024, 'height': 1024,
-      'num_images': 1,
-    })
+    raise Exception(f'OpenAI image error: {r.text}')
 
-  if not r.ok:
-    raise Exception(f'Leonardo error: {r.text}')
-
-  gen_id = r.json()['sdGenerationJob']['generationId']
-
-  for _ in range(40):
-    time.sleep(5)
-    c = requests.get(f'https://cloud.leonardo.ai/api/rest/v1/generations/{gen_id}', headers=h)
-    g = c.json().get('generations_by_pk', {})
-    if g.get('status') == 'COMPLETE':
-      imgs = g.get('generated_images', [])
-      if imgs:
-        return imgs[0]['url']
-    elif g.get('status') == 'FAILED':
-      raise Exception('Leonardo generation failed')
-
-  raise Exception('Leonardo timeout')
+  url = r.json()['data'][0]['url']
+  print(f'✅ DALL-E 3: rasm tayyor')
+  return url
 
 
 # ── GITHUB ────────────────────────────────────────────────────────────────────
@@ -496,12 +550,21 @@ def gh_put(path, data, sha, msg):
 
 
 # ── TELEGRAM ──────────────────────────────────────────────────────────────────
-def send_photo(image_url, caption):
-  r = requests.post(
-    f'https://api.telegram.org/bot{BOT_TOKEN}/sendPhoto',
-    json={'chat_id': CHANNEL_ID, 'photo': image_url, 'caption': caption, 'parse_mode': 'HTML'},
-    timeout=30
-  )
+def send_photo(image_data, caption):
+  """image_data: URL string yoki bytes (gpt-image-1 dan)"""
+  if isinstance(image_data, bytes):
+    r = requests.post(
+      f'https://api.telegram.org/bot{BOT_TOKEN}/sendPhoto',
+      data={'chat_id': CHANNEL_ID, 'caption': caption, 'parse_mode': 'HTML'},
+      files={'photo': ('image.png', image_data, 'image/png')},
+      timeout=60
+    )
+  else:
+    r = requests.post(
+      f'https://api.telegram.org/bot{BOT_TOKEN}/sendPhoto',
+      json={'chat_id': CHANNEL_ID, 'photo': image_data, 'caption': caption, 'parse_mode': 'HTML'},
+      timeout=30
+    )
   if not r.ok:
     raise Exception(f'Telegram sendPhoto error: {r.text}')
   return r.json()['result']['message_id']
@@ -642,29 +705,31 @@ def post_one(rubric_key, rubric, slot_time, history):
   print(f'\nYakuniy matn: {caption[:120]}...')
 
   # ── 3-BOSQICH: Rasm generatsiya ──
-  image_url = None
-  if LEONARDO_KEY:
-    print(f'\n🎨 [3/5] Rasm generatsiya qilinmoqda...')
+  image_data = None
+  if OPENAI_KEY:
+    print(f'\n🎨 [3/5] Rasm generatsiya qilinmoqda (caption asosida)...')
     try:
-      image_url = generate_image(rubric_key, rubric)
-      print(f'✅ [4/5] Rasm tayyor: {image_url[:60]}...')
+      image_data = generate_image(rubric_key, rubric, caption_text)
+      size_info = f'{len(image_data)} bytes' if isinstance(image_data, bytes) else str(image_data)[:60]
+      print(f'✅ [4/5] Rasm tayyor: {size_info}')
     except Exception as e:
       print(f'⚠️ Rasm generatsiya xatosi: {e} — rasmsiz yuboriladi')
-      image_url = None
+      image_data = None
   else:
-    print(f'\n⏭ [3-4/5] Leonardo kaliti yo\'q — rasmsiz yuboriladi')
+    print(f'\n⏭ [3-4/5] OPENAI_API_KEY yo\'q — rasmsiz yuboriladi')
 
   # ── 5-BOSQICH: Kanalga yuborish ──
   print(f'\n📤 [5/5] Kanalga yuborilmoqda...')
-  if image_url:
-    msg_id = send_photo(image_url, caption)
+  if image_data:
+    msg_id = send_photo(image_data, caption)
   else:
     msg_id = send_text(caption)
   print(f'✅ Yuborildi! msg_id={msg_id}')
 
+  image_log = 'bytes' if isinstance(image_data, bytes) else (image_data or '')
   return {
     'id': msg_id,
-    'image': image_url or '',
+    'image': image_log,
     'caption': caption_text,
     'hashtags': tags,
     'rubric': rubric_key,

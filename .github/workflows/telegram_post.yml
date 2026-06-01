@@ -36,12 +36,12 @@ jobs:
         env:
           TG_BOT_TOKEN:     ${{ secrets.TG_BOT_TOKEN }}
           GROQ_API_KEY:     ${{ secrets.GROQ_API_KEY }}
-          LEONARDO_API_KEY: ${{ secrets.LEONARDO_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           echo "=== SECRET TEKSHIRUV ==="
           if [ -z "$TG_BOT_TOKEN" ]; then echo "❌ TG_BOT_TOKEN — TOPILMADI"; else echo "✅ TG_BOT_TOKEN — bor (${#TG_BOT_TOKEN} belgi)"; fi
           if [ -z "$GROQ_API_KEY" ]; then echo "❌ GROQ_API_KEY — TOPILMADI"; else echo "✅ GROQ_API_KEY — bor (${#GROQ_API_KEY} belgi)"; fi
-          if [ -z "$LEONARDO_API_KEY" ]; then echo "❌ LEONARDO_API_KEY — TOPILMADI"; else echo "✅ LEONARDO_API_KEY — bor (${#LEONARDO_API_KEY} belgi)"; fi
+          if [ -z "$OPENAI_API_KEY" ]; then echo "⚠️ OPENAI_API_KEY — TOPILMADI (rasmsiz ishlar)"; else echo "✅ OPENAI_API_KEY — bor (${#OPENAI_API_KEY} belgi)"; fi
           echo "GITHUB_REPO=${{ github.repository }}"
           echo "EVENT=${{ github.event_name }}"
           echo "MANUAL_TRIGGER=${{ github.event_name == 'repository_dispatch' || github.event_name == 'workflow_dispatch' }}"
@@ -52,7 +52,7 @@ jobs:
         env:
           TG_BOT_TOKEN:       ${{ secrets.TG_BOT_TOKEN }}
           TG_CHANNEL_ID:      '@deardsgn'
-          LEONARDO_API_KEY:   ${{ secrets.LEONARDO_API_KEY }}
+          OPENAI_API_KEY:   ${{ secrets.OPENAI_API_KEY }}
           GROQ_API_KEY:       ${{ secrets.GROQ_API_KEY }}
           GITHUB_TOKEN:       ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPO:        ${{ github.repository }}
