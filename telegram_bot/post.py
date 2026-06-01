@@ -1,7 +1,7 @@
 """
 Telegram Design Bot — Zarnigor Orifova
 Har kuni avtomatik dizayn postlari yuboradi.
-Pipeline: Groq (matn) → Tekshiruvchi Agent → Telegram
+Pipeline: Groq (matn) → Tekshiruvchi Agent → OpenAI gpt-image-2 (rasm) → Telegram
 """
 import os, json, random, requests, base64
 from datetime import datetime, timezone, timedelta
@@ -485,7 +485,27 @@ def generate_image(rubric_key, rubric, caption_text=None):
   print(f'Yakuniy rasm prompt: {prompt[:80]}...')
   h = {'Authorization': f'Bearer {OPENAI_KEY}', 'Content-Type': 'application/json'}
 
-  # gpt-image-1 (eng yangi, eng sifatli)
+  # gpt-image-2 (2026-aprel, reasoning-powered, 4K, eng sifatli)
+  r = requests.post('https://api.openai.com/v1/images/generations', headers=h, json={
+    'model': 'gpt-image-2',
+    'prompt': prompt,
+    'n': 1,
+    'size': '1024x1024',
+    'quality': 'high',
+  }, timeout=120)
+
+  if r.ok:
+    data = r.json()['data'][0]
+    if 'b64_json' in data:
+      print('✅ gpt-image-2: rasm (bytes) tayyor')
+      return base64.b64decode(data['b64_json'])
+    if 'url' in data:
+      print(f'✅ gpt-image-2: rasm (url) tayyor')
+      return data['url']
+
+  print(f'gpt-image-2 xatosi ({r.status_code}) — gpt-image-1 ga o\'tilmoqda')
+
+  # gpt-image-1 (zaxira)
   r = requests.post('https://api.openai.com/v1/images/generations', headers=h, json={
     'model': 'gpt-image-1',
     'prompt': prompt,
@@ -503,24 +523,7 @@ def generate_image(rubric_key, rubric, caption_text=None):
       print(f'✅ gpt-image-1: rasm (url) tayyor')
       return data['url']
 
-  print(f'gpt-image-1 xatosi ({r.status_code}) — DALL-E 3 ga o\'tilmoqda')
-
-  # DALL-E 3 (zaxira)
-  r = requests.post('https://api.openai.com/v1/images/generations', headers=h, json={
-    'model': 'dall-e-3',
-    'prompt': prompt,
-    'n': 1,
-    'size': '1024x1024',
-    'quality': 'hd',
-    'style': 'vivid',
-  }, timeout=120)
-
-  if not r.ok:
-    raise Exception(f'OpenAI image error: {r.text}')
-
-  url = r.json()['data'][0]['url']
-  print(f'✅ DALL-E 3: rasm tayyor')
-  return url
+  raise Exception(f'OpenAI image error: {r.text}')
 
 
 # ── GITHUB ────────────────────────────────────────────────────────────────────
