@@ -824,6 +824,9 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
       <div class="nav-item" data-panel="contact" onclick="showPanel('contact', this)">
         <i class="fas fa-envelope"></i> Kontakt
       </div>
+      <div class="nav-item" data-panel="lms" onclick="showPanel('lms', this)">
+        <i class="fas fa-graduation-cap"></i> LMS
+      </div>
       <div class="nav-section">Tizim</div>
       <div class="nav-item" data-panel="analytics" onclick="showPanel('analytics', this)">
         <i class="fas fa-chart-line"></i> Statistika
@@ -1315,6 +1318,116 @@ textarea.form-input { resize: vertical; min-height: 80px; font-family: 'Syne', s
             <div style="font-size:0.8rem;font-weight:600;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px">Push Jarayoni</div>
             <div id="ghPushLogContent" style="font-family:'JetBrains Mono',monospace;font-size:0.78rem;line-height:1.6"></div>
           </div>
+        </div>
+      </div>
+
+      <!-- LMS PANEL -->
+      <div class="panel" id="panel-lms">
+        <div class="panel-header">
+          <h2>LMS – O'quv Tizimi</h2>
+          <p>TUIT LMS ma'lumotlari va dars jadvali</p>
+        </div>
+
+        <!-- Quick actions -->
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px">
+          <a href="https://lms.tuit.uz" target="_blank" class="btn btn-primary" style="text-decoration:none;display:inline-flex;align-items:center;gap:6px">
+            <i class="fas fa-external-link-alt"></i> LMS ga kirish
+          </a>
+          <button class="btn btn-secondary" onclick="LMS.refreshFrame()"><i class="fas fa-sync-alt"></i> Yangilash</button>
+          <button class="btn btn-secondary" onclick="LMS.saveData()"><i class="fas fa-save"></i> Saqlash</button>
+        </div>
+
+        <!-- Stats -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin-bottom:20px">
+          <div class="form-card" style="padding:18px;margin-bottom:0;text-align:center">
+            <div style="font-size:1.6rem;font-weight:800;color:var(--accent)" id="lmsCourseCount">—</div>
+            <div style="font-size:0.75rem;color:var(--sub);margin-top:4px">Fanlar</div>
+          </div>
+          <div class="form-card" style="padding:18px;margin-bottom:0;text-align:center">
+            <div style="font-size:1.6rem;font-weight:800;color:var(--accent2)" id="lmsTaskCount">—</div>
+            <div style="font-size:0.75rem;color:var(--sub);margin-top:4px">Topshiriqlar</div>
+          </div>
+          <div class="form-card" style="padding:18px;margin-bottom:0;text-align:center">
+            <div style="font-size:1.6rem;font-weight:800;color:#f59e0b" id="lmsGradeAvg">—</div>
+            <div style="font-size:0.75rem;color:var(--sub);margin-top:4px">O'rt. baho</div>
+          </div>
+          <div class="form-card" style="padding:18px;margin-bottom:0;text-align:center">
+            <div style="font-size:1.6rem;font-weight:800;color:#22c55e" id="lmsSemester">—</div>
+            <div style="font-size:0.75rem;color:var(--sub);margin-top:4px">Semestr</div>
+          </div>
+        </div>
+
+        <!-- Ma'lumotlarni qo'lda kiritish -->
+        <div class="form-card">
+          <div class="form-card-title"><i class="fas fa-user-graduate"></i> Talaba ma'lumotlari</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Ism-familiya</label>
+              <input class="form-input" id="lmsFullName" placeholder="Orifova Zarnigor" oninput="LMS.markDirty()">
+            </div>
+            <div class="form-group">
+              <label>Talaba ID</label>
+              <input class="form-input mono" id="lmsStudentId" placeholder="1BK24753" oninput="LMS.markDirty()">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Guruh</label>
+              <input class="form-input" id="lmsGroup" placeholder="1-BK-24" oninput="LMS.markDirty()">
+            </div>
+            <div class="form-group">
+              <label>Semestr</label>
+              <select class="form-input" id="lmsSemesterSel" onchange="LMS.markDirty()">
+                <option>1</option><option>2</option><option>3</option><option>4</option>
+                <option>5</option><option>6</option><option>7</option><option>8</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Fanlar va baholar -->
+        <div class="form-card">
+          <div class="form-card-title"><i class="fas fa-book"></i> Fanlar va baholar</div>
+          <div id="lmsSubjectsList">
+            <!-- JS tomonidan yuklanadi -->
+          </div>
+          <button class="btn btn-secondary" style="margin-top:8px" onclick="LMS.addSubject()">
+            <i class="fas fa-plus"></i> Fan qo'shish
+          </button>
+        </div>
+
+        <!-- Dars jadvali -->
+        <div class="form-card">
+          <div class="form-card-title"><i class="fas fa-calendar-week"></i> Dars jadvali</div>
+          <div style="overflow-x:auto">
+            <table id="lmsScheduleTable" style="width:100%;border-collapse:collapse;font-size:0.82rem">
+              <thead>
+                <tr style="border-bottom:1px solid var(--border)">
+                  <th style="padding:10px 8px;text-align:left;color:var(--muted);font-weight:600;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.5px">Soat</th>
+                  <th style="padding:10px 8px;text-align:center;color:var(--muted);font-weight:600;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.5px">Dushanba</th>
+                  <th style="padding:10px 8px;text-align:center;color:var(--muted);font-weight:600;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.5px">Seshanba</th>
+                  <th style="padding:10px 8px;text-align:center;color:var(--muted);font-weight:600;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.5px">Chorshanba</th>
+                  <th style="padding:10px 8px;text-align:center;color:var(--muted);font-weight:600;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.5px">Payshanba</th>
+                  <th style="padding:10px 8px;text-align:center;color:var(--muted);font-weight:600;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.5px">Juma</th>
+                  <th style="padding:10px 8px;text-align:center;color:var(--muted);font-weight:600;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.5px">Shanba</th>
+                </tr>
+              </thead>
+              <tbody id="lmsScheduleBody">
+              </tbody>
+            </table>
+          </div>
+          <button class="btn btn-secondary" style="margin-top:12px" onclick="LMS.addScheduleRow()">
+            <i class="fas fa-plus"></i> Qator qo'shish
+          </button>
+        </div>
+
+        <!-- Topshiriqlar -->
+        <div class="form-card">
+          <div class="form-card-title"><i class="fas fa-tasks"></i> Topshiriqlar / Deadline</div>
+          <div id="lmsTasksList"></div>
+          <button class="btn btn-secondary" style="margin-top:8px" onclick="LMS.addTask()">
+            <i class="fas fa-plus"></i> Topshiriq qo'shish
+          </button>
         </div>
       </div>
 
@@ -6054,13 +6167,226 @@ function restoreAdminMode() {
 
 // Telegram paneli ochilganda init
 var _tgInited = false;
+var _lmsInited = false;
 document.addEventListener('DOMContentLoaded', function() {
   var orig = window.showPanel;
   window.showPanel = function(id, el) {
     orig(id, el);
     if (id === 'telegram' && !_tgInited) { _tgInited = true; TG.init(); }
+    if (id === 'lms' && !_lmsInited) { _lmsInited = true; LMS.init(); }
   };
 });
+
+/* ============================================================
+   LMS MODULE
+   ============================================================ */
+var LMS = (function() {
+  var dirty = false;
+  var STORE_KEY = 'lms_data';
+
+  var defaultData = {
+    fullName: '', studentId: '', group: '', semester: '2',
+    subjects: [
+      { name: 'Matematika', grade: '', credit: 3, status: 'active' },
+      { name: 'Dasturlash asoslari', grade: '', credit: 4, status: 'active' },
+      { name: 'Ingliz tili', grade: '', credit: 2, status: 'active' }
+    ],
+    schedule: [
+      ['08:00–09:30', '', '', '', '', '', ''],
+      ['09:45–11:15', '', '', '', '', '', ''],
+      ['11:30–13:00', '', '', '', '', '', ''],
+      ['14:00–15:30', '', '', '', '', '', ''],
+      ['15:45–17:15', '', '', '', '', '', '']
+    ],
+    tasks: []
+  };
+
+  function load() {
+    try {
+      var raw = localStorage.getItem(STORE_KEY);
+      return raw ? JSON.parse(raw) : JSON.parse(JSON.stringify(defaultData));
+    } catch(e) { return JSON.parse(JSON.stringify(defaultData)); }
+  }
+
+  function save() {
+    var data = collectData();
+    localStorage.setItem(STORE_KEY, JSON.stringify(data));
+    dirty = false;
+    showToast('LMS ma\'lumotlari saqlandi', 'success');
+    updateStats(data);
+  }
+
+  function collectData() {
+    var data = {};
+    data.fullName = document.getElementById('lmsFullName').value;
+    data.studentId = document.getElementById('lmsStudentId').value;
+    data.group = document.getElementById('lmsGroup').value;
+    data.semester = document.getElementById('lmsSemesterSel').value;
+
+    // Subjects
+    data.subjects = [];
+    document.querySelectorAll('.lms-subject-row').forEach(function(row) {
+      data.subjects.push({
+        name: row.querySelector('.lms-subj-name').value,
+        grade: row.querySelector('.lms-subj-grade').value,
+        credit: row.querySelector('.lms-subj-credit').value,
+        status: row.querySelector('.lms-subj-status').value
+      });
+    });
+
+    // Schedule
+    data.schedule = [];
+    document.querySelectorAll('#lmsScheduleBody tr').forEach(function(tr) {
+      var cells = tr.querySelectorAll('input');
+      var row = [];
+      cells.forEach(function(c) { row.push(c.value); });
+      data.schedule.push(row);
+    });
+
+    // Tasks
+    data.tasks = [];
+    document.querySelectorAll('.lms-task-row').forEach(function(row) {
+      data.tasks.push({
+        title: row.querySelector('.lms-task-title').value,
+        subject: row.querySelector('.lms-task-subject').value,
+        deadline: row.querySelector('.lms-task-deadline').value,
+        done: row.querySelector('.lms-task-done').checked
+      });
+    });
+
+    return data;
+  }
+
+  function renderSubjects(subjects) {
+    var list = document.getElementById('lmsSubjectsList');
+    list.innerHTML = '';
+    subjects.forEach(function(s, i) {
+      list.appendChild(createSubjectRow(s, i));
+    });
+  }
+
+  function createSubjectRow(s, i) {
+    var div = document.createElement('div');
+    div.className = 'lms-subject-row';
+    div.style.cssText = 'display:grid;grid-template-columns:1fr 80px 70px 100px 36px;gap:8px;margin-bottom:8px;align-items:center';
+    div.innerHTML =
+      '<input class="form-input lms-subj-name" placeholder="Fan nomi" value="' + (s.name||'') + '" oninput="LMS.markDirty()">' +
+      '<input class="form-input mono lms-subj-grade" placeholder="Baho" value="' + (s.grade||'') + '" oninput="LMS.markDirty()">' +
+      '<input class="form-input mono lms-subj-credit" placeholder="Kredit" type="number" min="1" max="6" value="' + (s.credit||3) + '" oninput="LMS.markDirty()">' +
+      '<select class="form-input lms-subj-status" onchange="LMS.markDirty()">' +
+        '<option value="active"' + (s.status==='active'?' selected':'') + '>Aktiv</option>' +
+        '<option value="done"' + (s.status==='done'?' selected':'') + '>Tugatilgan</option>' +
+        '<option value="pending"' + (s.status==='pending'?' selected':'') + '>Kutilmoqda</option>' +
+      '</select>' +
+      '<button onclick="this.closest(\'.lms-subject-row\').remove();LMS.markDirty()" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--red);cursor:pointer;width:36px;height:36px;display:flex;align-items:center;justify-content:center"><i class="fas fa-times"></i></button>';
+    return div;
+  }
+
+  function renderSchedule(schedule) {
+    var tbody = document.getElementById('lmsScheduleBody');
+    tbody.innerHTML = '';
+    schedule.forEach(function(row) {
+      tbody.appendChild(createScheduleRow(row));
+    });
+  }
+
+  function createScheduleRow(row) {
+    var tr = document.createElement('tr');
+    tr.style.borderBottom = '1px solid var(--border)';
+    var cells = row || ['', '', '', '', '', '', ''];
+    var html = '';
+    cells.forEach(function(val, i) {
+      if (i === 0) {
+        html += '<td style="padding:6px 8px"><input class="form-input mono" style="width:110px;font-size:0.78rem;padding:7px 8px" placeholder="08:00–09:30" value="' + val + '" oninput="LMS.markDirty()"></td>';
+      } else {
+        html += '<td style="padding:6px 8px"><input class="form-input" style="width:100%;font-size:0.78rem;padding:7px 8px;text-align:center" placeholder="—" value="' + val + '" oninput="LMS.markDirty()"></td>';
+      }
+    });
+    html += '<td style="padding:6px 4px"><button onclick="this.closest(\'tr\').remove();LMS.markDirty()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.8rem;padding:4px"><i class="fas fa-times"></i></button></td>';
+    tr.innerHTML = html;
+    return tr;
+  }
+
+  function renderTasks(tasks) {
+    var list = document.getElementById('lmsTasksList');
+    list.innerHTML = '';
+    tasks.forEach(function(t) { list.appendChild(createTaskRow(t)); });
+  }
+
+  function createTaskRow(t) {
+    var div = document.createElement('div');
+    div.className = 'lms-task-row';
+    div.style.cssText = 'display:grid;grid-template-columns:1fr 120px 130px 32px 36px;gap:8px;margin-bottom:8px;align-items:center';
+    var checked = (t && t.done) ? 'checked' : '';
+    var today = new Date().toISOString().split('T')[0];
+    var deadline = (t && t.deadline) ? t.deadline : '';
+    var isOverdue = deadline && !t.done && deadline < today;
+    div.innerHTML =
+      '<input class="form-input lms-task-title" placeholder="Topshiriq nomi" value="' + (t&&t.title||'') + '" oninput="LMS.markDirty()">' +
+      '<input class="form-input lms-task-subject" placeholder="Fan" value="' + (t&&t.subject||'') + '" oninput="LMS.markDirty()">' +
+      '<input class="form-input lms-task-deadline" type="date" value="' + deadline + '" oninput="LMS.markDirty()" style="' + (isOverdue?'border-color:var(--red)':'') + '">' +
+      '<input type="checkbox" class="lms-task-done" ' + checked + ' onchange="LMS.markDirty()" style="width:18px;height:18px;accent-color:var(--accent);cursor:pointer">' +
+      '<button onclick="this.closest(\'.lms-task-row\').remove();LMS.markDirty()" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--red);cursor:pointer;width:36px;height:36px;display:flex;align-items:center;justify-content:center"><i class="fas fa-times"></i></button>';
+    return div;
+  }
+
+  function updateStats(data) {
+    var subjects = data.subjects || [];
+    document.getElementById('lmsCourseCount').textContent = subjects.length || '—';
+
+    var tasks = data.tasks || [];
+    var pending = tasks.filter(function(t) { return !t.done; }).length;
+    document.getElementById('lmsTaskCount').textContent = pending || '—';
+
+    var grades = subjects.map(function(s) { return parseFloat(s.grade); }).filter(function(g) { return !isNaN(g); });
+    if (grades.length) {
+      var avg = (grades.reduce(function(a,b){return a+b;},0) / grades.length).toFixed(1);
+      document.getElementById('lmsGradeAvg').textContent = avg;
+    } else {
+      document.getElementById('lmsGradeAvg').textContent = '—';
+    }
+
+    document.getElementById('lmsSemester').textContent = (data.semester || '—') + '-sem';
+  }
+
+  function init() {
+    var data = load();
+    document.getElementById('lmsFullName').value = data.fullName || '';
+    document.getElementById('lmsStudentId').value = data.studentId || '';
+    document.getElementById('lmsGroup').value = data.group || '';
+    var semSel = document.getElementById('lmsSemesterSel');
+    if (semSel) semSel.value = data.semester || '2';
+
+    renderSubjects(data.subjects || defaultData.subjects);
+    renderSchedule(data.schedule || defaultData.schedule);
+    renderTasks(data.tasks || []);
+    updateStats(data);
+  }
+
+  return {
+    init: init,
+    saveData: save,
+    markDirty: function() { dirty = true; },
+    addSubject: function() {
+      var list = document.getElementById('lmsSubjectsList');
+      list.appendChild(createSubjectRow({name:'',grade:'',credit:3,status:'active'}, list.children.length));
+      dirty = true;
+    },
+    addScheduleRow: function() {
+      var tbody = document.getElementById('lmsScheduleBody');
+      tbody.appendChild(createScheduleRow(['', '', '', '', '', '', '']));
+      dirty = true;
+    },
+    addTask: function() {
+      var list = document.getElementById('lmsTasksList');
+      list.appendChild(createTaskRow({title:'',subject:'',deadline:'',done:false}));
+      dirty = true;
+    },
+    refreshFrame: function() {
+      window.open('https://lms.tuit.uz', '_blank');
+    }
+  };
+})();
 
 /* ============================================================
    KEYBOARD SHORTCUTS
